@@ -13,6 +13,9 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Text.Json;
+using System.Web;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.TwiML.Messaging;
@@ -220,6 +223,62 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             // to maintain confidentiality, we always return an OK response even if the user was not found. 
             return Ok(CreateSuccessResponse("Your password have been reset"));
+        }
+
+        [HttpGet("/signin-with-google")]
+    public async Task<IActionResult> SigninWithGoogle()
+        {//code, scope, prompt, authuser
+           string clientId =  _configuration["oauth2:google:client_id"];
+            string clientSecret = _configuration["oauth2:google:client_secret"];
+                string baseUrl = _configuration["oauth2:google:token_uri"];
+            string redirectUri = _configuration.GetSection("oauth2:google:redirect_uris").Get<string[]>()[0];
+            var dicData = new Dictionary<string, string>();
+
+            dicData["client_id"] = clientId;
+            dicData["client_secret"] = clientSecret;
+            dicData["code"] = HttpContext.Request.Query["code"];
+            dicData["grant_type"] = "authorization_code";
+            dicData["redirect_uri"] = redirectUri ;
+            dicData["access_type"] = "online";
+            var s  = HttpContext.Request.Query["scope"];
+            try
+            {
+                using (var client = new HttpClient())
+                using (var content = new FormUrlEncodedContent(dicData))
+                {
+                    HttpResponseMessage response = await client.PostAsync(baseUrl, content);
+                    string json = await response.Content.ReadAsStringAsync();
+                    OauthTokenResponse tokenResponse = JsonSerializer.Deserialize<OauthTokenResponse>(json);
+
+                    string AccessToken = "";
+
+                    if (tokenResponse.IsSuccess)
+                    {
+                        // success
+                        AccessToken = tokenResponse.access_token;
+
+
+                        
+                        string url = $"https://www.googleapis.com/oauth2/v2/userinfo?fields=email&oauth_token={AccessToken}";
+
+                       
+                             response = await client.GetAsync(url);
+                            json = await response.Content.ReadAsStringAsync();
+                       
+
+                    }
+                    else
+                    {
+                        // error
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // error
+            }
+
+            return Ok();
         }
     }
 }

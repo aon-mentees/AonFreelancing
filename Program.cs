@@ -56,6 +56,10 @@ namespace AonFreelancing
                     ValidAudience = jwtSettings["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
+            }).AddGoogle(googleOptions =>
+            {
+                googleOptions.ClientId = builder.Configuration["oauth2:google:client_id"];
+                googleOptions.ClientSecret = builder.Configuration["oauth2:google:client_secret"];
             });
 
 
@@ -71,6 +75,7 @@ namespace AonFreelancing
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             app.UseAuthentication();
             app.UseAuthorization();
