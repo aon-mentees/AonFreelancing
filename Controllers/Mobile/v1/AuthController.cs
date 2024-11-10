@@ -33,13 +33,15 @@ namespace AonFreelancing.Controllers.Mobile.v1
         private readonly IConfiguration _configuration;
         private readonly OTPManager _otpManager;
         private readonly JwtService _jwtService;
+        private readonly GoogleOAuthService _googleOAuthService;
         public AuthController(
             UserManager<User> userManager,
             MainAppContext mainAppContext,
             RoleManager<ApplicationRole> roleManager,
             IConfiguration configuration,
             OTPManager otpManager,
-            JwtService jwtService
+            JwtService jwtService,
+            GoogleOAuthService googleOAuthService
             )
         {
             _userManager = userManager;
@@ -48,6 +50,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             _configuration = configuration;
             _otpManager = otpManager;
             _jwtService = jwtService;
+            _googleOAuthService = googleOAuthService;
         }
 
         [HttpPost("register")]
@@ -227,58 +230,17 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [HttpGet("/signin-with-google")]
     public async Task<IActionResult> SigninWithGoogle()
-        {//code, scope, prompt, authuser
-           string clientId =  _configuration["oauth2:google:client_id"];
-            string clientSecret = _configuration["oauth2:google:client_secret"];
-                string baseUrl = _configuration["oauth2:google:token_uri"];
-            string redirectUri = _configuration.GetSection("oauth2:google:redirect_uris").Get<string[]>()[0];
-            var dicData = new Dictionary<string, string>();
+        {
 
-            dicData["client_id"] = clientId;
-            dicData["client_secret"] = clientSecret;
-            dicData["code"] = HttpContext.Request.Query["code"];
-            dicData["grant_type"] = "authorization_code";
-            dicData["redirect_uri"] = redirectUri ;
-            dicData["access_type"] = "online";
-            var s  = HttpContext.Request.Query["scope"];
-            try
+          var result =   await _googleOAuthService.RetrieveOAuthTokenAsync(HttpContext.Request.Query["code"]);
+            if(!result.IsSuccess)
             {
-                using (var client = new HttpClient())
-                using (var content = new FormUrlEncodedContent(dicData))
-                {
-                    HttpResponseMessage response = await client.PostAsync(baseUrl, content);
-                    string json = await response.Content.ReadAsStringAsync();
-                    OauthTokenResponse tokenResponse = JsonSerializer.Deserialize<OauthTokenResponse>(json);
-
-                    string AccessToken = "";
-
-                    if (tokenResponse.IsSuccess)
-                    {
-                        // success
-                        AccessToken = tokenResponse.access_token;
-
-
-                        
-                        string url = $"https://www.googleapis.com/oauth2/v2/userinfo?fields=email&oauth_token={AccessToken}";
-
-                       
-                             response = await client.GetAsync(url);
-                            json = await response.Content.ReadAsStringAsync();
-                       
-
-                    }
-                    else
-                    {
-                        // error
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // error
+                return StatusCode(StatusCodes.Status500InternalServerError, "i fucked up");
             }
 
-            return Ok();
+            var userInfo = await _googleOAuthService.RetreiveUserInfo(result.AccessToken, "names,phoneNumbers,emailAddresses");
+            return Ok(userInfo);
+           
         }
     }
 }

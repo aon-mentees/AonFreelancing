@@ -1,16 +1,33 @@
-﻿namespace AonFreelancing.Models.Requests
+﻿using System.Text.Json.Serialization;
+
+namespace AonFreelancing.Models.Requests
 {
     public class OauthTokenResponse
     {
-        public string access_token { get; set; }
-        public int expires_in { get; set; }
-        public string refresh_token { get; set; }
-        public string scope { get; set; }
-        public string token_type { get; set; }
-        public string id_token { get; set; }
-        public string error { get; set; }
-        public string error_description { get; set; }
+        [JsonPropertyName("access_token")]
+        public string AccessToken { get; set; }
 
-        public bool IsSuccess => string.IsNullOrEmpty(error);
+        [JsonPropertyName("expires_in")]
+        public int ExpiresIn { get; set; }
+
+        [JsonPropertyName("refresh_token ")]
+        public string RefreshToken { get; set; }
+
+        [JsonPropertyName("scope")]
+        public string Scope { get; set; }
+
+        [JsonPropertyName("token_type")]
+        public string TokenType { get; set; }
+        
+        [JsonPropertyName("id_token")]
+        public string IdToken { get; set; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; set; }
+
+        [JsonPropertyName("error_description")]
+        public string? ErrorDescription { get; set; }
+
+        public bool IsSuccess => string.IsNullOrEmpty(Error);
     }
 }
