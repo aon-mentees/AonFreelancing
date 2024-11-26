@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <input id="Message" value="" />
+                <button class="btn btn-primary" id="SendMessage"
+                        type="button">
+                    Send message
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <ul id="Messages">
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js">
+    </script>
+    <script src="/js/signalr.js"></script>
+</body>
+</html>
