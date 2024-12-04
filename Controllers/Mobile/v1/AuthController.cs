@@ -47,7 +47,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             var IsExist = await _authService.IsUserExistsInTempAsync(phoneNumberReq);
-            if (IsExist)
+            if (IsExist) 
             {
                 return Conflict(CreateErrorResponse(
                     StatusCodes.Status409Conflict.ToString(), "User already exists."));

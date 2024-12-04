@@ -17,7 +17,7 @@
 
         public const string BIDS_STATUS_PENDING = "pending";
         public const string BIDS_STATUS_APPROVED = "approved";
-
+        public const string BIDS_STATUS_REJECTED = "rejected";
 
         public const string TASK_STATUS_TO_DO = "to-do";
         public const string TASK_STATUS_IN_PROGRESS = "in-progress";
