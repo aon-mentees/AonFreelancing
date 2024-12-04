@@ -50,6 +50,18 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
+
+            //Checks if this phone number is valid or not with country code (by using libphonenumber-csharp)
+            //Note: static variable 
+            var phoneUtil = PhoneNumberUtil.GetInstance();
+            PhoneNumber parsedNumber;
+
+            parsedNumber = phoneUtil.Parse(phoneNumberReq.PhoneNumber, null);
+            if (!phoneUtil.IsValidNumber(parsedNumber))
+            {
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Invalid phone number format."));
+            }
+
             //Checks if this phone number is already used by another user
             if (await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumberReq.PhoneNumber))
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "phone number is already used by an account"));
@@ -70,6 +82,15 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("verify-phone-number")]
         public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest phoneVerificationRequest)
         {
+            var phoneUtil = PhoneNumberUtil.GetInstance();
+            var parsedNumber = phoneUtil.Parse(phoneVerificationRequest.Phone, null);
+            if (!phoneUtil.IsValidNumber(parsedNumber))
+            {
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Invalid phone number format."));
+            }
+
+            //Save Phonenumber format as E164
+            phoneVerificationRequest.Phone = phoneUtil.Format(parsedNumber, PhoneNumberFormat.E164);
 
             if (await _authService.ProcessPhoneVerificationRequestAsync(phoneVerificationRequest))
                 return Ok(CreateSuccessResponse("Activated"));
