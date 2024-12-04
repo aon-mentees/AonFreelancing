@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241127185547_project-image-mig2")]
-    partial class projectimagemig2
+    [Migration("20241204120210_initial-fix-roles-issue-mig")]
+    partial class initialfixrolesissuemig
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -177,7 +177,7 @@ namespace AonFreelancing.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("Available");
+                        .HasDefaultValue("available");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -191,11 +191,11 @@ namespace AonFreelancing.Migrations
 
                     b.ToTable("Projects", null, t =>
                         {
-                            t.HasCheckConstraint("CK_PRICE_TYPE", "[PriceType] IN ('Fixed', 'PerHour')");
+                            t.HasCheckConstraint("CK_PRICE_TYPE", "[PriceType] IN ('fixed', 'per-hour')");
+
+                            t.HasCheckConstraint("CK_PROJECT_STATUS", "[Status] IN ('available', 'closed')");
 
                             t.HasCheckConstraint("CK_QUALIFICATION_NAME", "[QualificationName] IN ('uiux', 'frontend', 'mobile', 'backend', 'fullstack')");
-
-                            t.HasCheckConstraint("CK_STATUS", "[Status] IN ('Available', 'Closed')");
                         });
                 });
 

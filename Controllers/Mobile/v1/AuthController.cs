@@ -8,6 +8,7 @@ using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using Client = AonFreelancing.Models.Client;
 
 namespace AonFreelancing.Controllers.Mobile.v1
@@ -70,8 +71,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await _authService.AddOtpAsync(otp);
             await _otpManager.SendOTPAsync(otp.Code, otp.PhoneNumber);
 
-            // Logic for Mobile
-            // ex: mobileService.SomeFunctuZ
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }
 
@@ -96,31 +95,31 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
 
         [HttpPost("completeRegistration")]
-        public async Task<IActionResult> CompleteRegistrationAsync([FromBody] RegisterRequest registerReq)
+        public async Task<IActionResult> CompleteRegistrationAsync([FromBody] UserRegistrationRequest userRegistrationRequest)
         {
 
-            var tempUser = await _authService.GetTempUserAsync(registerReq.PhoneNumber);
+            var tempUser = await _authService.GetTempUserAsync(userRegistrationRequest.PhoneNumber);
             if (tempUser == null)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
                     "Phone number is invalid."));
 
-            User? user = registerReq.UserType switch
+            User? user = userRegistrationRequest.UserType switch
             {
                 Constants.USER_TYPE_FREELANCER => new Freelancer
                 {
-                    Name = registerReq.Name,
-                    UserName = registerReq.Username,
+                    Name = userRegistrationRequest.Name,
+                    UserName = userRegistrationRequest.Username,
                     PhoneNumber = tempUser.PhoneNumber,
                     PhoneNumberConfirmed = tempUser.PhoneNumberConfirmed,
                     //Skills = registerReq.Skills ?? string.Empty,
                 },
                 Constants.USER_TYPE_CLIENT => new Client()
                 {
-                    Name = registerReq.Name,
-                    UserName = registerReq.Username,
+                    Name = userRegistrationRequest.Name,
+                    UserName = userRegistrationRequest.Username,
                     PhoneNumber = tempUser.PhoneNumber,
                     PhoneNumberConfirmed = tempUser.PhoneNumberConfirmed,
-                    CompanyName = registerReq.CompanyName ?? string.Empty,
+                    CompanyName = userRegistrationRequest.CompanyName ?? string.Empty,
                 },
                 _ => null
             };
@@ -129,7 +128,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
                     "No such user type exists."));
 
-            var userCreationResult = await _userManager.CreateAsync(user, registerReq.Password);
+            var userCreationResult = await _userManager.CreateAsync(user, userRegistrationRequest.Password);
             if (!userCreationResult.Succeeded)
                 return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<object>()
                 {
@@ -142,13 +141,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
                         .ToList()
                 });
 
-            var role = new ApplicationRole { Name = registerReq.UserType };
-            await _roleManager.CreateAsync(role);
-            await _userManager.AddToRoleAsync(user, role.Name);
+            var storedRole = await _roleManager.FindByNameAsync(userRegistrationRequest.UserType);
+            await _userManager.AddToRoleAsync(user, storedRole.Name);
             await _authService.Remove(tempUser);
 
-            return CreatedAtAction(nameof(UsersController.GetProfileByIdAsync), "users",
-                new { id = user.Id }, null);
+            return CreatedAtAction(nameof(UsersController.GetProfileByIdAsync), "users", new { id = user.Id }, null);
         }
 
         [HttpPost("login")]

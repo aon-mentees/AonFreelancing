@@ -19,7 +19,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService) : BaseController
     {
-        [Authorize(Roles = "CLIENT")]
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
         public async Task<IActionResult> PostProjectAsync([FromForm] ProjectInputDto projectInputDto)
         {
@@ -112,7 +112,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
 
 
-        [Authorize(Roles = "FREELANCER")]
+        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("{projectId}/bids")]
         public async Task<IActionResult> SubmitBidAsync(long projectId, [FromBody] BidInputDto bidInputDTO)
         {
@@ -139,7 +139,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
 
 
-        [Authorize(Roles = "CLIENT")]
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPut("{projectId}/bids/{bidId}/approve")]
         public async Task<IActionResult> ApproveBidAsync([FromRoute] long projectId, [FromRoute] long bidId)
         {

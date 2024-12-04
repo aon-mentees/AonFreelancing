@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class initmig : Migration
+    public partial class initialfixrolesissuemig : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -197,8 +197,7 @@ namespace AonFreelancing.Migrations
                 name: "Freelancers",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false),
-                    Skills = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -267,16 +266,16 @@ namespace AonFreelancing.Migrations
                     Duration = table.Column<int>(type: "int", nullable: false),
                     Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     QualificationName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Available"),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "available"),
                     FreelancerId = table.Column<long>(type: "bigint", nullable: true),
-                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    ImageFileName = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Projects", x => x.Id);
-                    table.CheckConstraint("CK_PRICE_TYPE", "[PriceType] IN ('Fixed', 'PerHour')");
+                    table.CheckConstraint("CK_PRICE_TYPE", "[PriceType] IN ('fixed', 'per-hour')");
+                    table.CheckConstraint("CK_PROJECT_STATUS", "[Status] IN ('available', 'closed')");
                     table.CheckConstraint("CK_QUALIFICATION_NAME", "[QualificationName] IN ('uiux', 'frontend', 'mobile', 'backend', 'fullstack')");
-                    table.CheckConstraint("CK_STATUS", "[Status] IN ('Available', 'Closed')");
                     table.ForeignKey(
                         name: "FK_Projects_Clients_ClientId",
                         column: x => x.ClientId,
@@ -288,6 +287,26 @@ namespace AonFreelancing.Migrations
                         column: x => x.FreelancerId,
                         principalTable: "Freelancers",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Skills",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Skills", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Skills_Freelancers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Freelancers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -332,6 +351,32 @@ namespace AonFreelancing.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProjectLikes",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectLikes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectLikes_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProjectLikes_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tasks",
                 columns: table => new
                 {
@@ -339,7 +384,7 @@ namespace AonFreelancing.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProjectId = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "to-do"),
                     DeadlineAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Notes = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -349,6 +394,7 @@ namespace AonFreelancing.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tasks", x => x.Id);
+                    table.CheckConstraint("CK_TASK_STATUS", "[Status] IN ('done', 'in-review', 'in-progress', 'to-do')");
                     table.ForeignKey(
                         name: "FK_Tasks_Projects_ProjectId",
                         column: x => x.ProjectId,
@@ -424,6 +470,17 @@ namespace AonFreelancing.Migrations
                 column: "SystemUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProjectLikes_ProjectId_UserId",
+                table: "ProjectLikes",
+                columns: new[] { "ProjectId", "UserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectLikes_UserId",
+                table: "ProjectLikes",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_ClientId",
                 table: "Projects",
                 column: "ClientId");
@@ -432,6 +489,11 @@ namespace AonFreelancing.Migrations
                 name: "IX_Projects_FreelancerId",
                 table: "Projects",
                 column: "FreelancerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Skills_UserId",
+                table: "Skills",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_ProjectId",
@@ -468,6 +530,12 @@ namespace AonFreelancing.Migrations
 
             migrationBuilder.DropTable(
                 name: "otps");
+
+            migrationBuilder.DropTable(
+                name: "ProjectLikes");
+
+            migrationBuilder.DropTable(
+                name: "Skills");
 
             migrationBuilder.DropTable(
                 name: "Tasks");

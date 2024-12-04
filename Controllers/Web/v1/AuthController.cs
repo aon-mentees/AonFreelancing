@@ -92,7 +92,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [HttpPost("completeRegistration")]
-        public async Task<IActionResult> CompleteRegistrationAsync([FromBody] RegisterRequest registerReq)
+        public async Task<IActionResult> CompleteRegistrationAsync([FromBody] UserRegistrationRequest registerReq)
         {
 
             var tempUser = await _authService.GetTempUserAsync(registerReq.PhoneNumber);

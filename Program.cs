@@ -1,5 +1,6 @@
 
 using AonFreelancing.Contexts;
+using AonFreelancing.Enums;
 using AonFreelancing.Middlewares;
 using AonFreelancing.Models;
 using AonFreelancing.Services;
@@ -91,6 +92,15 @@ namespace AonFreelancing
             });
 
             var app = builder.Build();
+
+            //seed roles to the database
+            using (var serviceScope = app.Services.CreateScope())
+            {
+                var serviceProvider = serviceScope.ServiceProvider;
+                var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+                SeedRoles(roleManager).GetAwaiter().GetResult();
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -118,5 +128,17 @@ namespace AonFreelancing
 
             app.Run();
         }
+
+        static async Task SeedRoles(RoleManager<ApplicationRole> roleManager)
+        {
+            foreach (string roleName in Enum.GetNames(typeof(UserRoles)))
+            {
+                string normalizedRoleName = roleName.ToLower();
+                if (!await roleManager.RoleExistsAsync(normalizedRoleName))
+                    await roleManager.CreateAsync(new ApplicationRole { Name = normalizedRoleName });
+            }
+        }
     }
+
+
 }
