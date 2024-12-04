@@ -8,6 +8,7 @@ using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PhoneNumbers;
 using System.Net;
 
 namespace AonFreelancing.Controllers.Mobile.v1
@@ -69,6 +70,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("verify-phone-number")]
         public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest phoneVerificationRequest)
         {
+
             if (await _authService.ProcessPhoneVerificationRequestAsync(phoneVerificationRequest))
                 return Ok(CreateSuccessResponse("Activated"));
             return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "UnAuthorized"));
