@@ -25,7 +25,7 @@ namespace AonFreelancing
 
             var conf = builder.Configuration;
             builder.Services.AddControllers(o => o.SuppressAsyncSuffixInActionNames = false);
-            builder.Services.AddSingleton<OTPManager>();
+            builder.Services.AddSingleton<OtpManager>();
             builder.Services.AddSingleton<JwtService>();
             builder.Services.AddSingleton<FileStorageService>();
             builder.Services.AddScoped<AuthService>();

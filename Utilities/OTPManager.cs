@@ -5,13 +5,13 @@ using AonFreelancing.Models;
 
 namespace AonFreelancing.Utilities
 {
-    public class OTPManager
+    public class OtpManager
     {
       
 
         readonly IConfiguration _configuration;
 
-        public OTPManager(IConfiguration configuration)
+        public OtpManager(IConfiguration configuration)
         {
             _configuration = configuration;
         }

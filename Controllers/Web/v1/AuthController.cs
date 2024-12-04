@@ -20,14 +20,14 @@ namespace AonFreelancing.Controllers.Web.v1
         private readonly AuthService _authService;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
-        private readonly OTPManager _otpManager;
+        private readonly OtpManager _otpManager;
         private readonly JwtService _jwtService;
 
         public AuthController(
             UserManager<User> userManager,
             MainAppContext mainAppContext,
             RoleManager<ApplicationRole> roleManager,
-            OTPManager otpManager,
+            OtpManager otpManager,
             JwtService jwtService,
             AuthService authService
         )
@@ -56,7 +56,7 @@ namespace AonFreelancing.Controllers.Web.v1
             };
 
             await _authService.AddAsync(tempUser);
-            var otp = new OTP()
+            var otp = new Otp()
             {
                 PhoneNumber = phoneNumberReq.PhoneNumber,
                 Code = _otpManager.GenerateOtp(),
@@ -72,15 +72,15 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [HttpPost("verifyPhoneNumber")]
-        public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] VerifyReq verifyReq)
+        public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest verifyReq)
         {
-            var IsValid = await _authService.IsUserValidForConfirmationAsync(verifyReq.Phone);
+            var IsValid = await _authService.IsPhoneNumberConfirmableAsync(verifyReq.Phone);
             if (IsValid)
             {
                 var otp = await _authService.GetOTPAsync(verifyReq.Phone);
 
                 // verify OTP
-                if (_authService.VerifyOtp(verifyReq.Otp, otp))
+                if (_authService.VerifyOtp(verifyReq.OtpCode, otp))
                 {
                     await _authService.UpdateTempUser(verifyReq.Phone);
                     await _authService.UpdateOtpAsync(otp);
@@ -148,7 +148,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> LoginAsync([FromBody] AuthRequest req)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest req)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == req.PhoneNumber);
             if (user != null && await _userManager.CheckPasswordAsync(user, req.Password))

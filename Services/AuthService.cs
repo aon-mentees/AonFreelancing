@@ -1,21 +1,58 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.Requests;
+using AonFreelancing.Utilities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Security.Principal;
-using static System.Net.WebRequestMethods;
+
 
 namespace AonFreelancing.Services
 {
     public class AuthService
     {
         private readonly MainAppContext _mainAppContext;
-        public AuthService(MainAppContext mainAppContext) {
+        private readonly OtpManager _otpManager;
+        public AuthService(MainAppContext mainAppContext, OtpManager otpManager) {
             _mainAppContext = mainAppContext;
+            _otpManager = otpManager;
         }
+
         public long GetUserId(ClaimsIdentity identity) => long.Parse(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
 
+        public async Task<bool> ProcessPhoneVerificationRequestAsync(PhoneVerificationRequest phoneVerificationRequest)
+        {
+            bool isPhoneNumberConfirmable = await IsPhoneNumberConfirmableAsync(phoneVerificationRequest.Phone);
+            bool isOtpValid = await ProcessOtpCodeAsync(phoneVerificationRequest.Phone, phoneVerificationRequest.OtpCode);
+            return isPhoneNumberConfirmable && isOtpValid;
+        }
+
+         async Task<bool> ProcessOtpCodeAsync(string phoneNumber, string otpCode)
+        {
+            Otp? storedOtp = await _mainAppContext.Otps.FirstOrDefaultAsync(o => o.PhoneNumber == phoneNumber);
+            bool isValidOtp = IsValidOtp(otpCode, storedOtp);
+            if (isValidOtp)
+            {
+                storedOtp.IsUsed = true;
+                TempUser? storedTempUser = await _mainAppContext.TempUsers.FirstOrDefaultAsync(tu => tu.PhoneNumber == phoneNumber);
+                if(storedTempUser != null)
+                    storedTempUser.PhoneNumberConfirmed = true;
+                await _mainAppContext.SaveChangesAsync();
+            }
+
+            return isValidOtp;
+        }
+
+        bool IsValidOtp(string providedOtp, Otp? storedOtp) => storedOtp != null &&
+                                                                DateTime.Now < storedOtp.ExpiresAt &&
+                                                                providedOtp.Equals(storedOtp.Code) &&
+                                                                !storedOtp.IsUsed;
+
+        public async Task SaveTempUserAndOtpAsync(TempUser newTempUser, Otp newOtp)
+        {
+            await _mainAppContext.TempUsers.AddAsync(newTempUser);
+            await _mainAppContext.Otps.AddAsync(newOtp);
+            await _mainAppContext.SaveChangesAsync();
+        }
         public async Task<bool> IsUserExistsInTempAsync(PhoneNumberReq phoneNumberReq)
         {
             return await _mainAppContext.TempUsers
@@ -28,9 +65,9 @@ namespace AonFreelancing.Services
             await _mainAppContext.SaveChangesAsync();
 
         }
-        public async Task AddOtpAsync(OTP oTP)
+        public async Task AddOtpAsync(Otp oTP)
         {
-            await _mainAppContext.OTPs.AddAsync(oTP);
+            await _mainAppContext.Otps.AddAsync(oTP);
             await _mainAppContext.SaveChangesAsync();
         }
 
@@ -43,27 +80,14 @@ namespace AonFreelancing.Services
         {
             return await _mainAppContext.TempUsers.FirstOrDefaultAsync(u=>u.PhoneNumber == PhoneNumber);
         }
-        public async Task<bool> IsUserValidForConfirmationAsync(string PhonerNumber)
-        {
-           return await _mainAppContext.TempUsers.AnyAsync(u => u.PhoneNumber == PhonerNumber && !u.PhoneNumberConfirmed);
+         async Task<bool> IsPhoneNumberConfirmableAsync(string PhonerNumber) => await _mainAppContext.TempUsers.AnyAsync(tu => tu.PhoneNumber == PhonerNumber && !tu.PhoneNumberConfirmed);
 
-        }
 
-        public async Task<OTP> GetOTPAsync(string Phone)
+        public async Task<Otp> GetOTPAsync(string Phone)
         {
-            return await _mainAppContext.OTPs.Where(o => o.PhoneNumber == Phone)
+            return await _mainAppContext.Otps.Where(o => o.PhoneNumber == Phone)
                    .FirstOrDefaultAsync();
 
-        }
-
-        public bool VerifyOtp(string ProvidedOTP, OTP otp)
-        {
-            if(otp != null && ProvidedOTP.Equals(otp.Code) && DateTime.Now < otp.ExpiresAt && otp.IsUsed == false)
-            {
-                return true;
-            }
-
-            return false;
         }
 
         public async Task UpdateTempUser(string PhoneNumber)
@@ -76,7 +100,7 @@ namespace AonFreelancing.Services
             }
         }
 
-        public async Task UpdateOtpAsync(OTP otp)
+        public async Task UpdateOtpAsync(Otp otp)
         {
 
             otp.IsUsed = true;// Update Otp

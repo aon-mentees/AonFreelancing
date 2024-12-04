@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AonFreelancing.Models.Requests;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -11,7 +12,13 @@ namespace AonFreelancing.Models
     public class Freelancer : User
     {
         public List<Skill> Skills { get; set; }
+
+        public Freelancer() { }
+        public Freelancer(UserRegistrationRequest registrationRequest)
+        : base(registrationRequest)
+        {
+
+        }
+
     }
-
-
 }

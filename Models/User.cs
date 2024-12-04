@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AonFreelancing.Interfaces;
+using AonFreelancing.Models.Requests;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,12 @@ namespace AonFreelancing.Models
         public string? About {  get; set; }
 
         public ICollection<Bid> Bids { get; set; } = new List<Bid>();
-
+        public User() { }
+        public User(UserRegistrationRequest request)
+        {
+            Name = request.Name;
+            PhoneNumber = request.PhoneNumber;
+            Email = request.Email;
+        }
     }
 }
