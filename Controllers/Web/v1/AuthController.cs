@@ -48,13 +48,19 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
+            string normalizedReceivedEmail = userRegistrationRequest.Email.ToUpper();
+            User? storedUser = await _authService.FindUserByNormalizedEmailAsync(normalizedReceivedEmail);
             TempUser? storedTempUser = await _authService.FindTempUserByPhoneNumberAsync(userRegistrationRequest.PhoneNumber);
-            if (storedTempUser == null)//check if the request is not associated with a temp user record.
-                return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Submit and verify your phone number before registering your details"));
-            User? storedUser = await _authService.FindUserByNormalizedEmailAsync(userRegistrationRequest.Email.ToUpper());
-            if (storedUser != null) //check if the provided phone number is already used.
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This email address is already used"));
 
+            if (storedUser != null)
+            {
+                if (storedUser.NormalizedEmail == normalizedReceivedEmail)
+                    return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This email address is already used"));
+                if (storedUser.PhoneNumber == userRegistrationRequest.PhoneNumber)
+                    return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This phone number is already used"));
+                if (storedTempUser == null)
+                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Submit and verify your phone number before registering your details"));
+            }
             User? newUser = null;
             if (userRegistrationRequest.UserType == Constants.USER_TYPE_FREELANCER)
                 newUser = new Freelancer(userRegistrationRequest);
@@ -62,7 +68,6 @@ namespace AonFreelancing.Controllers.Web.v1
                 newUser = new Client(userRegistrationRequest);
             if (newUser == null)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "No such user type exists."));
-
 
             newUser.UserName = await _authService.GenerateUserNameFromName(newUser.Name);
             newUser.PhoneNumberConfirmed = true;
