@@ -1,14 +1,10 @@
-﻿using AonFreelancing.Contexts;
-using AonFreelancing.Models;
+﻿using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.Requests;
 using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Client = AonFreelancing.Models.Client;
 
 namespace AonFreelancing.Controllers.Web.v1
 {
@@ -16,161 +12,99 @@ namespace AonFreelancing.Controllers.Web.v1
     [ApiController]
     public class AuthController : BaseController
     {
-        //private readonly MainAppContext _mainAppContext;
-        private readonly AuthService _authService;
-        private readonly UserManager<User> _userManager;
-        private readonly RoleManager<ApplicationRole> _roleManager;
-        private readonly OtpManager _otpManager;
-        private readonly JwtService _jwtService;
-
-        public AuthController(
-            UserManager<User> userManager,
-            MainAppContext mainAppContext,
-            RoleManager<ApplicationRole> roleManager,
-            OtpManager otpManager,
-            JwtService jwtService,
-            AuthService authService
-        )
+        readonly AuthService _authService;
+        public AuthController(AuthService authService)
         {
-            _userManager = userManager;
-            _roleManager = roleManager;
-            //_mainAppContext = mainAppContext;
-            _otpManager = otpManager;
-            _jwtService = jwtService;
             _authService = authService;
         }
 
         [HttpPost("send-verification-code")]
         public async Task<IActionResult> SendVerificationCodeAsync([FromBody] PhoneNumberReq phoneNumberReq)
         {
-            //checks input validation
             if (!ModelState.IsValid)
                 return CustomBadRequest();
+            var validationResult = await _authService.CanSendOtpAsync(phoneNumberReq.PhoneNumber);
+            if (!validationResult.IsSuccess)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
 
-            var IsExist = await _authService.IsUserExistsInTempAsync(phoneNumberReq);
-            if (IsExist)
-            {
-                return Conflict(CreateErrorResponse(
-                    StatusCodes.Status409Conflict.ToString(), "User already exists."));
-            }
-            var tempUser = new TempUser()
-            {
-                PhoneNumber = phoneNumberReq.PhoneNumber,
-                PhoneNumberConfirmed = false
-            };
-
-            await _authService.AddAsync(tempUser);
-            var otp = new Otp()
-            {
-                PhoneNumber = phoneNumberReq.PhoneNumber,
-                Code = _otpManager.GenerateOtp(),
-                CreatedDate = DateTime.Now,
-                ExpiresAt = DateTime.Now.AddMinutes(10),
-                IsUsed = false,
-            };
-
-            await _authService.AddOtpAsync(otp);
-            await _otpManager.SendOTPAsync(otp.Code, otp.PhoneNumber);
+            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq.PhoneNumber);
+            await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
 
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }
 
         [HttpPost("verify-phone-number")]
-        public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest verifyReq)
+        public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest phoneVerificationRequest)
         {
-            //checks input validation
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-
-            if (await _authService.ProcessPhoneVerificationRequestAsync(verifyReq))
+            if (await _authService.ProcessPhoneVerificationRequestAsync(phoneVerificationRequest))
                 return Ok(CreateSuccessResponse("Activated"));
-
-            return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "UnAuthorized"));
+            return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Unauthorized"));
         }
 
         [HttpPost("complete-registration")]
-        public async Task<IActionResult> CompleteRegistrationAsync([FromBody] UserRegistrationRequest registerReq)
+        public async Task<IActionResult> CompleteRegistrationAsync([FromBody] UserRegistrationRequest userRegistrationRequest)
         {
-            //checks input validation
             if (!ModelState.IsValid)
                 return CustomBadRequest();
+            string normalizedReceivedEmail = userRegistrationRequest.Email.ToUpper();
+            User? storedUser = await _authService.FindUserByNormalizedEmailAsync(normalizedReceivedEmail);
+            TempUser? storedTempUser = await _authService.FindTempUserByPhoneNumberAsync(userRegistrationRequest.PhoneNumber);
 
-            var tempUser = await _authService.GetTempUserAsync(registerReq.PhoneNumber);
-            if (tempUser == null)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-                    "Phone number is invalid."));
-            
-            User? user = registerReq.UserType switch
+            if (storedUser != null)
             {
-                Constants.USER_TYPE_FREELANCER => new Freelancer
-                {
-                    Name = registerReq.Name,
-                    //UserName = registerReq.Username,
-                    PhoneNumber = tempUser.PhoneNumber,
-                    PhoneNumberConfirmed = tempUser.PhoneNumberConfirmed,
-                    //Skills = registerReq.Skills ,
-                },
-                Constants.USER_TYPE_CLIENT => new Client()
-                {
-                    Name = registerReq.Name,
-                    //UserName = registerReq.Username,
-                    PhoneNumber = tempUser.PhoneNumber,
-                    PhoneNumberConfirmed = tempUser.PhoneNumberConfirmed,
-                    CompanyName = registerReq.CompanyName ?? string.Empty,
-                },
-                _ => null
-            };
+                if (storedUser.NormalizedEmail == normalizedReceivedEmail)
+                    return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This email address is already used"));
+                if (storedUser.PhoneNumber == userRegistrationRequest.PhoneNumber)
+                    return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This phone number is already used"));
+                if (storedTempUser == null)
+                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Submit and verify your phone number before registering your details"));
+            }
+            User? newUser = null;
+            if (userRegistrationRequest.UserType == Constants.USER_TYPE_FREELANCER)
+                newUser = new Freelancer(userRegistrationRequest);
+            else if (userRegistrationRequest.UserType == Constants.USER_TYPE_CLIENT)
+                newUser = new Client(userRegistrationRequest);
+            if (newUser == null)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "No such user type exists."));
 
-            if (user == null)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-                    "No such user type exists."));
-
-            var userCreationResult = await _userManager.CreateAsync(user, registerReq.Password);
+            newUser.UserName = await _authService.GenerateUserNameFromName(newUser.Name);
+            newUser.PhoneNumberConfirmed = true;
+            var userCreationResult = await _authService.CreateUserAsync(newUser, userRegistrationRequest.Password);
             if (!userCreationResult.Succeeded)
                 return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<object>()
                 {
                     Errors = userCreationResult.Errors
-                        .Select(e => new Error()
-                        {
-                            Code = e.Code,
-                            Message = e.Description
-                        })
-                        .ToList()
+                    .Select(e => new Error()
+                    {
+                        Code = e.Code,
+                        Message = e.Description
+                    })
+                    .ToList()
                 });
-            
-            var role = new ApplicationRole { Name = registerReq.UserType };
-            await _roleManager.CreateAsync(role);
-            await _userManager.AddToRoleAsync(user, role.Name);
-            await _authService.Remove(tempUser);
+            await _authService.AssignRoleToUserAsync(newUser, userRegistrationRequest.UserType);
+            await _authService.RemoveEntity(storedTempUser);
 
-            return CreatedAtAction(nameof(UsersController.GetProfileByIdAsync), "users", 
-                new { id = user.Id }, null);
+            return CreatedAtAction(nameof(UsersController.GetProfileByIdAsync), "users", new { id = newUser.Id }, null);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest req)
         {
-            //checks input validation
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == req.PhoneNumber);
-            if (user != null && await _userManager.CheckPasswordAsync(user, req.Password))
+            if (await _authService.ValidateCredentialsAsync(req.Email, req.Password))
             {
-                if (!await _userManager.IsPhoneNumberConfirmedAsync(user))
-                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),
-                        "Verify Your Account First"));
+                User? storedUser = await _authService.FindUserByEmailAsync(req.Email);
+                if (!storedUser.PhoneNumberConfirmed)
+                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Verify Your Account First"));
 
-                var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
-                var token = _jwtService.GenerateJWT(user, role ?? string.Empty);
-                return Ok(CreateSuccessResponse(new LoginResponse()
-                {
-                    AccessToken = token,
-                    UserDetailsDTO = new UserDetailsDTO(user, role ?? string.Empty)
-                }));
+                string role = await _authService.FindUserRoleAsync(storedUser);
+                string token = await _authService.GenerateAuthToken(storedUser, role);
+                return Ok(CreateSuccessResponse(new LoginResponse(token, new UserDetailsDTO(storedUser, role ?? string.Empty))));
             }
-
-            return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "UnAuthorized"));
+            return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Unauthorized"));
         }
 
         // [HttpPost("forgot-password")]

@@ -31,7 +31,7 @@ namespace AonFreelancing.Controllers
                 .SelectMany(x => x.Errors)
                 .Select(e => new Error
                 {
-                    Code = "",
+                    Code = StatusCodes.Status400BadRequest.ToString(),
                     Message = e.ErrorMessage
                 })
                 .ToList();

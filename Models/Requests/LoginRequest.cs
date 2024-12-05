@@ -3,11 +3,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AonFreelancing.Models.Requests
 {
-    public record LoginRequest(
+    public class LoginRequest
+    {
+        //[Required, PhoneNumberRegex] 
+        //string PhoneNumber,
         [Required]
-        [PhoneNumberRegex]
-        string PhoneNumber,
-        [Required, MinLength(4, ErrorMessage = "Invalid Password")] 
-        string Password
-    );
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; }
+        [Required]
+        [MinLength(6, ErrorMessage = "too short password")]
+        [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[#$^+=!*()@%&]).{6,}$", ErrorMessage = "Password must be at least 6 characters long, contains at least one uppercase letter, one lowercase letter, one number, and one special character (#$^+=!*()@%&).")]
+        public string Password { get; set; }
+    }
 }
