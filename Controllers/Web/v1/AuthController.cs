@@ -40,9 +40,13 @@ namespace AonFreelancing.Controllers.Web.v1
             _authService = authService;
         }
 
-        [HttpPost("sendVerificationCode")]
+        [HttpPost("send-verification-code")]
         public async Task<IActionResult> SendVerificationCodeAsync([FromBody] PhoneNumberReq phoneNumberReq)
         {
+            //checks input validation
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
             var IsExist = await _authService.IsUserExistsInTempAsync(phoneNumberReq);
             if (IsExist)
             {
@@ -71,29 +75,25 @@ namespace AonFreelancing.Controllers.Web.v1
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }
 
-        [HttpPost("verifyPhoneNumber")]
+        [HttpPost("verify-phone-number")]
         public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest verifyReq)
         {
-            var IsValid = await _authService.IsPhoneNumberConfirmableAsync(verifyReq.Phone);
-            if (IsValid)
-            {
-                var otp = await _authService.GetOTPAsync(verifyReq.Phone);
+            //checks input validation
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
 
-                // verify OTP
-                if (_authService.VerifyOtp(verifyReq.OtpCode, otp))
-                {
-                    await _authService.UpdateTempUser(verifyReq.Phone);
-                    await _authService.UpdateOtpAsync(otp);
-                    return Ok(CreateSuccessResponse("Activated"));
-                }
-            }
+            if (await _authService.ProcessPhoneVerificationRequestAsync(verifyReq))
+                return Ok(CreateSuccessResponse("Activated"));
 
             return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "UnAuthorized"));
         }
 
-        [HttpPost("completeRegistration")]
+        [HttpPost("complete-registration")]
         public async Task<IActionResult> CompleteRegistrationAsync([FromBody] UserRegistrationRequest registerReq)
         {
+            //checks input validation
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
 
             var tempUser = await _authService.GetTempUserAsync(registerReq.PhoneNumber);
             if (tempUser == null)
@@ -105,7 +105,7 @@ namespace AonFreelancing.Controllers.Web.v1
                 Constants.USER_TYPE_FREELANCER => new Freelancer
                 {
                     Name = registerReq.Name,
-                    UserName = registerReq.Username,
+                    //UserName = registerReq.Username,
                     PhoneNumber = tempUser.PhoneNumber,
                     PhoneNumberConfirmed = tempUser.PhoneNumberConfirmed,
                     //Skills = registerReq.Skills ,
@@ -113,7 +113,7 @@ namespace AonFreelancing.Controllers.Web.v1
                 Constants.USER_TYPE_CLIENT => new Client()
                 {
                     Name = registerReq.Name,
-                    UserName = registerReq.Username,
+                    //UserName = registerReq.Username,
                     PhoneNumber = tempUser.PhoneNumber,
                     PhoneNumberConfirmed = tempUser.PhoneNumberConfirmed,
                     CompanyName = registerReq.CompanyName ?? string.Empty,
@@ -150,6 +150,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest req)
         {
+            //checks input validation
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == req.PhoneNumber);
             if (user != null && await _userManager.CheckPasswordAsync(user, req.Password))
             {

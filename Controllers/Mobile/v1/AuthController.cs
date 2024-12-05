@@ -47,8 +47,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("send-verification-code")]
         public async Task<IActionResult> SendVerificationCodeAsync([FromBody] PhoneNumberReq phoneNumberReq)
         {
+            //checks input validation
             if (!ModelState.IsValid)
                 return CustomBadRequest();
+
             //Checks if this phone number is already used by another user
             if (await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumberReq.PhoneNumber))
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "phone number is already used by an account"));
@@ -69,6 +71,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("verify-phone-number")]
         public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest phoneVerificationRequest)
         {
+            //checks input validation
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
             if (await _authService.ProcessPhoneVerificationRequestAsync(phoneVerificationRequest))
                 return Ok(CreateSuccessResponse("Activated"));
             return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "UnAuthorized"));
@@ -77,6 +83,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("complete-registration")]
         public async Task<IActionResult> CompleteRegistrationAsync([FromBody] UserRegistrationRequest userRegistrationRequest)
         {
+            //checks input validation
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
             User? storedUser = await _mainAppContext.Users.Where(u => u.PhoneNumber == userRegistrationRequest.PhoneNumber).FirstOrDefaultAsync();
             if (storedUser != null) //check if the provided phone number is already used.
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "phone number is already used"));
@@ -123,6 +133,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest req)
         {
+            //checks input validation
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
             var storedUser = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == req.PhoneNumber);
             if (storedUser != null && await _userManager.CheckPasswordAsync(storedUser, req.Password))
             {

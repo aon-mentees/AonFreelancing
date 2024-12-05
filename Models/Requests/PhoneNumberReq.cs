@@ -1,11 +1,12 @@
+using AonFreelancing.Attributes;
 using System.ComponentModel.DataAnnotations;
 
 namespace AonFreelancing.Models.Requests;
 
 public class PhoneNumberReq
 {
-    [Required, StringLength(14, MinimumLength = 14)]
-    [Phone]
+    [Required]
+    [PhoneNumberRegex]
     public string PhoneNumber { get; set; }
 
 

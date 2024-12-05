@@ -80,7 +80,7 @@ namespace AonFreelancing.Services
         {
             return await _mainAppContext.TempUsers.FirstOrDefaultAsync(u=>u.PhoneNumber == PhoneNumber);
         }
-         async Task<bool> IsPhoneNumberConfirmableAsync(string PhonerNumber) => await _mainAppContext.TempUsers.AnyAsync(tu => tu.PhoneNumber == PhonerNumber && !tu.PhoneNumberConfirmed);
+        async Task<bool> IsPhoneNumberConfirmableAsync(string PhonerNumber) => await _mainAppContext.TempUsers.AnyAsync(tu => tu.PhoneNumber == PhonerNumber && !tu.PhoneNumberConfirmed);
 
 
         public async Task<Otp> GetOTPAsync(string Phone)
