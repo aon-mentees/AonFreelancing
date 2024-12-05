@@ -37,6 +37,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("verify-phone-number")]
         public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest phoneVerificationRequest)
         {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
             if (await _authService.ProcessPhoneVerificationRequestAsync(phoneVerificationRequest))
                 return Ok(CreateSuccessResponse("Activated"));
             return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Unauthorized"));
@@ -45,11 +47,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("complete-registration")]
         public async Task<IActionResult> CompleteRegistrationAsync([FromBody] UserRegistrationRequest userRegistrationRequest)
         {
-            User? storedUser = await _mainAppContext.Users.Where(u => u.PhoneNumber == userRegistrationRequest.PhoneNumber).FirstOrDefaultAsync();
-            if (storedUser != null) //check if the provided phone number is already used.
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "phone number is already used"));
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+            string normalizedReceivedEmail = userRegistrationRequest.Email.ToUpper();
+            User? storedUser = await _authService.FindUserByNormalizedEmailAsync(normalizedReceivedEmail);
+            TempUser? storedTempUser = await _authService.FindTempUserByPhoneNumberAsync(userRegistrationRequest.PhoneNumber);
 
-            if(storedUser!= null)
+            if (storedUser != null)
             {
                 if (storedUser.NormalizedEmail == normalizedReceivedEmail)
                     return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This email address is already used"));
@@ -89,13 +93,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest req)
         {
-            var storedUser = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == req.PhoneNumber);
-            if (storedUser != null && await _userManager.CheckPasswordAsync(storedUser, req.Password))
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+            if (await _authService.ValidateCredentialsAsync(req.Email, req.Password))
             {
                 User? storedUser = await _authService.FindUserByEmailAsync(req.Email);
                 if (!storedUser.PhoneNumberConfirmed)
-                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),"Verify Your Account First"));
-                
+                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Verify Your Account First"));
+
                 string role = await _authService.FindUserRoleAsync(storedUser);
                 string token = await _authService.GenerateAuthToken(storedUser, role);
                 return Ok(CreateSuccessResponse(new LoginResponse(token, new UserDetailsDTO(storedUser, role ?? string.Empty))));
