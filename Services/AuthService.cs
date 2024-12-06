@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Security.Claims;
+using static System.Net.WebRequestMethods;
 
 
 namespace AonFreelancing.Services
@@ -75,6 +76,7 @@ namespace AonFreelancing.Services
             await _mainAppContext.Otps.AddAsync(newOtp);
             await _mainAppContext.SaveChangesAsync();
         }
+       
         public async Task<bool> IsUserExistsAsync(string phoneNumber)
         {
             return await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
@@ -114,6 +116,27 @@ namespace AonFreelancing.Services
         public async Task<ApplicationRole?> FindRoleByNameAsync(string name)
         {
             return await _roleManager.FindByNameAsync(name);
+        }
+        public async Task<Otp> FindOtpAsync(string phoneNumber)
+        {
+            return await _mainAppContext.Otps.FirstOrDefaultAsync(o => o.PhoneNumber == phoneNumber);
+        }
+        public async Task<string> RecreateOtpCodeAsync(Otp storedOTP)
+        {
+            string newOtpCode = _otpManager.GenerateOtp();
+            await UpdateStoredOtpAsync(storedOTP, newOtpCode);
+            return storedOTP.Code;
+        }
+        public async Task UpdateStoredOtpAsync(Otp newOtp,string otpCode)
+        {
+            newOtp.Code = otpCode;
+            newOtp.CreatedDate = DateTime.Now;
+            newOtp.ExpiresAt = DateTime.Now.AddMinutes(Convert.ToInt32(_configuration["Otp:ExpireInMinutes"]));
+            await SaveRecreatedOtpAsync(newOtp);
+        }
+        public async Task SaveRecreatedOtpAsync(Otp newOtp)
+        {
+            await _mainAppContext.SaveChangesAsync();
         }
         public async Task<string> FindUserRoleAsync(User user)
         {

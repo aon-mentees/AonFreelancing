@@ -17,7 +17,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/projects")]
     [ApiController]
-    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService) : BaseController
+    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
+        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService,ProjectService projectService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -145,6 +146,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
             Project? storedProject = await mainAppContext.Projects.Where(p => p.Id == projectId)
                                                                  .Include(p => p.Bids)
                                                                  .FirstOrDefaultAsync();
