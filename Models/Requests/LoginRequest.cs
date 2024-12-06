@@ -5,7 +5,7 @@ namespace AonFreelancing.Models.Requests
 {
     public class LoginRequest
     {
-        //[Required, PhoneNumberRegex] 
+        //[Required, PhoneNumber] 
         //string PhoneNumber,
         [Required]
         [EmailAddress(ErrorMessage = "Invalid email address")]

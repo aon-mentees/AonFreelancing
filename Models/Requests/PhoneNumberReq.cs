@@ -6,7 +6,8 @@ namespace AonFreelancing.Models.Requests;
 public class PhoneNumberReq
 {
     [Required]
-    [PhoneNumberRegex]
+    [PhoneNumber] //using libphonenumber
+    //[PhoneNumberRegex]
     public string PhoneNumber { get; set; }
 
 

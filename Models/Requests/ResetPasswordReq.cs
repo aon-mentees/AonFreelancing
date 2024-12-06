@@ -10,7 +10,7 @@ namespace AonFreelancing.Models.Requests
         [Required, MinLength(6, ErrorMessage = "Too short password")]
         string? ConfirmPassword,
     
-        [Required, PhoneNumberRegex, StringLength(14, MinimumLength = 14)]
+        [Required, PhoneNumber, StringLength(14, MinimumLength = 14)]
         string? PhoneNumber
     );
 }
