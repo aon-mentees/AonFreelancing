@@ -3,6 +3,7 @@ using AonFreelancing.Models;
 using AonFreelancing.Models.Requests;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AonFreelancing.Services
@@ -24,7 +25,36 @@ namespace AonFreelancing.Services
             _jwtService = jwtService;
             _roleManager = roleManager;
         }
-      
+
+        public async Task<Project?> FindProjectWithBidsAsync(long projectId)
+        {
+            return await _mainAppContext.Projects.Where(p => p.Id == projectId)
+                                                 .Include(p => p.Bids)
+                                                 .FirstOrDefaultAsync();
+        }
+        public async Task<Bid?> FindBidsAsync(Project project, long bidId)
+        {
+            return project.Bids.Where(b => b.Id == bidId).FirstOrDefault();
+        }
+        public async Task ApproveProjectBidAsync(Bid bid,Project project)
+        {
+            bid.Status = Constants.BIDS_STATUS_APPROVED;
+            bid.ApprovedAt = DateTime.Now;
+            project.Status = Constants.PROJECT_STATUS_CLOSED;
+            project.FreelancerId = bid.FreelancerId;
+
+            await SaveProjectChangesAsync();
+        }
+        public async Task RejectProjectBidAsync(Bid bid)
+        {
+            bid.Status = Constants.BIDS_STATUS_REJECTED;
+
+            await SaveProjectChangesAsync();
+        }
+        public async Task SaveProjectChangesAsync()
+        {
+            await _mainAppContext.SaveChangesAsync();
+        }
 
     }
 }

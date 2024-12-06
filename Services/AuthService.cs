@@ -132,9 +132,9 @@ namespace AonFreelancing.Services
             newOtp.Code = otpCode;
             newOtp.CreatedDate = DateTime.Now;
             newOtp.ExpiresAt = DateTime.Now.AddMinutes(Convert.ToInt32(_configuration["Otp:ExpireInMinutes"]));
-            await SaveRecreatedOtpAsync(newOtp);
+            await SaveRecreatedOtpAsync();
         }
-        public async Task SaveRecreatedOtpAsync(Otp newOtp)
+        public async Task SaveRecreatedOtpAsync()
         {
             await _mainAppContext.SaveChangesAsync();
         }

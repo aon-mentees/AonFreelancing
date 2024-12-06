@@ -147,30 +147,50 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            Project? storedProject = await mainAppContext.Projects.Where(p => p.Id == projectId)
-                                                                 .Include(p => p.Bids)
-                                                                 .FirstOrDefaultAsync();
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
 
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
 
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "project status is not 'Available'"));
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
 
-            Bid? storedBid = storedProject.Bids.Where(b => b.Id == bidId).FirstOrDefault();
+            Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
             if (storedBid == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "bid not found"));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found."));
 
-            storedBid.Status = Constants.BIDS_STATUS_APPROVED;
-            storedBid.ApprovedAt = DateTime.Now;
-            storedProject.Status = Constants.PROJECT_STATUS_CLOSED;
-            storedProject.FreelancerId = storedBid.FreelancerId;
+            await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 
-            await mainAppContext.SaveChangesAsync();
-            return Ok();
+            return Ok(CreateSuccessResponse("Bid approved."));
+        }
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPut("{projectId}/bids/{bidId}/reject")]
+        public async Task<IActionResult> RejectBidAsync([FromRoute] long projectId, [FromRoute] long bidId)
+        {
+
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
+
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
+
+            if (authenticatedClientId != storedProject.ClientId)
+                return Forbid();
+
+            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
+
+            Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
+            if (storedBid == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found."));
+
+            await projectService.RejectProjectBidAsync(storedBid);
+
+            return Ok(CreateSuccessResponse("Bid rejected."));
         }
 
 
