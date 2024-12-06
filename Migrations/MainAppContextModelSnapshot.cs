@@ -101,7 +101,44 @@ namespace AonFreelancing.Migrations
                     b.ToTable("Bids");
                 });
 
-            modelBuilder.Entity("AonFreelancing.Models.OTP", b =>
+            modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("LikeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LikerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ReceiverId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LikeId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.ToTable("LikeNotifications", (string)null);
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(450)");
@@ -206,6 +243,10 @@ namespace AonFreelancing.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("ProjectId")
                         .HasColumnType("bigint");
@@ -555,11 +596,26 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AonFreelancing.Models.OTP", b =>
+            modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.ProjectLike", null)
+                        .WithMany()
+                        .HasForeignKey("LikeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
                     b.HasOne("AonFreelancing.Models.TempUser", null)
                         .WithOne()
-                        .HasForeignKey("AonFreelancing.Models.OTP", "PhoneNumber")
+                        .HasForeignKey("AonFreelancing.Models.Otp", "PhoneNumber")
                         .HasPrincipalKey("AonFreelancing.Models.TempUser", "PhoneNumber")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

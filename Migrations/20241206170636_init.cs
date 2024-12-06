@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class initialfixrolesissuemig : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -358,6 +358,7 @@ namespace AonFreelancing.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProjectId = table.Column<long>(type: "bigint", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -401,6 +402,35 @@ namespace AonFreelancing.Migrations
                         principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LikeNotifications",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    LikeId = table.Column<long>(type: "bigint", nullable: false),
+                    ReceiverId = table.Column<long>(type: "bigint", nullable: false),
+                    LikerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LikeNotifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LikeNotifications_AspNetUsers_ReceiverId",
+                        column: x => x.ReceiverId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LikeNotifications_ProjectLikes_LikeId",
+                        column: x => x.LikeId,
+                        principalTable: "ProjectLikes",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -470,6 +500,16 @@ namespace AonFreelancing.Migrations
                 column: "SystemUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_LikeNotifications_LikeId",
+                table: "LikeNotifications",
+                column: "LikeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LikeNotifications_ReceiverId",
+                table: "LikeNotifications",
+                column: "ReceiverId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProjectLikes_ProjectId_UserId",
                 table: "ProjectLikes",
                 columns: new[] { "ProjectId", "UserId" },
@@ -529,10 +569,10 @@ namespace AonFreelancing.Migrations
                 name: "Bids");
 
             migrationBuilder.DropTable(
-                name: "otps");
+                name: "LikeNotifications");
 
             migrationBuilder.DropTable(
-                name: "ProjectLikes");
+                name: "otps");
 
             migrationBuilder.DropTable(
                 name: "Skills");
@@ -545,6 +585,9 @@ namespace AonFreelancing.Migrations
 
             migrationBuilder.DropTable(
                 name: "SystemUsers");
+
+            migrationBuilder.DropTable(
+                name: "ProjectLikes");
 
             migrationBuilder.DropTable(
                 name: "TempUser");

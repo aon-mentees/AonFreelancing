@@ -19,6 +19,7 @@ namespace AonFreelancing.Contexts
         public DbSet<TaskEntity> Tasks { get; set; }
         public DbSet<Skill> Skills { get; set; }
         public DbSet<ProjectLike> ProjectLikes { get; set; }
+        public DbSet<LikeNotification> LikeNotifications { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
@@ -31,8 +32,8 @@ namespace AonFreelancing.Contexts
             builder.Entity<Freelancer>().ToTable("Freelancers");
             builder.Entity<Client>().ToTable("Clients");
             builder.Entity<SystemUser>().ToTable("SystemUsers");
-            
             builder.Entity<Otp>().ToTable("otps", o => o.HasCheckConstraint("CK_CODE","LEN([Code]) = 6"));
+            builder.Entity<LikeNotification>().ToTable("LikeNotifications");
 
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PRICE_TYPE", $"[PriceType] IN ('{Constants.PROJECT_PRICETYPE_FIXED}', '{Constants.PROJECT_PRICETYPE_PERHOUR}')"));
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_QUALIFICATION_NAME", $"[QualificationName] IN ('{Constants.PROJECT_QUALIFICATION_UIUX}', '{Constants.PROJECT_QUALIFICATION_FRONTEND}', '{Constants.PROJECT_QUALIFICATION_MOBILE}', '{Constants.PROJECT_QUALIFICATION_BACKEND}', '{Constants.PROJECT_QUALIFICATION_FULLSTACK}')"));
@@ -75,8 +76,16 @@ namespace AonFreelancing.Contexts
                                           .HasForeignKey(pl => pl.ProjectId)
                                           .OnDelete(DeleteBehavior.NoAction)
                                           .HasPrincipalKey(p => p.Id);
-
-
+            builder.Entity<LikeNotification>().HasOne<User>()
+                                               .WithMany()
+                                               .HasForeignKey(ln=>ln.ReceiverId)
+                                               .HasPrincipalKey (u => u.Id);  
+            builder.Entity<LikeNotification>().HasOne<ProjectLike>()
+                                               .WithMany()
+                                               .HasForeignKey(ln=>ln.LikeId)
+                                               .HasPrincipalKey (pl => pl.Id)
+                                               .OnDelete(DeleteBehavior.NoAction); 
+ 
             base.OnModelCreating(builder);
         }
     }

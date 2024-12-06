@@ -1,13 +1,16 @@
 ﻿
 using AonFreelancing.Contexts;
+using AonFreelancing.Hubs;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.DTOs.NoftificationDTOs;
 using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
@@ -17,7 +20,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/projects")]
     [ApiController]
-    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService) : BaseController
+    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService, LikeNotificationService likeNotificationService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -235,6 +238,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return base.CustomBadRequest();
 
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string NameOfAuthenticatedUser= authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
             ProjectLike? storedProjectLike = await mainAppContext.ProjectLikes.FirstOrDefaultAsync(pl => pl.ProjectId == projectId && pl.UserId == authenticatedUserId);
 
             if (storedProjectLike != null)
@@ -242,12 +246,24 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 if (action == Constants.PROJECT_LIKE_ACTION)
                     return Conflict(CreateErrorResponse("409", "you cannot like the same project twice"));
                 await projectLikeService.UnlikeProjectAsync(storedProjectLike);
+                //await likeNotificationService.DeleteWithrojectLikeAsync(storedProjectLike);
                 return NoContent();
             }
             if (storedProjectLike == null && action == Constants.PROJECT_LIKE_ACTION)
             {
-                await projectLikeService.LikeProjectAsync(authenticatedUserId, projectId);
-                return StatusCode(StatusCodes.Status201Created, "like submitted successfully");
+                ProjectLike newProjectLike = await projectLikeService.LikeProjectAsync(authenticatedUserId, projectId, NameOfAuthenticatedUser);
+
+                string likerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+                Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+                if (storedProject != null)
+
+                {
+                    string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
+                    LikeNotification newLikeNotification = new LikeNotification(newProjectLike.Id, storedProject.ClientId, likerName, notificationMessage, false);
+                    await likeNotificationService.CreateAsync(newLikeNotification);
+                    await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification));
+                    return StatusCode(StatusCodes.Status201Created, "like submitted successfully");
+                }
             }
             return NoContent();
         }

@@ -33,6 +33,7 @@
         public const string PROJECT_QUALIFICATION_MOBILE = "mobile";
         public const string PROJECT_QUALIFICATION_UIUX = "uiux";
 
+        public const string LIKE_NOTIFICATION_MESSAGE_FORMAT = "{0} liked your project {1}";
 
     }
 }
