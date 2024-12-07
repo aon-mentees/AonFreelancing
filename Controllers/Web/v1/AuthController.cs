@@ -16,8 +16,6 @@ namespace AonFreelancing.Controllers.Web.v1
         public AuthController(AuthService authService)
         {
             _authService = authService;
-            _configuration = configuration;
-
         }
 
         [HttpPost("send-verification-code")]

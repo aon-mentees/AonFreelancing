@@ -26,34 +26,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
+            var validationResult = await _authService.CanSendOtpAsync(phoneNumberReq.PhoneNumber);
+            if (!validationResult.IsSuccess)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
 
-            //Checks if this phone number is valid or not with country code (by using libphonenumber-csharp)
-            //Note: static variable 
-            var phoneUtil = PhoneNumberUtil.GetInstance();
-            PhoneNumber parsedNumber;
-
-            parsedNumber = phoneUtil.Parse(phoneNumberReq.PhoneNumber, null);
-            if (!phoneUtil.IsValidNumber(parsedNumber))
-            {
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Invalid phone number format."));
-            }
-
-            //Checks if this phone number is already used by another user
-            if (await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumberReq.PhoneNumber))
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "phone number is already used by an account"));
-            //Checks if an otp exists for the received phone number
-            if (await _mainAppContext.Otps.AnyAsync(o => o.PhoneNumber == phoneNumberReq.PhoneNumber))
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "otp is already sent"));
-
-            TempUser newTempUser = new TempUser(phoneNumberReq.PhoneNumber);
-            string otpCode = _otpManager.GenerateOtp();
-            Otp newOtp = new Otp(phoneNumberReq.PhoneNumber, otpCode, Convert.ToInt32(_configuration["Otp:ExpireInMinutes"]));
-
-            await _authService.SaveTempUserAndOtpAsync(newTempUser, newOtp);
-            await _otpManager.SendOTPAsync(newOtp.Code, newOtp.PhoneNumber);
+            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq.PhoneNumber);
+            await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
 
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }
+
 
         [HttpPost("verify-phone-number")]
         public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest phoneVerificationRequest)

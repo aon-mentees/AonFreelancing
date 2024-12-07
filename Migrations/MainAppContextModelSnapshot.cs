@@ -223,6 +223,38 @@ namespace AonFreelancing.Migrations
                     b.ToTable("ProjectLikes");
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("RatedUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RaterUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<double>("RatingValue")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RatedUserId");
+
+                    b.HasIndex("RaterUserId");
+
+                    b.ToTable("Ratings");
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Skill", b =>
                 {
                     b.Property<long>("Id")
@@ -594,6 +626,21 @@ namespace AonFreelancing.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("RatedUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("RaterUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
