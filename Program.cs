@@ -28,7 +28,7 @@ namespace AonFreelancing
             builder.Services.AddSingleton<OtpManager>();
             builder.Services.AddSingleton<JwtService>();
             builder.Services.AddSingleton<FileStorageService>();
-            builder.Services.AddSingleton<InMemoryUserConnectionService>();
+            builder.Services.AddSingleton<InMemorySignalRUserConnectionService>();
             builder.Services.AddScoped<PushNotificationService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<LikeNotificationService>();

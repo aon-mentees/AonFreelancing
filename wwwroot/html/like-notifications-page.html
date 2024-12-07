@@ -34,7 +34,7 @@
         });
 
         connection.on("GetLikeNotification", (likeNotificationDTO) => {
-            alert(`New Like from ${likeNotificationDTO.name}`);
+            alert(`New Like from ${likeNotificationDTO.likerName}`);
             console.log("Received like notification:", likeNotificationDTO);
         });
 

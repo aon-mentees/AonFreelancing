@@ -7,11 +7,11 @@ namespace AonFreelancing.Hubs
 {
     public class NotificationsHub : Hub<INotificationsClient>
     {
-        readonly InMemoryUserConnectionService _inMemorySignalRUserConnectionsService;
+        readonly InMemorySignalRUserConnectionService _inMemorySignalRUserConnectionService;
         readonly AuthService _authService;
-        public NotificationsHub(InMemoryUserConnectionService userConnectionService, AuthService authService)
+        public NotificationsHub(InMemorySignalRUserConnectionService userConnectionService, AuthService authService)
         {
-            _inMemorySignalRUserConnectionsService = userConnectionService;
+            _inMemorySignalRUserConnectionService = userConnectionService;
             _authService = authService;
         }
         public override async Task OnConnectedAsync()
@@ -19,14 +19,14 @@ namespace AonFreelancing.Hubs
             //notice that this gets the claims identity from hub context not from http context
             var claimsIdentity = Context.User.Identity as ClaimsIdentity;
             long userId = _authService.GetUserId(claimsIdentity);
-            _inMemorySignalRUserConnectionsService.Add(userId, Context.ConnectionId);
+            _inMemorySignalRUserConnectionService.Add(userId, Context.ConnectionId);
         }
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             //notice that this gets the claims identity from hub context not from http context
             var claimsIdentity = Context.User.Identity as ClaimsIdentity;
             long userId = _authService.GetUserId(claimsIdentity);
-            _inMemorySignalRUserConnectionsService.Remove(userId, Context.ConnectionId);
+            _inMemorySignalRUserConnectionService.Remove(userId, Context.ConnectionId);
 
             await base.OnDisconnectedAsync(exception);
         }

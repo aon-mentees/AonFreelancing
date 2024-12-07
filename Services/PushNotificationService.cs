@@ -8,19 +8,19 @@ namespace AonFreelancing.Services
 {
     public class PushNotificationService
     {
-        readonly IHubContext<NotificationsHub, INotificationsClient> _INotificationsHubContext;
-        readonly InMemoryUserConnectionService _inMemoryUserConnectionService;
-        public PushNotificationService(IHubContext<NotificationsHub, INotificationsClient> notificationHubContext, InMemoryUserConnectionService inMemoryUserConnectionService)
+        readonly IHubContext<NotificationsHub, INotificationsClient> _iNotificationsHubContext;
+        readonly InMemorySignalRUserConnectionService _inMemorySignalRUserConnectionService;
+        public PushNotificationService(IHubContext<NotificationsHub, INotificationsClient> notificationHubContext, InMemorySignalRUserConnectionService inMemorySignalRUserConnectionService)
         {
-            _INotificationsHubContext = notificationHubContext;
-            _inMemoryUserConnectionService = inMemoryUserConnectionService;
+            _iNotificationsHubContext = notificationHubContext;
+            _inMemorySignalRUserConnectionService = inMemorySignalRUserConnectionService;
         }
 
         public async Task SendLikeNotification(LikeNotificationOutputDTO likeNotificationDTO)
         {
-            var connections = _inMemoryUserConnectionService.GetConnections(likeNotificationDTO.ReceiverId);
+            var connections = _inMemorySignalRUserConnectionService.GetConnections(likeNotificationDTO.ReceiverId);
             if (!connections.IsNullOrEmpty())
-                await _INotificationsHubContext.Clients.Clients(connections).GetLikeNotification(likeNotificationDTO);
+                await _iNotificationsHubContext.Clients.Clients(connections).GetLikeNotification(likeNotificationDTO);
         }
 
 
