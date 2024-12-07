@@ -5,6 +5,9 @@ using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PhoneNumbers;
+using System.Net;
 
 namespace AonFreelancing.Controllers.Mobile.v1
 {
@@ -24,20 +27,29 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             var validationResult = await _authService.CanSendOtpAsync(phoneNumberReq.PhoneNumber);
-              if (!validationResult.IsSuccess)           
+            if (!validationResult.IsSuccess)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
-            
+
             string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq.PhoneNumber);
             await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
-            
+
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }
+
 
         [HttpPost("verify-phone-number")]
         public async Task<IActionResult> VerifyPhoneNumberAsync([FromBody] PhoneVerificationRequest phoneVerificationRequest)
         {
-            if (!ModelState.IsValid)
-                return CustomBadRequest();
+            var phoneUtil = PhoneNumberUtil.GetInstance();
+            var parsedNumber = phoneUtil.Parse(phoneVerificationRequest.Phone, null);
+            if (!phoneUtil.IsValidNumber(parsedNumber))
+            {
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Invalid phone number format."));
+            }
+
+            //Save Phonenumber format as E164
+            phoneVerificationRequest.Phone = phoneUtil.Format(parsedNumber, PhoneNumberFormat.E164);
+
             if (await _authService.ProcessPhoneVerificationRequestAsync(phoneVerificationRequest))
                 return Ok(CreateSuccessResponse("Activated"));
             return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Unauthorized"));

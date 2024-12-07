@@ -5,7 +5,7 @@ namespace AonFreelancing.Models.Requests
 {
     public class PhoneVerificationRequest
     {
-        [Required, StringLength(14, MinimumLength = 14)]
+        [Required, StringLength(15, MinimumLength = 10)]
         public string Phone { get; set; }
 
         [Required, StringLength(6, MinimumLength = 6)]

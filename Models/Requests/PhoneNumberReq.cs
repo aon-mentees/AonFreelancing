@@ -4,7 +4,7 @@ namespace AonFreelancing.Models.Requests;
 
 public class PhoneNumberReq
 {
-    [Required, StringLength(14, MinimumLength = 14)]
+    [Required, StringLength(15, MinimumLength = 10)]
     [Phone]
     public string PhoneNumber { get; set; }
 
