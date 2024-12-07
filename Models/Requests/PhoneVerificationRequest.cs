@@ -8,7 +8,6 @@ namespace AonFreelancing.Models.Requests
     {
         [Required]
         [PhoneNumber] //using libphonenumber
-        //[PhoneNumberRegex]
         public string Phone { get; set; }
 
         [Required, StringLength(6, MinimumLength = 6)]

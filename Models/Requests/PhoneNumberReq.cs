@@ -7,7 +7,6 @@ public class PhoneNumberReq
 {
     [Required]
     [PhoneNumber] //using libphonenumber
-    //[PhoneNumberRegex]
     public string PhoneNumber { get; set; }
 
 

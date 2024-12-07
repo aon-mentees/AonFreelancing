@@ -15,7 +15,6 @@ namespace AonFreelancing.Models.Requests
         public string Email { get; set; }
         [Required]
         [PhoneNumber] //using libphonenumber
-        //[PhoneNumberRegex]
         public string PhoneNumber { get; set; }
         [Required]
         [MinLength(6, ErrorMessage = "Too short password")]
