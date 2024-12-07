@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using AonFreelancing.Attributes;
 using AonFreelancing.Utilities;
 namespace AonFreelancing.Models.Requests
 {
@@ -13,7 +14,7 @@ namespace AonFreelancing.Models.Requests
         [EmailAddress]
         public string Email { get; set; }
         [Required]
-        [Phone]
+        [PhoneNumber] //using libphonenumber
         public string PhoneNumber { get; set; }
         [Required]
         [MinLength(6, ErrorMessage = "Too short password")]
