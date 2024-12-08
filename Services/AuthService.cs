@@ -127,7 +127,9 @@ namespace AonFreelancing.Services
             await UpdateStoredOtpAsync(storedOTP, newOtpCode);
             return storedOTP.Code;
         }
-        public async Task UpdateStoredOtpAsync(Otp newOtp, string otpCode)
+
+        public async Task UpdateStoredOtpAsync(Otp newOtp,string otpCode)
+
         {
             newOtp.Code = otpCode;
             newOtp.CreatedDate = DateTime.Now;

@@ -29,10 +29,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return NotFound(CreateErrorResponse(
                 StatusCodes.Status404NotFound.ToString(), "No OTP entry found for the specified phone number."));
 
-            if (storedOTP.IsUsed)
-                return Conflict(CreateErrorResponse(
-                StatusCodes.Status409Conflict.ToString(), "OTP for this phone number is already used."));
-
             string regeneratedOtpCode = await _authService.RecreateOtpCodeAsync(storedOTP);
             await _authService.SendOtpAsync(regeneratedOtpCode, phoneNumberReq.PhoneNumber);
 

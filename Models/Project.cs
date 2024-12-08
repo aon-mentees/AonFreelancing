@@ -19,7 +19,6 @@ namespace AonFreelancing.Models
         // Belongs to a client
         [ForeignKey("ClientId")] 
         public Client? Client { get; set; }
-
         public DateTime CreatedAt { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

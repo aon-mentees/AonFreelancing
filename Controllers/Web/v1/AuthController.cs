@@ -38,6 +38,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
             return Ok(CreateSuccessResponse("OTP code resent to your phone number, during testing you may not receive it, please use 123456"));
         }
+
         [HttpPost("send-verification-code")]
         public async Task<IActionResult> SendVerificationCodeAsync([FromBody] PhoneNumberReq phoneNumberReq)
         {

@@ -11,7 +11,7 @@ using System.Security.Claims;
 namespace AonFreelancing.Controllers.Mobile.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/[controller]")]
+    [Route("api/mobile/v1/skills")]
     [ApiController]
     public class SkillsController (MainAppContext mainAppContext): BaseController
     {

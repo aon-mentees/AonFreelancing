@@ -1,9 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using AonFreelancing.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace AonFreelancing.Models.Requests
 {
     public record ForgotPasswordReq(
-        [Required, Phone, StringLength(14, MinimumLength = 14)] 
+        [Required, PhoneNumber, StringLength(14, MinimumLength = 14)] 
         string? PhoneNumber
     );
 }
