@@ -45,7 +45,7 @@ namespace AonFreelancing.Services
             _roleService = roleService;
         }
 
-        // TempUser Methodes
+        // TempUser Methods
         public async Task<TempUser?> FindTempUserByPhoneNumberAsync(string phoneNumber) => await _tempUserService.GetByPhoneNumberAsync(phoneNumber);        
         public async Task<string> CreateTempUserAndOtp(TempUserDTO tempUserDTO)
         {
@@ -74,7 +74,7 @@ namespace AonFreelancing.Services
             return !tempUser.PhoneNumberConfirmed;
         }
 
-        // OTP && Verfication methodes
+        // OTP && Verfication methods
         async Task<bool> ProcessOtpCodeAsync(string phoneNumber, string otpCode)
         {
             Otp? storedOtp = await _otpService.GetByPhoneNumber(phoneNumber);
@@ -131,10 +131,13 @@ namespace AonFreelancing.Services
             return storedUser != null && await _userManager.CheckPasswordAsync(storedUser, password);
         }
     
-        // USER Methodes
+        // USER Methods
         public long GetUserId(ClaimsIdentity identity) => long.Parse(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
         public async Task<IdentityResult> CreateUserAsync(User user, string password) => await _userService.CreateAsync(user, password);        
         public async Task<User?> GetUserByNormalizedEmailAsync(string normalizedEmail) => await _userService.GetByNormalizedEmailAsync(normalizedEmail);
+        public async Task<bool> IsUserExistsByNormalizedEmailAsync(string normalizedEmail) => await _userService.IsExistsByNormalizedEmailAsync(normalizedEmail);
+        public async Task<bool> IsUserExistsByPhoneNumberAsync(string phoneNumber) => await _userService.IsExistsByPhoneNumberAsync(phoneNumber);
+        
         public async Task<User?> GetUserByEmailAsync(string email)=> await _userService.GetByEmailAsync(email);
         public async Task<bool> IsUserExistsAsync(string phoneNumber) => await _userService.GetByPhoneNumberAsync(phoneNumber) != null;
         public async Task<string> GenerateUserNameFromName(string Name)
@@ -148,7 +151,8 @@ namespace AonFreelancing.Services
             return generatedUserName;
         }
 
-        // User Roles Methodes
+        public async Task<User?> GetByPhoneNumberAsync(string phoneNumber) => await _userService.GetByPhoneNumberAsync(phoneNumber);
+        // User Roles Methods
         public async Task<string> GetUserRoleAsync(User user) => await _userService.GetUserRoleAsync(user);
         public async Task AssignRoleToUserAsync(User user, string roleName)
         {

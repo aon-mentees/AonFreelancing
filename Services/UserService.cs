@@ -24,6 +24,9 @@ public class UserService : MainDbService
     public async Task<User?> GetByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.Users.Where(tu => tu.PhoneNumber == phoneNumber).FirstOrDefaultAsync();
     public User Create(UserRegistrationRequest request) => new User(request);
     public async Task<User?> GetByNormalizedEmailAsync(string normalizedEmail) => await _mainAppContext.Users.Where(u => u.NormalizedEmail == normalizedEmail).FirstOrDefaultAsync();
+    public async Task<bool> IsExistsByNormalizedEmailAsync(string normalizedEmail) => await _mainAppContext.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail);
+    public async Task<bool> IsExistsByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
+    
     public async Task<User?> GetByEmailAsync(string email) => await _mainAppContext.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == email.ToUpper());
     public async Task<bool> IsUserNameTakenAsync(string newUserName) => await _mainAppContext.Users.AnyAsync(u => u.UserName == newUserName);
 
