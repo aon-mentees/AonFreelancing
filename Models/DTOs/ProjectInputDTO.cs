@@ -25,7 +25,7 @@ namespace AonFreelancing.Models.DTOs
 
         [Required]
         [AllowedValues(Constants.PROJECT_PRICETYPE_PERHOUR, Constants.PROJECT_PRICETYPE_FIXED, ErrorMessage ="Price type is invalid.")]
-        public string PriceType { get; set; }
+        public string? PriceType { get; set; }
 
         [Required]
         [Range(0, int.MaxValue)]

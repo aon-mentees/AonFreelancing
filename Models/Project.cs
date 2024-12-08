@@ -22,7 +22,7 @@ namespace AonFreelancing.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        public string PriceType { get; set; }
+        public string? PriceType { get; set; }
         public int Duration { get; set; }
         public decimal Budget { get; set; }
         public string QualificationName { get; set; }
