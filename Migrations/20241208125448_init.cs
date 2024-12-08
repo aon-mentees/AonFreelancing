@@ -211,6 +211,29 @@ namespace AonFreelancing.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReceiverId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Notifications_AspNetUsers_ReceiverId",
+                        column: x => x.ReceiverId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SystemUsers",
                 columns: table => new
                 {
@@ -351,22 +374,52 @@ namespace AonFreelancing.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "LikeNotifications",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    LikerId = table.Column<long>(type: "bigint", nullable: false),
+                    LikerName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LikeNotifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LikeNotifications_AspNetUsers_LikerId",
+                        column: x => x.LikerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_LikeNotifications_Notifications_Id",
+                        column: x => x.Id,
+                        principalTable: "Notifications",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LikeNotifications_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProjectLikes",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProjectId = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LikerId = table.Column<long>(type: "bigint", nullable: false),
+                    LikerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProjectLikes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProjectLikes_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_ProjectLikes_AspNetUsers_LikerId",
+                        column: x => x.LikerId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -402,35 +455,6 @@ namespace AonFreelancing.Migrations
                         principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "LikeNotifications",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    LikeId = table.Column<long>(type: "bigint", nullable: false),
-                    ReceiverId = table.Column<long>(type: "bigint", nullable: false),
-                    LikerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_LikeNotifications", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_LikeNotifications_AspNetUsers_ReceiverId",
-                        column: x => x.ReceiverId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_LikeNotifications_ProjectLikes_LikeId",
-                        column: x => x.LikeId,
-                        principalTable: "ProjectLikes",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -500,25 +524,30 @@ namespace AonFreelancing.Migrations
                 column: "SystemUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LikeNotifications_LikeId",
+                name: "IX_LikeNotifications_LikerId",
                 table: "LikeNotifications",
-                column: "LikeId");
+                column: "LikerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LikeNotifications_ReceiverId",
+                name: "IX_LikeNotifications_ProjectId",
                 table: "LikeNotifications",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_ReceiverId",
+                table: "Notifications",
                 column: "ReceiverId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProjectLikes_ProjectId_UserId",
+                name: "IX_ProjectLikes_LikerId",
                 table: "ProjectLikes",
-                columns: new[] { "ProjectId", "UserId" },
-                unique: true);
+                column: "LikerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProjectLikes_UserId",
+                name: "IX_ProjectLikes_ProjectId_LikerId",
                 table: "ProjectLikes",
-                column: "UserId");
+                columns: new[] { "ProjectId", "LikerId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_ClientId",
@@ -575,6 +604,9 @@ namespace AonFreelancing.Migrations
                 name: "otps");
 
             migrationBuilder.DropTable(
+                name: "ProjectLikes");
+
+            migrationBuilder.DropTable(
                 name: "Skills");
 
             migrationBuilder.DropTable(
@@ -587,7 +619,7 @@ namespace AonFreelancing.Migrations
                 name: "SystemUsers");
 
             migrationBuilder.DropTable(
-                name: "ProjectLikes");
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "TempUser");

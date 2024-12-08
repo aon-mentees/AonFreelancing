@@ -1,26 +1,19 @@
 ﻿namespace AonFreelancing.Models.DTOs.NoftificationDTOs
 {
-    public class LikeNotificationOutputDTO
+    public class LikeNotificationOutputDTO : NotificationOutputDTO
     {
-        public long Id { get; set; }
-        public long LikeId { get; set; }
-        public long ReceiverId { get; set; }
+
+        public long ProjectId { get; set; }
+        public long LikerId {  get; set; }
         public string LikerName { get; set; }
         //TODO: Add profile image (nigga diyar shall do it)
-        public string Message { get; set; }
-        public bool IsRead { get; set; }
-        public DateTime CreatedAt { get; set; }
 
         LikeNotificationOutputDTO(LikeNotification likeNotification)
+        : base(likeNotification.Id, likeNotification.Title, likeNotification.Message, likeNotification.IsRead, likeNotification.CreatedAt, likeNotification.ReceiverId)
         {
-            Id = likeNotification.Id;
-            LikeId = likeNotification.LikeId;
-            ReceiverId = likeNotification.ReceiverId;
+            ProjectId = likeNotification.ProjectId;
+            LikerId = likeNotification.LikerId;
             LikerName = likeNotification.LikerName;
-            Message = likeNotification.Message;
-            IsRead = likeNotification.IsRead;
-            CreatedAt = likeNotification.CreatedAt;
-
         }
         public static LikeNotificationOutputDTO FromLikeNotification(LikeNotification likeNotification) => new LikeNotificationOutputDTO(likeNotification);
     }

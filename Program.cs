@@ -31,7 +31,7 @@ namespace AonFreelancing
             builder.Services.AddSingleton<InMemorySignalRUserConnectionService>();
             builder.Services.AddScoped<PushNotificationService>();
             builder.Services.AddScoped<AuthService>();
-            builder.Services.AddScoped<LikeNotificationService>();
+            builder.Services.AddScoped<NotificationService>();
             builder.Services.AddScoped<ProjectLikeService>();
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()

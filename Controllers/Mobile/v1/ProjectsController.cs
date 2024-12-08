@@ -20,7 +20,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/projects")]
     [ApiController]
-    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService, LikeNotificationService likeNotificationService) : BaseController
+    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService, NotificationService notificationService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -236,37 +236,27 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
+            var claimsIdentity = (ClaimsIdentity)HttpContext.User.Identity;
+            long authenticatedUserId = authService.GetUserId(claimsIdentity);
+            string authenticatedLikerName = authService.GetNameOfUser(claimsIdentity);
+            Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            string NameOfAuthenticatedUser= authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
-            ProjectLike? storedProjectLike = await mainAppContext.ProjectLikes.FirstOrDefaultAsync(pl => pl.ProjectId == projectId && pl.UserId == authenticatedUserId);
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
+            ProjectLike? storedLike = await projectLikeService.Find(authenticatedUserId, projectId);
+            if (storedLike != null && action == Constants.PROJECT_LIKE_ACTION)
+                return Conflict(CreateErrorResponse("409", "you cannot like the same project twice"));
+            
+            if (storedLike != null && action == Constants.PROJECT_UNLIKE_ACTION)
+                return await UnLikeProjectAsync(storedLike);
+            if (storedLike == null && action == Constants.PROJECT_LIKE_ACTION)
+                return  await LikeProjectAsync(storedProject,authenticatedUserId, authenticatedLikerName);
 
-            if (storedProjectLike != null)
-            {
-                if (action == Constants.PROJECT_LIKE_ACTION)
-                    return Conflict(CreateErrorResponse("409", "you cannot like the same project twice"));
-                await projectLikeService.UnlikeProjectAsync(storedProjectLike);
-                //await likeNotificationService.DeleteWithrojectLikeAsync(storedProjectLike);
-                return NoContent();
-            }
-            if (storedProjectLike == null && action == Constants.PROJECT_LIKE_ACTION)
-            {
-                ProjectLike newProjectLike = await projectLikeService.LikeProjectAsync(authenticatedUserId, projectId, NameOfAuthenticatedUser);
-
-                string likerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
-                Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
-                if (storedProject != null)
-
-                {
-                    string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
-                    LikeNotification newLikeNotification = new LikeNotification(newProjectLike.Id, storedProject.ClientId, likerName, notificationMessage, false);
-                    await likeNotificationService.CreateAsync(newLikeNotification);
-                    await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification));
-                    return StatusCode(StatusCodes.Status201Created, "like submitted successfully");
-                }
-            }
-            return NoContent();
+            return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),"no like found to be deleted"));
         }
+
+     
+
 
         [HttpGet("{projectId}/tasks")]
         public async Task<IActionResult> GetTasksByProjectIdAsync([FromRoute] long projectId,
@@ -289,6 +279,24 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                             .Select(t => TaskOutputDTO.FromTask(t))
                                                             .ToListAsync();
             return Ok(CreateSuccessResponse(storedTasksDTOs));
+        }
+        private async Task<IActionResult> LikeProjectAsync(Project storedProject, long likerId, string likerName)
+        {
+            await projectLikeService.LikeProjectAsync(likerId, storedProject.Id, likerName);
+
+            string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
+            string notificationTitle = Constants.LIKE_NOTIFICATION_TITLE;
+            LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, storedProject.Id, likerId, likerName);
+
+            await notificationService.CreateAsync(newLikeNotification);
+            await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification));
+            return Ok("Liked Successfully");
+        }
+        private async Task<IActionResult> UnLikeProjectAsync(ProjectLike storedProjectLike)
+        {
+            await projectLikeService.UnlikeProjectAsync(storedProjectLike);
+            await notificationService.DeleteForLikeAsync(storedProjectLike);
+            return Ok("Unliked successfully");
         }
 
     }

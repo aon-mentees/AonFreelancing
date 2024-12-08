@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241206170636_init")]
+    [Migration("20241208125448_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -104,7 +104,7 @@ namespace AonFreelancing.Migrations
                     b.ToTable("Bids");
                 });
 
-            modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
+            modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -118,13 +118,6 @@ namespace AonFreelancing.Migrations
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
-                    b.Property<long>("LikeId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("LikerName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -132,13 +125,17 @@ namespace AonFreelancing.Migrations
                     b.Property<long>("ReceiverId")
                         .HasColumnType("bigint");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("LikeId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ReceiverId");
 
-                    b.ToTable("LikeNotifications", (string)null);
+                    b.ToTable("Notifications", (string)null);
+
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
@@ -247,21 +244,21 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Name")
+                    b.Property<long>("LikerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LikerName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("ProjectId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("LikerId");
 
-                    b.HasIndex("ProjectId", "UserId")
+                    b.HasIndex("ProjectId", "LikerId")
                         .IsUnique();
 
                     b.ToTable("ProjectLikes");
@@ -543,6 +540,27 @@ namespace AonFreelancing.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("LikerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LikerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.HasIndex("LikerId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("LikeNotifications", (string)null);
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
                 {
                     b.HasBaseType("AonFreelancing.Models.User");
@@ -599,14 +617,8 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
+            modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
                 {
-                    b.HasOne("AonFreelancing.Models.ProjectLike", null)
-                        .WithMany()
-                        .HasForeignKey("LikeId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.HasOne("AonFreelancing.Models.User", null)
                         .WithMany()
                         .HasForeignKey("ReceiverId")
@@ -643,16 +655,16 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.ProjectLike", b =>
                 {
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("LikerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("AonFreelancing.Models.Project", null)
                         .WithMany("ProjectLikes")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AonFreelancing.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -724,6 +736,27 @@ namespace AonFreelancing.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.LikeNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("LikerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
