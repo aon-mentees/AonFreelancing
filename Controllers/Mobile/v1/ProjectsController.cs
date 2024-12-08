@@ -53,6 +53,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
             [FromQuery] int pageSize = 8, [FromQuery] string qur = ""
         )
         {
+            if (!ModelState.IsValid)
+                return base.CustomBadRequest();
+
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             string normalizedQuery = qur.ToLower().Replace(" ", "").Trim();
             List<ProjectOutDTO>? storedProjects;
@@ -66,11 +70,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 query = query.Where(p => qualificationNames.Contains(p.QualificationName));
 
             storedProjects = await query.OrderByDescending(p => p.CreatedAt)
-            .Skip(page * pageSize)
-            .Take(pageSize)
-            .Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl))
-            .ToListAsync();
-
+                                        .Skip(page * pageSize)
+                                        .Take(pageSize)
+                                        .Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl))
+                                        .ToListAsync();
+            foreach(var p in  storedProjects)
+                p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
+            
             return Ok(CreateSuccessResponse(new PaginatedResult<ProjectOutDTO>(totalProjectsCount, storedProjects)));
         }
 
@@ -88,6 +94,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             string normalizedQuery = qur.ToLower().Replace(" ", "").Trim();
             var query = mainAppContext.Projects.AsNoTracking().Include(p => p.Client).Include(p => p.ProjectLikes).AsQueryable();
@@ -111,6 +118,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                              .Take(pageSize)
                                                              .Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl))
                                                              .ToListAsync();
+            foreach (var p in storedProjects)
+                p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
+
             return Ok(CreateSuccessResponse(new PaginatedResult<ProjectOutDTO>(totalProjectsCount, storedProjects)));
         }
 
@@ -235,7 +245,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         public async Task<IActionResult> LikeOrUnLikeProject([FromRoute] long projectId, [AllowedValues(Constants.PROJECT_LIKE_ACTION, Constants.PROJECT_UNLIKE_ACTION)] string action)
         {
             if (!ModelState.IsValid)
-                return base.CustomBadRequest();
+                return CustomBadRequest();
             var claimsIdentity = (ClaimsIdentity)HttpContext.User.Identity;
             long authenticatedUserId = authService.GetUserId(claimsIdentity);
             string authenticatedLikerName = authService.GetNameOfUser(claimsIdentity);
