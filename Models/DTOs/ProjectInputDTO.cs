@@ -1,6 +1,8 @@
 ﻿using AonFreelancing.Attributes;
+using AonFreelancing.Utilities;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection.Metadata;
 
 namespace AonFreelancing.Models.DTOs
 {
@@ -22,7 +24,7 @@ namespace AonFreelancing.Models.DTOs
         public int Duration { get; set; } //Number of days
 
         [Required]
-        [AllowedValues("PerHour","Fixed", ErrorMessage ="Price type is invalid.")]
+        [AllowedValues(Constants.PROJECT_PRICETYPE_PERHOUR, Constants.PROJECT_PRICETYPE_FIXED, ErrorMessage ="Price type is invalid.")]
         public string PriceType { get; set; }
 
         [Required]
