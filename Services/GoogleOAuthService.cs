@@ -70,14 +70,7 @@ namespace AonFreelancing.Services
                     phoneNumbers[0].TryGetProperty("value",out JsonElement simplePhoneNumber);
                     phoneNumbers[0].TryGetProperty("canonicalForm", out JsonElement canonicalPhoneNumber);
 
-                    return new OAuthUserInfoDTO
-                    {
-                        Email = email.GetString(),
-                        FirstName = givenName,
-                        LastName = familyName,
-                        SimplePhoneNumber = simplePhoneNumber.GetString(),
-                        CanonicalPhoneNumber = canonicalPhoneNumber.GetString()
-                    };
+                    return new OAuthUserInfoDTO(email.GetString(), givenName, familyName);
                 }
               
                 //return  JsonSerializer.Deserialize<OAuthUserInfoDTO>(userInfoJsonResponse);

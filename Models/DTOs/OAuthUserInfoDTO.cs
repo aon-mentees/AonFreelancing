@@ -8,8 +8,17 @@ namespace AonFreelancing.Models.DTOs
         public string LastName { get; set; }
         public string FullName {  get; set; }
         public string Email { get; set; }
-        public string SimplePhoneNumber {  get; set; }
-        public string CanonicalPhoneNumber {  get; set; }
+
+        public OAuthUserInfoDTO(string firstName, string lastName, string email)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            FullName = $"{FirstName} {LastName}";
+            Email = email;
+        }
+        //public string SimplePhoneNumber {  get; set; }
+        //public string CanonicalPhoneNumber {  get; set; }
+
 
     }
 }

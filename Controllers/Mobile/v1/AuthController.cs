@@ -239,6 +239,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
             }
 
             var userInfo = await _googleOAuthService.RetreiveUserInfo(result.AccessToken, "names,phoneNumbers,emailAddresses");
+            //Tries to save the user in the db but fails because phone number cannot be null.
+            //One possible solution is to use emails for verifying users and that register using Oauth2,
+            //and using phone number for users that register with our normal registration
+            await _mainAppContext.Users.AddAsync(new User() { Email = userInfo.Email, Name = userInfo.FullName,UserName= "abc"});
+            await _mainAppContext.SaveChangesAsync();
             return Ok(userInfo);
            
         }
