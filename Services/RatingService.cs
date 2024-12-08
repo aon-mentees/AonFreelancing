@@ -38,7 +38,7 @@ namespace AonFreelancing.Services
         }
 
 
-        public async Task<List<Rating>> GetRatingsForUserAsync(int userId)
+        public async Task<List<Rating>> GetRatingsForUserAsync(long userId)
         {
             return await _mainAppContext.Ratings
                 .Where(r => r.RatedUserId == userId)
@@ -46,7 +46,7 @@ namespace AonFreelancing.Services
         }
 
    
-        public async Task<double> GetAverageRatingForUserAsync(int userId)
+        public async Task<double> GetAverageRatingForUserAsync(long userId)
         {
             var ratings = await _mainAppContext.Ratings
                 .Where(r => r.RatedUserId == userId)

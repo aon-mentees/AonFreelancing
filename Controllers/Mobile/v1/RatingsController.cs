@@ -1,5 +1,6 @@
 ﻿using AonFreelancing.Models.DTOs;
 using AonFreelancing.Services;
+using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -43,23 +44,37 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             await _ratingService.Save(authenticatedRaterUserId, request.RatedUserId, request.RatingValue, request.Comment);
 
-            return Ok(new { Message = "Rating added successfully." });
+            return Ok(CreateSuccessResponse("Rating created successfully."));
         }
 
-
+        [Authorize]
         [HttpGet("{userId}/ratings")]
-        public async Task<IActionResult> GetRatingsForUser(int userId)
+        public async Task<IActionResult> GetRatingsForUser(long userId)
         {
             var ratings = await _ratingService.GetRatingsForUserAsync(userId);
-            return Ok(ratings);
+
+            if (ratings == null || !ratings.Any())
+                return NotFound(CreateErrorResponse(
+                    StatusCodes.Status404NotFound.ToString(),
+                    "No ratings found for the specified user."
+                ));
+
+            return Ok(CreateSuccessResponse(ratings));
         }
 
         [Authorize]
         [HttpGet("{userId}/average-rate")]
-        public async Task<IActionResult> GetAverageRating(int userId)
+        public async Task<IActionResult> GetAverageRating(long userId)
         {
             var average = await _ratingService.GetAverageRatingForUserAsync(userId);
-            return Ok(new { UserId = userId, AverageRating = average });
+
+            if (average == null)
+                return NotFound(CreateErrorResponse(
+                    StatusCodes.Status404NotFound.ToString(),
+                    "No ratings available to calculate average."
+                ));
+
+            return Ok(CreateSuccessResponse(new { UserId = userId, AverageRating = average }));
         }
     }
 }

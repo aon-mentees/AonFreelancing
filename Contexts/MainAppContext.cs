@@ -84,13 +84,13 @@ namespace AonFreelancing.Contexts
             builder.Entity<Rating>()
                    .HasOne<User>()
                    .WithMany()
-                   .HasForeignKey(r => r.RatedUserId) // Composite foreign 
+                   .HasForeignKey(r => r.RatedUserId) 
                    .HasPrincipalKey(u => u.Id)
                    .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<Rating>()
                     .HasOne<User>()
                     .WithMany()
-                    .HasForeignKey(r => r.RaterUserId) // Composite foreign 
+                    .HasForeignKey(r => r.RaterUserId)
                     .HasPrincipalKey(u => u.Id)
                     .OnDelete(DeleteBehavior.NoAction);
 

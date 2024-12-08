@@ -16,8 +16,6 @@ namespace AonFreelancing.Models
         public string? Comment { get; set; }
         public DateTime CreatedAt { get; set; }
 
-    
-
         public Rating() { }
         public Rating(RatingInputDTO ratingInputDTO, long raterUserId)
         {
