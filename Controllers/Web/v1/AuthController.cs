@@ -19,16 +19,16 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [HttpPost("send-verification-code")]
-        public async Task<IActionResult> SendVerificationCodeAsync([FromBody] PhoneNumberReq phoneNumberReq)
+        public async Task<IActionResult> SendVerificationCodeAsync([FromBody] TempUserDTO tempUserDTO)
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            var validationResult = await _authService.CanSendOtpAsync(phoneNumberReq.PhoneNumber);
+            var validationResult = await _authService.CanSendOtpAsync(tempUserDTO.PhoneNumber);
             if (!validationResult.IsSuccess)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
 
-            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq.PhoneNumber);
-            await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
+            string generatedOtpCode = await _authService.CreateTempUserAndOtp(tempUserDTO);
+            await _authService.SendOtpAsync(generatedOtpCode, tempUserDTO.PhoneNumber);
 
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }

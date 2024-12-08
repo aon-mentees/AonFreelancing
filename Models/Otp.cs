@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using AonFreelancing.Models.DTOs;
 
 namespace AonFreelancing.Models
 {
@@ -20,6 +21,14 @@ namespace AonFreelancing.Models
             PhoneNumber = phoneNumber;
             CreatedDate = DateTime.Now;
             ExpiresAt = DateTime.Now.AddMinutes(expireInMinutes);
+        }
+
+        public Otp(OtpInputDTO otpDTO)
+        {
+            Code = otpDTO.Code;
+            PhoneNumber = otpDTO.PhoneNumber;
+            CreatedDate = DateTime.Now;
+            ExpiresAt = otpDTO.ExpiresAt;
         }
     }
 }

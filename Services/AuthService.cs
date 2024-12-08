@@ -1,9 +1,11 @@
 ﻿using AonFreelancing.Commons;
 using AonFreelancing.Contexts;
 using AonFreelancing.Models;
+using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.Requests;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing.Tree;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Security.Claims;
@@ -19,7 +21,9 @@ namespace AonFreelancing.Services
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly JwtService _jwtService;
-        public AuthService(MainAppContext mainAppContext, OtpManager otpManager, UserManager<User> userManager, IConfiguration configuration, JwtService jwtService, RoleManager<ApplicationRole> roleManager)
+        private readonly TempUserService _tempUserService;
+        private readonly OTPService _otpService;
+        public AuthService(MainAppContext mainAppContext, OtpManager otpManager, UserManager<User> userManager, IConfiguration configuration, JwtService jwtService, RoleManager<ApplicationRole> roleManager, TempUserService tempUserService, OTPService otpService)
         {
             _mainAppContext = mainAppContext;
             _otpManager = otpManager;
@@ -27,15 +31,37 @@ namespace AonFreelancing.Services
             _configuration = configuration;
             _jwtService = jwtService;
             _roleManager = roleManager;
+            _tempUserService = tempUserService;
+            _otpService = otpService;
         }
 
-        public long GetUserId(ClaimsIdentity identity) => long.Parse(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        public async Task<bool> ProcessPhoneVerificationRequestAsync(PhoneVerificationRequest phoneVerificationRequest)
+        public async Task<TempUser?> FindTempUserByPhoneNumberAsync(string phoneNumber) => await _tempUserService.FindByPhoneNumberAsync(phoneNumber);        
+        
+        public async Task<string> CreateTempUserAndOtp(TempUserDTO tempUserDTO)
         {
-            bool isPhoneNumberConfirmable = await IsPhoneNumberConfirmableAsync(phoneVerificationRequest.Phone);
-            bool isOtpValid = await ProcessOtpCodeAsync(phoneVerificationRequest.Phone, phoneVerificationRequest.OtpCode);
-            return isPhoneNumberConfirmable && isOtpValid;
+            TempUser newTempUser = _tempUserService.Create(tempUserDTO);
+            string newOtpCode = _otpManager.GenerateOtp();
+            Otp newOtp = _otpService.Create(new OtpInputDTO(tempUserDTO.PhoneNumber,
+                                                                    newOtpCode, 
+                                                                    Convert.ToInt32(_configuration["Otp:ExpireInMinutes"])));
+            await _tempUserService.AddAsync(newTempUser);
+            await _otpService.AddAsync(newOtp);
+
+            // Save all changes
+            await _tempUserService.SaveChangesAsync();
+            return newOtp.Code;
+        }
+        public async Task<bool> IsTempUserExistsAsync(string phoneNumber)
+        {
+            TempUser? tempUser = await _tempUserService.FindByPhoneNumberAsync(phoneNumber);
+            return tempUser != null;
+        }
+        public async Task<bool> IsPhoneNumberConfirmableAsync(string phoneNumber)
+        {
+            TempUser? tempUser = await _tempUserService.FindByPhoneNumberAsync(phoneNumber);
+            if (tempUser == null)
+                return false;
+            return !tempUser.PhoneNumberConfirmed;
         }
 
         async Task<bool> ProcessOtpCodeAsync(string phoneNumber, string otpCode)
@@ -54,6 +80,16 @@ namespace AonFreelancing.Services
             return isValidOtp;
         }
 
+        public long GetUserId(ClaimsIdentity identity) => long.Parse(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+        public async Task<bool> ProcessPhoneVerificationRequestAsync(PhoneVerificationRequest phoneVerificationRequest)
+        {
+            bool isPhoneNumberConfirmable = await IsPhoneNumberConfirmableAsync(phoneVerificationRequest.Phone);
+            bool isOtpValid = await ProcessOtpCodeAsync(phoneVerificationRequest.Phone, phoneVerificationRequest.OtpCode);
+            Console.WriteLine("Is phone number confirmed: " + isPhoneNumberConfirmable + isOtpValid);
+            return isPhoneNumberConfirmable && isOtpValid;
+        }   
+        
         bool IsValidOtp(string providedOtp, Otp? storedOtp)
         {
             return storedOtp != null &&
@@ -65,24 +101,12 @@ namespace AonFreelancing.Services
         {
             return await _mainAppContext.Users.Where(u => u.NormalizedEmail == normalizedEmail).FirstOrDefaultAsync();
         }
-        public async Task<TempUser?> FindTempUserByPhoneNumberAsync(string phoneNumber)
-        {
-            return await _mainAppContext.TempUsers.Where(tu => tu.PhoneNumber == phoneNumber).FirstOrDefaultAsync();
-        }
-        public async Task SaveTempUserAndOtpAsync(TempUser newTempUser, Otp newOtp)
-        {
-            await _mainAppContext.TempUsers.AddAsync(newTempUser);
-            await _mainAppContext.Otps.AddAsync(newOtp);
-            await _mainAppContext.SaveChangesAsync();
-        }
+        
         public async Task<bool> IsUserExistsAsync(string phoneNumber)
         {
             return await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
         }
-        public async Task<bool> IsTempUserExistsAsync(string phoneNumber)
-        {
-            return await _mainAppContext.TempUsers.AnyAsync(tu => tu.PhoneNumber == phoneNumber);
-        }
+        
         public async Task<bool> IsOtpExistsAsync(string phoneNumber)
         {
             return await _mainAppContext.Otps.AnyAsync(o => o.PhoneNumber == phoneNumber);
@@ -98,15 +122,7 @@ namespace AonFreelancing.Services
                 return new ValidationResult("OTP is already sent");
             return new ValidationResult();
         }
-        public async Task<string> CreateTempUserAndOtp(string phoneNumber)
-        {
-            string newOtpCode = _otpManager.GenerateOtp();
-            TempUser newTempUser = new TempUser(phoneNumber);
-            Otp newOtp = new Otp(phoneNumber, newOtpCode, Convert.ToInt32(_configuration["Otp:ExpireInMinutes"]));
-
-            await SaveTempUserAndOtpAsync(newTempUser, newOtp);
-            return newOtp.Code;
-        }
+        
         public async Task SendOtpAsync(string otpCode, string phoneNumber)
         {
             await _otpManager.SendOTPAsync(otpCode, phoneNumber);
@@ -158,10 +174,6 @@ namespace AonFreelancing.Services
             await _mainAppContext.SaveChangesAsync();
         }
 
-        async Task<bool> IsPhoneNumberConfirmableAsync(string PhonerNumber)
-        {
-            return await _mainAppContext.TempUsers.AnyAsync(tu => tu.PhoneNumber == PhonerNumber && !tu.PhoneNumberConfirmed);
-        }
 
 
     }
