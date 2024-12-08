@@ -76,7 +76,7 @@ namespace AonFreelancing.Services
             await _mainAppContext.Otps.AddAsync(newOtp);
             await _mainAppContext.SaveChangesAsync();
         }
-       
+
         public async Task<bool> IsUserExistsAsync(string phoneNumber)
         {
             return await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
@@ -127,7 +127,9 @@ namespace AonFreelancing.Services
             await UpdateStoredOtpAsync(storedOTP, newOtpCode);
             return storedOTP.Code;
         }
+
         public async Task UpdateStoredOtpAsync(Otp newOtp,string otpCode)
+
         {
             newOtp.Code = otpCode;
             newOtp.CreatedDate = DateTime.Now;

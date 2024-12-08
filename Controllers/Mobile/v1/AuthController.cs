@@ -29,10 +29,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return NotFound(CreateErrorResponse(
                 StatusCodes.Status404NotFound.ToString(), "No OTP entry found for the specified phone number."));
 
-            if (storedOTP.IsUsed)
-                return Conflict(CreateErrorResponse(
-                StatusCodes.Status409Conflict.ToString(), "OTP for this phone number is already used."));
-
             string regeneratedOtpCode = await _authService.RecreateOtpCodeAsync(storedOTP);
             await _authService.SendOtpAsync(regeneratedOtpCode, phoneNumberReq.PhoneNumber);
 
@@ -45,12 +41,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             var validationResult = await _authService.CanSendOtpAsync(phoneNumberReq.PhoneNumber);
-              if (!validationResult.IsSuccess)           
+            if (!validationResult.IsSuccess)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
-            
+
             string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq.PhoneNumber);
             await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
-            
+
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }
 

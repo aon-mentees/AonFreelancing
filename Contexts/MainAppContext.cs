@@ -19,6 +19,8 @@ namespace AonFreelancing.Contexts
         public DbSet<TaskEntity> Tasks { get; set; }
         public DbSet<Skill> Skills { get; set; }
         public DbSet<ProjectLike> ProjectLikes { get; set; }
+        public DbSet<Rating> Ratings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
@@ -43,6 +45,9 @@ namespace AonFreelancing.Contexts
               .Property(t => t.Status).HasDefaultValue(Constants.TASK_STATUS_TO_DO);
 
             builder.Entity<ProjectLike>().HasIndex(pl => new { pl.ProjectId, pl.UserId }).IsUnique();
+
+            builder.Entity<Rating>().HasIndex(r => r.RaterUserId).IsUnique(false);
+            builder.Entity<Rating>().HasIndex(r => r.RatedUserId).IsUnique(false);
             //set up relationships
             builder.Entity<TempUser>().HasOne<Otp>()
                                     .WithOne()
@@ -75,6 +80,19 @@ namespace AonFreelancing.Contexts
                                           .HasForeignKey(pl => pl.ProjectId)
                                           .OnDelete(DeleteBehavior.NoAction)
                                           .HasPrincipalKey(p => p.Id);
+
+            builder.Entity<Rating>()
+                   .HasOne<User>()
+                   .WithMany()
+                   .HasForeignKey(r => r.RatedUserId) 
+                   .HasPrincipalKey(u => u.Id)
+                   .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<Rating>()
+                    .HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(r => r.RaterUserId)
+                    .HasPrincipalKey(u => u.Id)
+                    .OnDelete(DeleteBehavior.NoAction);
 
 
             base.OnModelCreating(builder);

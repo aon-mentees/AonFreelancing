@@ -1,4 +1,5 @@
-﻿using AonFreelancing.Models;
+﻿using AonFreelancing.Contexts;
+using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.Requests;
 using AonFreelancing.Models.Responses;
@@ -17,7 +18,6 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             _authService = authService;
         }
-
         [HttpPut("resend-verification-code")]
         public async Task<IActionResult> ResendOtpAsync([FromBody] PhoneNumberReq phoneNumberReq)
         {
@@ -42,6 +42,7 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("send-verification-code")]
         public async Task<IActionResult> SendVerificationCodeAsync([FromBody] PhoneNumberReq phoneNumberReq)
         {
+            //checks input validation
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             var validationResult = await _authService.CanSendOtpAsync(phoneNumberReq.PhoneNumber);

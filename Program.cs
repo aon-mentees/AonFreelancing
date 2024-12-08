@@ -28,9 +28,12 @@ namespace AonFreelancing
             builder.Services.AddSingleton<OtpManager>();
             builder.Services.AddSingleton<JwtService>();
             builder.Services.AddSingleton<FileStorageService>();
+            // Dependency injection
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<ProjectLikeService>();
             builder.Services.AddScoped<ProjectService>();
+            builder.Services.AddScoped<RatingService>();
+
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()
                 .AddEntityFrameworkStores<MainAppContext>()
