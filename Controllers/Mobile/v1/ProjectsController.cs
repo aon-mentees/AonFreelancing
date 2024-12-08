@@ -45,7 +45,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-        [HttpGet("clientfeed")]
+        [HttpGet("client-feed")]
         public async Task<IActionResult> GetClientFeedAsync(
             [FromQuery] List<string>? qualificationNames, [FromQuery] int page = 0,
             [FromQuery] int pageSize = 8, [FromQuery] string qur = ""
@@ -73,7 +73,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpGet("freelancerfeed")]
+        [HttpGet("freelancer-feed")]
         public async Task<IActionResult> GetProjectFeedAsync(
             [FromQuery(Name = "specializations")] List<string>? qualificationNames,
             [FromQuery(Name = "timeline")] int? duration,
