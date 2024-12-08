@@ -31,7 +31,7 @@ namespace AonFreelancing.Services
         }
 
         public long GetUserId(ClaimsIdentity identity) => long.Parse(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
-
+        public string GetNameOfUser(ClaimsIdentity identity) => identity.FindFirst(ClaimTypes.GivenName).Value;
         public async Task<bool> ProcessPhoneVerificationRequestAsync(PhoneVerificationRequest phoneVerificationRequest)
         {
             bool isPhoneNumberConfirmable = await IsPhoneNumberConfirmableAsync(phoneVerificationRequest.Phone);
