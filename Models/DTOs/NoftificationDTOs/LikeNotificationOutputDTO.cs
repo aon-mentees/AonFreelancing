@@ -9,7 +9,7 @@
         //TODO: Add profile image (nigga diyar shall do it)
 
         LikeNotificationOutputDTO(LikeNotification likeNotification)
-        : base(likeNotification.Id, likeNotification.Title, likeNotification.Message, likeNotification.IsRead, likeNotification.CreatedAt, likeNotification.ReceiverId)
+        : base(likeNotification.Id, likeNotification.Title, likeNotification.Message, likeNotification.IsRead, likeNotification.CreatedAt)
         {
             ProjectId = likeNotification.ProjectId;
             LikerId = likeNotification.LikerId;

@@ -16,9 +16,9 @@ namespace AonFreelancing.Services
             _inMemorySignalRUserConnectionService = inMemorySignalRUserConnectionService;
         }
 
-        public async Task SendLikeNotification(LikeNotificationOutputDTO likeNotificationDTO)
+        public async Task SendLikeNotification(LikeNotificationOutputDTO likeNotificationDTO,long receiverId)
         {
-            var connections = _inMemorySignalRUserConnectionService.GetConnections(likeNotificationDTO.ReceiverId);
+            var connections = _inMemorySignalRUserConnectionService.GetConnections(receiverId);
             if (!connections.IsNullOrEmpty())
                 await _iNotificationsHubContext.Clients.Clients(connections).GetLikeNotification(likeNotificationDTO);
         }
