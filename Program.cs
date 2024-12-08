@@ -30,6 +30,8 @@ namespace AonFreelancing
             builder.Services.AddSingleton<FileStorageService>();
             builder.Services.AddScoped<OTPService>();
             builder.Services.AddScoped<TempUserService>();
+            builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<RoleService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<ProjectLikeService>();
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));

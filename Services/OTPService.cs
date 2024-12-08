@@ -13,6 +13,8 @@ namespace AonFreelancing.Services
         
         public async Task<IEnumerable<Otp>> GetAllAsync() => await _mainAppContext.Otps.ToListAsync();
         public async Task<Otp?> GetByIdAsync(int id) => await _mainAppContext.Otps.FindAsync(id);
+        public async Task<Otp?> GetByPhoneNumber(string phoneNumber) => await _mainAppContext.Otps.FirstOrDefaultAsync(o => o.PhoneNumber == phoneNumber);
         public Otp Create(OtpInputDTO otpDTO) => new Otp(otpDTO);
+        
     }
 }
