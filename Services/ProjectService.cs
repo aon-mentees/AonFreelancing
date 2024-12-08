@@ -34,7 +34,7 @@ namespace AonFreelancing.Services
         }
         public async Task<Bid?> FindBidsAsync(Project project, long bidId)
         {
-            return project.Bids.Where(b => b.Id == bidId).FirstOrDefault();
+            return project.Bids.Where(b => b.Id == bidId && b.Status!=Constants.BIDS_STATUS_REJECTED).FirstOrDefault();
         }
         public async Task ApproveProjectBidAsync(Bid bid,Project project)
         {
@@ -48,7 +48,7 @@ namespace AonFreelancing.Services
         public async Task RejectProjectBidAsync(Bid bid)
         {
             bid.Status = Constants.BIDS_STATUS_REJECTED;
-
+            bid.RejectedAt = DateTime.Now;
             await SaveProjectChangesAsync();
         }
         public async Task SaveProjectChangesAsync()

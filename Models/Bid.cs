@@ -17,6 +17,7 @@ namespace AonFreelancing.Models
         public string Status { get; set; }
         public DateTime SubmittedAt { get; set; }
         public DateTime? ApprovedAt { get; set; }
+        public DateTime? RejectedAt { get; set; }
 
         public Bid() { }
 

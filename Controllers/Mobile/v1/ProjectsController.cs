@@ -160,7 +160,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
             if (storedBid == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found."));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found or already rejected."));
 
             await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 
