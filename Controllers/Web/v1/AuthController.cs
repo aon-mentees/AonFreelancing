@@ -18,6 +18,27 @@ namespace AonFreelancing.Controllers.Web.v1
             _authService = authService;
         }
 
+        [HttpPut("resend-verification-code")]
+        public async Task<IActionResult> ResendOtpAsync([FromBody] PhoneNumberReq phoneNumberReq)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            var storedOTP = await _authService.FindOtpAsync(phoneNumberReq.PhoneNumber);
+            if (storedOTP == null)
+                return NotFound(CreateErrorResponse(
+                StatusCodes.Status404NotFound.ToString(), "No OTP entry found for the specified phone number."));
+
+            if (storedOTP.IsUsed)
+                return Conflict(CreateErrorResponse(
+                StatusCodes.Status409Conflict.ToString(), "OTP for this phone number is already used."));
+
+            string regeneratedOtpCode = await _authService.RecreateOtpCodeAsync(storedOTP);
+            await _authService.SendOtpAsync(regeneratedOtpCode, phoneNumberReq.PhoneNumber);
+
+            return Ok(CreateSuccessResponse("OTP code resent to your phone number, during testing you may not receive it, please use 123456"));
+        }
+
         [HttpPost("send-verification-code")]
         public async Task<IActionResult> SendVerificationCodeAsync([FromBody] TempUserDTO tempUserDTO)
         {

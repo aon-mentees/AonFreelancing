@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241204120210_initial-fix-roles-issue-mig")]
-    partial class initialfixrolesissuemig
+    [Migration("20241205201201_InitialNewDB")]
+    partial class InitialNewDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -104,7 +104,7 @@ namespace AonFreelancing.Migrations
                     b.ToTable("Bids");
                 });
 
-            modelBuilder.Entity("AonFreelancing.Models.OTP", b =>
+            modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(450)");
@@ -558,11 +558,11 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("AonFreelancing.Models.OTP", b =>
+            modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
                     b.HasOne("AonFreelancing.Models.TempUser", null)
                         .WithOne()
-                        .HasForeignKey("AonFreelancing.Models.OTP", "PhoneNumber")
+                        .HasForeignKey("AonFreelancing.Models.Otp", "PhoneNumber")
                         .HasPrincipalKey("AonFreelancing.Models.TempUser", "PhoneNumber")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

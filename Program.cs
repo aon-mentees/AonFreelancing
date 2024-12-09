@@ -1,6 +1,7 @@
 
 using AonFreelancing.Contexts;
 using AonFreelancing.Enums;
+using AonFreelancing.Hubs;
 using AonFreelancing.Middlewares;
 using AonFreelancing.Models;
 using AonFreelancing.Services;
@@ -9,7 +10,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -28,17 +28,21 @@ namespace AonFreelancing
             builder.Services.AddSingleton<OtpManager>();
             builder.Services.AddSingleton<JwtService>();
             builder.Services.AddSingleton<FileStorageService>();
+            builder.Services.AddSingleton<InMemorySignalRUserConnectionService>();
+            builder.Services.AddScoped<PushNotificationService>();
             builder.Services.AddScoped<OTPService>();
             builder.Services.AddScoped<TempUserService>();
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<RoleService>();
             builder.Services.AddScoped<AuthService>();
+            builder.Services.AddScoped<NotificationService>();
             builder.Services.AddScoped<ProjectLikeService>();
+            builder.Services.AddScoped<ProjectService>();
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()
                 .AddEntityFrameworkStores<MainAppContext>()
                 .AddDefaultTokenProviders();
-
+            builder.Services.AddSignalR();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
@@ -87,8 +91,22 @@ namespace AonFreelancing
                     ValidAudience = jwtSettings["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        // If the request is for a hub
+                        if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/Hubs")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
-
 
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
@@ -114,7 +132,6 @@ namespace AonFreelancing
             app.UseSwagger();
             app.UseSwaggerUI();
 
-
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseHttpsRedirection();
             app.UseStaticFiles(new StaticFileOptions
@@ -122,14 +139,17 @@ namespace AonFreelancing
                 FileProvider = new PhysicalFileProvider(FileStorageService.ROOT),
                 RequestPath = "/images"
             });
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/html")),
+                RequestPath = "/pages"
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-          
-
             app.MapControllers();
-
+            app.MapHub<NotificationsHub>("/Hubs/Notifications");
             app.Run();
         }
 
@@ -143,6 +163,4 @@ namespace AonFreelancing
             }
         }
     }
-
-
 }

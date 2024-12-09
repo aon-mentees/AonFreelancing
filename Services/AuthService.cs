@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.Data;
 using System.Security.Claims;
+using static System.Net.WebRequestMethods;
 
 
 namespace AonFreelancing.Services
@@ -127,7 +128,7 @@ namespace AonFreelancing.Services
         }
         public async Task<bool> ValidateCredentialsAsync(string email, string password)
         {
-            var storedUser = await _userManager.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == email.ToUpper());
+            var storedUser = await _userService.GetByNormalizedEmailAsync(email);
             return storedUser != null && await _userManager.CheckPasswordAsync(storedUser, password);
         }
     

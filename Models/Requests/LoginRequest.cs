@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using AonFreelancing.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace AonFreelancing.Models.Requests
 {
     public class LoginRequest
     {
-        //[Required, StringLength(14, ErrorMessage = "Invalid Phone Number, should be 14 digit starts with country code")] 
+        //[Required, PhoneNumber] 
         //string PhoneNumber,
         [Required]
         [EmailAddress(ErrorMessage = "Invalid email address")]

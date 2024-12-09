@@ -4,6 +4,7 @@ using AonFreelancing.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    partial class MainAppContextModelSnapshot : ModelSnapshot
+    [Migration("20241208125448_init")]
+    partial class init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,9 +80,6 @@ namespace AonFreelancing.Migrations
 
                     b.Property<decimal>("ProposedPrice")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -418,10 +418,6 @@ namespace AonFreelancing.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("UserType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -622,14 +618,13 @@ namespace AonFreelancing.Migrations
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
-            modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
                     b.HasOne("AonFreelancing.Models.User", null)
                         .WithMany()
                         .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                }));
+                });
 
             modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
