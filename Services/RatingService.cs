@@ -20,21 +20,10 @@ namespace AonFreelancing.Services
             _mainAppContext = mainAppContext;
         }
 
-        public async Task<bool> Save(long raterUserId, long ratedUserId, double ratingValue, string comment)
+        public async Task Save(Rating rating)
         {
-            var rating = new Rating
-            {
-                RaterUserId = raterUserId,
-                RatedUserId = ratedUserId,
-                RatingValue = ratingValue,
-                Comment = comment,
-                CreatedAt = DateTime.Now
-            };
-
-            _mainAppContext.Ratings.Add(rating);
+            await _mainAppContext.Ratings.AddAsync(rating);
             await _mainAppContext.SaveChangesAsync();
-
-            return true;
         }
 
 
@@ -52,11 +41,10 @@ namespace AonFreelancing.Services
                 .Where(r => r.RatedUserId == userId)
                 .ToListAsync();
 
-            //if (ratings.Count == 0)
-            //{
-            //    return 0; 
-            //}
+            if (ratings.Count == 0)
+                return double.NaN;
 
+            //return ratings.DefaultIfEmpty(double.NaN).Average(r => r.RatingValue); Just for me :) don't use it. 
             return ratings.Average(r => r.RatingValue);
         }
 

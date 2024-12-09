@@ -1,4 +1,5 @@
-﻿using AonFreelancing.Models.DTOs;
+﻿using AonFreelancing.Models;
+using AonFreelancing.Models.DTOs;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 namespace AonFreelancing.Controllers.Mobile.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/rate")]
+    [Route("api/mobile/v1/ratings")]
     [ApiController]
     public class RatingsController : BaseController
     {
@@ -25,7 +26,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             _projectService = projectService;
         }
 
-        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT},{Constants.USER_TYPE_FREELANCER}")]
+        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
         [HttpPost]
         public async Task<IActionResult> CreateRatingAsync([FromBody] RatingInputDTO request)
         {
@@ -44,35 +45,24 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (await _ratingService.IsRatingAlreadyGivenAsync(authenticatedRaterUserId, request.RatedUserId))
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "You cannot rate the same user twice."));
 
-            await _ratingService.Save(authenticatedRaterUserId, request.RatedUserId, request.RatingValue, request.Comment);
+            await _ratingService.Save(new Rating(request, authenticatedRaterUserId));
 
             return Ok(CreateSuccessResponse("Rating created successfully."));
         }
 
-        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT},{Constants.USER_TYPE_FREELANCER}")]
-        [HttpGet("{userid}/rate")]
-        public async Task<IActionResult> GetRatingsForUser(long userid)
+        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
+        [HttpGet]
+        public async Task<IActionResult> GetRatingsForUser([FromQuery] long userId)
         {
-            var ratings = await _ratingService.GetRatingsForUserAsync(userid);
-
-            //if (ratings == null || !ratings.Any())
-            //    return Ok(CreateSuccessResponse());
-
+            var ratings = await _ratingService.GetRatingsForUserAsync(userId);
             return Ok(CreateSuccessResponse(ratings));
         }
 
-        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT},{Constants.USER_TYPE_FREELANCER}")]
-        [HttpGet("{userId}/average-rate")]
-        public async Task<IActionResult> GetAverageRating(long userId)
+        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
+        [HttpGet("average-rate")]
+        public async Task<IActionResult> GetAverageRating([FromQuery] long userId)
         {
             var average = await _ratingService.GetAverageRatingForUserAsync(userId);
-
-            //if (average == null)
-            //    return NotFound(CreateErrorResponse(
-            //        StatusCodes.Status404NotFound.ToString(),
-            //        "No ratings available to calculate average."
-            //    ));
-
             return Ok(CreateSuccessResponse(new { AverageRating = average }));
         }
     }
