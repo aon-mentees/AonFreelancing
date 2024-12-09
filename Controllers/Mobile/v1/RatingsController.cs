@@ -36,10 +36,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             long authenticatedRaterUserId = _authService.GetUserId(identity);
 
-            if (authenticatedRaterUserId == request.RatedUserId)
-                return Forbid("You cannot rate yourself.");
 
-            if (!await _projectService.IsUser1WorkedWithUser2Async(authenticatedRaterUserId, request.RatedUserId))
+            if (authenticatedRaterUserId == request.RatedUserId || !await _projectService.IsUser1WorkedWithUser2Async(authenticatedRaterUserId, request.RatedUserId))
                 return Forbid();
 
             if (await _ratingService.IsRatingAlreadyGivenAsync(authenticatedRaterUserId, request.RatedUserId))
@@ -54,8 +52,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet]
         public async Task<IActionResult> GetRatingsForUser([FromQuery] long userId)
         {
-            var ratings = await _ratingService.GetRatingsForUserAsync(userId);
-            return Ok(CreateSuccessResponse(ratings));
+            IEnumerable<RatingOutputDTO> storedRatings = (await _ratingService.GetRatingsForUserAsync(userId)).Select(r => new RatingOutputDTO(r));
+            return Ok(CreateSuccessResponse(storedRatings));
         }
 
         [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
