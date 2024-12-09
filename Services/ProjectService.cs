@@ -56,5 +56,11 @@ namespace AonFreelancing.Services
             await _mainAppContext.SaveChangesAsync();
         }
 
+        // Check if User 1 Worked With User 2 
+        public async Task<bool> IsUser1WorkedWithUser2Async(long userId1, long userId2)
+        {
+            return await _mainAppContext.Projects.AnyAsync(p => (p.ClientId == userId1 && p.FreelancerId == userId2) ||
+                                                                (p.ClientId == userId2 && p.FreelancerId == userId1));
+        }
     }
 }
