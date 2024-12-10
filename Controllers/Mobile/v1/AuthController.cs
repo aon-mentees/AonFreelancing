@@ -24,7 +24,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            var storedOTP = await _authService.FindOtpAsync(phoneNumberReq.PhoneNumber);
+            var storedOTP = await _authService.GetOtpByPhoneNumber(phoneNumberReq.PhoneNumber);
             if (storedOTP == null)
                 return NotFound(CreateErrorResponse(
                 StatusCodes.Status404NotFound.ToString(), "No OTP entry found for the specified phone number."));

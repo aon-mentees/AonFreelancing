@@ -101,7 +101,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("SystemUserId");
 
-                    b.ToTable("Bids");
+                    b.ToTable("Bids", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
@@ -418,10 +418,6 @@ namespace AonFreelancing.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("UserType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -622,14 +618,13 @@ namespace AonFreelancing.Migrations
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
-            modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
                     b.HasOne("AonFreelancing.Models.User", null)
                         .WithMany()
                         .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                }));
+                });
 
             modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {

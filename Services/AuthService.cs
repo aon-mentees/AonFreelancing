@@ -48,6 +48,7 @@ namespace AonFreelancing.Services
 
         // TempUser Methods
         public async Task<TempUser?> FindTempUserByPhoneNumberAsync(string phoneNumber) => await _tempUserService.GetByPhoneNumberAsync(phoneNumber);        
+        public string GetNameOfUser(ClaimsIdentity identity) => identity.FindFirst(ClaimTypes.GivenName).Value;
         public async Task<string> CreateTempUserAndOtp(TempUserDTO tempUserDTO)
         {
             TempUser newTempUser = _tempUserService.Create(tempUserDTO);
@@ -131,7 +132,23 @@ namespace AonFreelancing.Services
             var storedUser = await _userService.GetByNormalizedEmailAsync(email);
             return storedUser != null && await _userManager.CheckPasswordAsync(storedUser, password);
         }
-    
+        
+        public async Task<Otp?> GetOtpByPhoneNumber(string phoneNumber) => await _otpService.GetByPhoneNumber(phoneNumber);
+         public async Task<string> RecreateOtpCodeAsync(Otp storedOTP)
+        {
+            string newOtpCode = _otpManager.GenerateOtp();
+            await UpdateStoredOtpAsync(storedOTP, newOtpCode);
+            return storedOTP.Code;
+        }
+
+        public async Task UpdateStoredOtpAsync(Otp storedOTP,string otpCode)
+        {
+            storedOTP.Code = otpCode;
+            storedOTP.CreatedDate = DateTime.Now;
+            storedOTP.ExpiresAt = DateTime.Now.AddMinutes(Convert.ToInt32(_configuration["Otp:ExpireInMinutes"]));
+            await _otpService.SaveChangesAsync();
+        }
+
         // USER Methods
         public long GetUserId(ClaimsIdentity identity) => long.Parse(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
         public async Task<IdentityResult> CreateUserAsync(User user, string password) => await _userService.CreateAsync(user, password);        
