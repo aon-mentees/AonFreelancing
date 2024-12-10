@@ -36,5 +36,5 @@ public class UserService : MainDbService
     public async Task<string> GetUserRoleAsync(User user)=> (await _userManager.GetRolesAsync(user)).First();
     public async Task<IdentityResult> CreateAsync(User user, string password) => await _userManager.CreateAsync(user, password);
     public async Task AddToRoleAsync(User user, string storedRole)=> await _userManager.AddToRoleAsync(user, storedRole);
-    
+    public async Task<bool> CheckPasswordAsync(User storedUser, string password) => await _userManager.CheckPasswordAsync(storedUser, password);
 }

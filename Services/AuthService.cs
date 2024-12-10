@@ -17,33 +17,28 @@ namespace AonFreelancing.Services
 {
     public class AuthService
     {
-        private readonly MainAppContext _mainAppContext;
         private readonly OtpManager _otpManager;
         private readonly IConfiguration _configuration;
-        private readonly UserManager<User> _userManager;
-        private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly JwtService _jwtService;
         private readonly TempUserService _tempUserService;
         private readonly OTPService _otpService;
         private readonly UserService _userService;
         private readonly RoleService _roleService;
-
-        public AuthService(MainAppContext mainAppContext, OtpManager otpManager, 
-                            UserManager<User> userManager, IConfiguration configuration,
-                            JwtService jwtService, RoleManager<ApplicationRole> roleManager, 
-                            TempUserService tempUserService, OTPService otpService, 
-                            UserService userServic, RoleService roleService)
+        private readonly RemoveService _removeService;
+        
+        public AuthService(OtpManager otpManager, RemoveService removeService,
+                            JwtService jwtService, TempUserService tempUserService,
+                            OTPService otpService, UserService userServic, 
+                            RoleService roleService, IConfiguration configuration)
         {
-            _mainAppContext = mainAppContext;
             _otpManager = otpManager;
-            _userManager = userManager;
             _configuration = configuration;
             _jwtService = jwtService;
-            _roleManager = roleManager;
             _tempUserService = tempUserService;
             _otpService = otpService;
             _userService = userServic;
             _roleService = roleService;
+            _removeService = removeService;
         }
 
         // TempUser Methods
@@ -130,7 +125,7 @@ namespace AonFreelancing.Services
         public async Task<bool> ValidateCredentialsAsync(string email, string password)
         {
             var storedUser = await _userService.GetByNormalizedEmailAsync(email);
-            return storedUser != null && await _userManager.CheckPasswordAsync(storedUser, password);
+            return storedUser != null && await _userService.CheckPasswordAsync(storedUser, password);
         }
         
         public async Task<Otp?> GetOtpByPhoneNumber(string phoneNumber) => await _otpService.GetByPhoneNumber(phoneNumber);
@@ -177,11 +172,7 @@ namespace AonFreelancing.Services
             ApplicationRole? storedRole = await _roleService.GetByNameAsync(roleName);;
             await _userService.AddToRoleAsync(user, storedRole.Name);
         }
-        public async Task RemoveEntity(object entity)
-        {
-            _mainAppContext.Remove(entity);
-            await _mainAppContext.SaveChangesAsync();
-        }
+        public async Task RemoveEntity(object entity) => await _removeService.RemoveEntityAsync(entity);
 
     }
 }
