@@ -28,13 +28,9 @@ namespace AonFreelancing.Controllers.Web.v1
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            User? authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
-            if (authenticatedUser == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
-                    "Unable to load user."));
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            long clientId = authenticatedUser.Id;
-            Project? newProject = Project.FromInputDTO(projectInputDto, clientId);
+            Project? newProject = Project.FromInputDTO(projectInputDto, authenticatedUserId);
 
             if (projectInputDto.ImageFile != null)
                 newProject.ImageFileName = await fileStorageService.SaveAsync(projectInputDto.ImageFile);
