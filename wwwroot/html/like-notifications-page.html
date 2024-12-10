@@ -38,6 +38,17 @@
             console.log("Received like notification:", likeNotificationDTO);
         });
 
+        connection.on("GetBidApprovalNotification", (BidApprovalNotificaationOutputDTO) => {
+            alert(`Your bid approved from ${BidApprovalNotificaationOutputDTO.ApproverName}`);
+            console.log("Received approve notification:", BidApprovalNotificaationOutputDTO);
+        });
+
+        connection.on("GetBidRejectionNotification", (BidRejectionNotificationOutputDTO) => {
+            alert(`Your bid rejected from ${BidRejectionNotificationOutputDTO.RejectorName}`);
+            console.log("Received reject notification:", BidRejectionNotificationOutputDTO);
+        });
+
+
         start();
     </script>
 </body>

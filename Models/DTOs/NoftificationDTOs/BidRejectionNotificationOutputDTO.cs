@@ -14,7 +14,7 @@
             RejectorName = bidRejectionNotification.RejectorName;
             BidId = bidRejectionNotification.BidId;
         }
-        public static BidRejectionNotificationOutputDTO FromRejectionNotification(BidRejectionNotification bidRejectionNotification) => new BidRejectionNotificationOutputDTO(bidApprovalNotification);
+        public static BidRejectionNotificationOutputDTO FromRejectionNotification(BidRejectionNotification bidRejectionNotification) => new BidRejectionNotificationOutputDTO(bidRejectionNotification);
 
     }
 }
