@@ -24,7 +24,7 @@ namespace AonFreelancing.Controllers.Web.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            var storedOTP = await _authService.FindOtpAsync(phoneNumberReq.PhoneNumber);
+            var storedOTP = await _authService.GetOtpByPhoneNumber(phoneNumberReq.PhoneNumber);
             if (storedOTP == null)
                 return NotFound(CreateErrorResponse(
                 StatusCodes.Status404NotFound.ToString(), "No OTP entry found for the specified phone number."));
@@ -40,16 +40,16 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [HttpPost("send-verification-code")]
-        public async Task<IActionResult> SendVerificationCodeAsync([FromBody] PhoneNumberReq phoneNumberReq)
+        public async Task<IActionResult> SendVerificationCodeAsync([FromBody] TempUserDTO tempUserDTO)
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            var validationResult = await _authService.CanSendOtpAsync(phoneNumberReq.PhoneNumber);
+            var validationResult = await _authService.CanSendOtpAsync(tempUserDTO.PhoneNumber);
             if (!validationResult.IsSuccess)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
 
-            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq.PhoneNumber);
-            await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
+            string generatedOtpCode = await _authService.CreateTempUserAndOtp(tempUserDTO);
+            await _authService.SendOtpAsync(generatedOtpCode, tempUserDTO.PhoneNumber);
 
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }
@@ -70,7 +70,7 @@ namespace AonFreelancing.Controllers.Web.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             string normalizedReceivedEmail = userRegistrationRequest.Email.ToUpper();
-            User? storedUser = await _authService.FindUserByNormalizedEmailAsync(normalizedReceivedEmail);
+            User? storedUser = await _authService.GetUserByNormalizedEmailAsync(normalizedReceivedEmail);
             TempUser? storedTempUser = await _authService.FindTempUserByPhoneNumberAsync(userRegistrationRequest.PhoneNumber);
 
             if (storedUser != null)
@@ -117,11 +117,11 @@ namespace AonFreelancing.Controllers.Web.v1
                 return CustomBadRequest();
             if (await _authService.ValidateCredentialsAsync(req.Email, req.Password))
             {
-                User? storedUser = await _authService.FindUserByEmailAsync(req.Email);
+                User? storedUser = await _authService.GetUserByEmailAsync(req.Email);
                 if (!storedUser.PhoneNumberConfirmed)
                     return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Verify Your Account First"));
 
-                string role = await _authService.FindUserRoleAsync(storedUser);
+                string role = await _authService.GetUserRoleAsync(storedUser);
                 string token = await _authService.GenerateAuthToken(storedUser, role);
                 return Ok(CreateSuccessResponse(new LoginResponse(token, new UserDetailsDTO(storedUser, role ?? string.Empty))));
             }

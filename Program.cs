@@ -30,6 +30,11 @@ namespace AonFreelancing
             builder.Services.AddSingleton<FileStorageService>();
             builder.Services.AddSingleton<InMemorySignalRUserConnectionService>();
             builder.Services.AddScoped<PushNotificationService>();
+            builder.Services.AddScoped<OTPService>();
+            builder.Services.AddScoped<TempUserService>();
+            builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<RemoveService>();
+            builder.Services.AddScoped<RoleService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<NotificationService>();
             builder.Services.AddScoped<ProjectLikeService>();
