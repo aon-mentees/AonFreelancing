@@ -63,9 +63,6 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("ClientId")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("FreelancerId")
                         .HasColumnType("bigint");
 
@@ -88,18 +85,11 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("SystemUserId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ClientId");
 
                     b.HasIndex("FreelancerId");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("SystemUserId");
 
                     b.ToTable("Bids");
                 });
@@ -592,12 +582,8 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.Bid", b =>
                 {
-                    b.HasOne("AonFreelancing.Models.Client", null)
-                        .WithMany("Bids")
-                        .HasForeignKey("ClientId");
-
                     b.HasOne("AonFreelancing.Models.Freelancer", "Freelancer")
-                        .WithMany("Bids")
+                        .WithMany()
                         .HasForeignKey("FreelancerId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -608,24 +594,19 @@ namespace AonFreelancing.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("AonFreelancing.Models.SystemUser", null)
-                        .WithMany("Bids")
-                        .HasForeignKey("SystemUserId");
-
                     b.Navigation("Freelancer");
 
                     b.Navigation("Project");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
-            modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
                     b.HasOne("AonFreelancing.Models.User", null)
                         .WithMany()
                         .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                }));
+                });
 
             modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
@@ -799,21 +780,12 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
                 {
-                    b.Navigation("Bids");
-
                     b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Freelancer", b =>
                 {
-                    b.Navigation("Bids");
-
                     b.Navigation("Skills");
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.SystemUser", b =>
-                {
-                    b.Navigation("Bids");
                 });
 #pragma warning restore 612, 618
         }

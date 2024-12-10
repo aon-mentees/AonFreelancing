@@ -128,21 +128,20 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
-
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
-
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
-
-            Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
+            
+            Bid? storedBid = storedProject.Bids.FirstOrDefault(b => b.Id == bidId);
             if (storedBid == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found or already rejected."));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found"));
+            if (storedBid.Status != Constants.BIDS_STATUS_PENDING)
+                return Forbid();
 
             await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 

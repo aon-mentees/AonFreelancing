@@ -345,6 +345,7 @@ namespace AonFreelancing.Migrations
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SubmittedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RejectedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ClientId = table.Column<long>(type: "bigint", nullable: true),
                     SystemUserId = table.Column<long>(type: "bigint", nullable: true)
                 },

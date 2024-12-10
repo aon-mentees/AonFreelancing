@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241208125448_init")]
+    [Migration("20241210114128_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -80,6 +80,9 @@ namespace AonFreelancing.Migrations
 
                     b.Property<decimal>("ProposedPrice")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()

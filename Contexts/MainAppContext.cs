@@ -63,8 +63,9 @@ namespace AonFreelancing.Contexts
 
             builder.Entity<Bid>()
                 .HasOne(b => b.Freelancer)
-                .WithMany(f => f.Bids)
+                .WithMany()
                 .HasForeignKey(b => b.FreelancerId)
+                .HasPrincipalKey(f => f.Id)
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Skill>().HasOne<Freelancer>()

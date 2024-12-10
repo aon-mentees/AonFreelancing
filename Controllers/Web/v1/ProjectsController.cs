@@ -109,7 +109,7 @@ namespace AonFreelancing.Controllers.Web.v1
             if (storedProject.Budget <= bidInputDTO.ProposedPrice)
                 return BadRequest(CreateErrorResponse("400", "proposed price must be less than the project's budget"));
             if (storedProject.Bids.Any() && storedProject.Bids.OrderBy(b => b.ProposedPrice).First().ProposedPrice <= bidInputDTO.ProposedPrice)
-                return BadRequest(CreateErrorResponse("40", "proposed price must be less than earlier proposed prices"));
+                return BadRequest(CreateErrorResponse("400", "proposed price must be less than earlier proposed prices"));
 
             Bid? newBid = Bid.FromInputDTO(bidInputDTO, authenticatedFreelancerId, projectId);
             await mainAppContext.AddAsync(newBid);
@@ -125,30 +125,24 @@ namespace AonFreelancing.Controllers.Web.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = await mainAppContext.Projects.Where(p => p.Id == projectId)
-                                                                 .Include(p => p.Bids)
-                                                                 .FirstOrDefaultAsync();
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
-
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
-
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "project status is not 'Available'"));
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
 
-            Bid? storedBid = storedProject.Bids.Where(b => b.Id == bidId).FirstOrDefault();
+            Bid? storedBid = storedProject.Bids.FirstOrDefault(b => b.Id == bidId);
             if (storedBid == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "bid not found"));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found"));
+            if (storedBid.Status != Constants.BIDS_STATUS_PENDING)
+                return Forbid();
 
-            storedBid.Status = Constants.BIDS_STATUS_APPROVED;
-            storedBid.ApprovedAt = DateTime.Now;
-            storedProject.Status = Constants.PROJECT_STATUS_CLOSED;
-            storedProject.FreelancerId = storedBid.FreelancerId;
+            await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 
-            await mainAppContext.SaveChangesAsync();
-            return Ok();
+            return Ok(CreateSuccessResponse("Bid approved."));
         }
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPut("{projectId}/bids/{bidId}/reject")]

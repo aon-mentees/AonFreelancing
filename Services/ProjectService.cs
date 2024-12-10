@@ -46,19 +46,27 @@ namespace AonFreelancing.Services
             bid.ApprovedAt = DateTime.Now;
             project.Status = Constants.PROJECT_STATUS_CLOSED;
             project.FreelancerId = bid.FreelancerId;
-
-            await SaveProjectChangesAsync();
+            project.Bids.ForEach(b =>
+            {
+                if (b.Status != Constants.BIDS_STATUS_APPROVED)
+                {
+                    b.Status = Constants.BIDS_STATUS_REJECTED;
+                    b.RejectedAt = bid.ApprovedAt;
+                    _mainAppContext.Update(b);
+                }
+            });
+            _mainAppContext.Projects.Update(project);
+            _mainAppContext.Bids.Update(bid);
+            await _mainAppContext.SaveChangesAsync();
         }
         public async Task RejectProjectBidAsync(Bid bid)
         {
             bid.Status = Constants.BIDS_STATUS_REJECTED;
             bid.RejectedAt = DateTime.Now;
-            await SaveProjectChangesAsync();
-        }
-        public async Task SaveProjectChangesAsync()
-        {
+            _mainAppContext.Bids.Update(bid);
             await _mainAppContext.SaveChangesAsync();
         }
+
         public async Task<bool> IsProjectExistsAsync(long id)
         {
             return await _mainAppContext.Projects.AnyAsync(p => p.Id == id);
