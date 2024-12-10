@@ -21,6 +21,7 @@ namespace AonFreelancing.Models
         public string? About {  get; set; }
 
         public ICollection<Bid> Bids { get; set; } = new List<Bid>();
+        public List<Comment>? Comments { get; set; }
         public User() { }
         public User(UserRegistrationRequest request)
         {

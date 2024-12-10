@@ -104,6 +104,39 @@ namespace AonFreelancing.Migrations
                     b.ToTable("Bids");
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
                 {
                     b.Property<long>("Id")
@@ -617,15 +650,33 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Project", "Project")
+                        .WithMany("Comments")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", "User")
+                        .WithMany("Comments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
-            modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
                     b.HasOne("AonFreelancing.Models.User", null)
                         .WithMany()
                         .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                }));
+                });
 
             modelBuilder.Entity("AonFreelancing.Models.Otp", b =>
                 {
@@ -792,9 +843,16 @@ namespace AonFreelancing.Migrations
                 {
                     b.Navigation("Bids");
 
+                    b.Navigation("Comments");
+
                     b.Navigation("ProjectLikes");
 
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.User", b =>
+                {
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>

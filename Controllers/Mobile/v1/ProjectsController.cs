@@ -331,5 +331,59 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return Ok("Unliked successfully");
         }
 
+        [Authorize(Roles =$"{Constants.USER_TYPE_CLIENT},{Constants.USER_TYPE_FREELANCER}")]
+        [HttpPost("{projectId}/comments")]
+        public async Task<IActionResult> CreateCommentAsync([FromRoute] long projectId, [FromForm] CommentInputDTO commentInputDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            User? authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
+            if (authenticatedUser == null)
+                return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),
+                    "Unauthorized user"));
+
+            Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+
+            Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
+
+            if (commentInputDTO.ImageFile != null)
+                comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
+
+            await mainAppContext.Comments.AddAsync(comment);
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Commented"));
+        }
+
+        [HttpGet("{projectId}/comments")]
+        public async Task<IActionResult> GetComments([FromRoute] long projectId, [FromQuery] int pageNumber = 1, [FromQuery]int pageSize = 10)
+        {
+            string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+            var projectExists = await mainAppContext.Projects.AnyAsync(p => p.Id == projectId);
+
+            if (!projectExists)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found !"));
+
+            var comments = await mainAppContext.Comments    
+                                                .Where(c => c.ProjectId == projectId)
+                                                .OrderByDescending(c => c.CreatedAt)
+                                                .Include(c => c.User)
+                                                .Skip((pageNumber - 1) * pageSize) 
+                                                .Take(pageSize) 
+                                                .Select(c => new CommentOutputDTO
+                                                {
+                                                    Id = c.Id,
+                                                    Content = c.Content,
+                                                    CommenterName = c.User.Name,
+                                                    CommenterId = c.UserId,
+                                                    CreatedAt = c.CreatedAt,
+                                                    ImageUrl = c.ImageUrl != null ? $"{imagesBaseUrl}/{c.ImageUrl}" : null
+                                                }).ToListAsync();
+
+            return Ok(CreateSuccessResponse(comments));
+        }
     }
 }

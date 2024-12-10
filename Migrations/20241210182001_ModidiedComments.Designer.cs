@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241208125448_init")]
-    partial class init
+    [Migration("20241210182001_ModidiedComments")]
+    partial class ModidiedComments
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -81,6 +81,9 @@ namespace AonFreelancing.Migrations
                     b.Property<decimal>("ProposedPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -102,6 +105,39 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("SystemUserId");
 
                     b.ToTable("Bids");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
@@ -617,6 +653,25 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Project", "Project")
+                        .WithMany("Comments")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", "User")
+                        .WithMany("Comments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
                 {
                     b.HasOne("AonFreelancing.Models.User", null)
@@ -791,9 +846,16 @@ namespace AonFreelancing.Migrations
                 {
                     b.Navigation("Bids");
 
+                    b.Navigation("Comments");
+
                     b.Navigation("ProjectLikes");
 
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.User", b =>
+                {
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>

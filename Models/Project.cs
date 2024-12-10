@@ -35,6 +35,7 @@ namespace AonFreelancing.Models
 
         public List<TaskEntity>? Tasks { get; set; }
         public List<ProjectLike>? ProjectLikes { get; set; }
+        public List<Comment>? Comments { get; set; }
 
         public Project() { }
         Project(ProjectInputDto inputDto,long clientId)
