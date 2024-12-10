@@ -287,8 +287,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),"no like found to be deleted"));
         }
 
-     
-
 
         [HttpGet("{projectId}/tasks")]
         public async Task<IActionResult> GetTasksByProjectIdAsync([FromRoute] long projectId,
