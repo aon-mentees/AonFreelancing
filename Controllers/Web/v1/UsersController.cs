@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace AonFreelancing.Controllers.Web.v1
 {
@@ -64,6 +65,26 @@ FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<F
                 return Ok(CreateSuccessResponse(storedClientDTO));
 
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "NotFound"));
+
+        }
+        [HttpGet("statistics")]
+        public async Task<IActionResult> GetUserStatistics()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            long authenticatedUserId = Convert.ToInt64(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
+            //User? authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
+
+            var storedProjects = await mainAppContext.Projects.AsNoTracking()
+                                                                   .Include(p => p.Freelancer)
+                                                                   .Include(p => p.Tasks)
+                                                                   .Where(p => p.ClientId == authenticatedUserId || p.FreelancerId == authenticatedUserId)
+                                                                   .ToListAsync();
+            var storedTasks = storedProjects.SelectMany(p => p.Tasks)
+                                            .ToList();
+            return Ok(CreateSuccessResponse(new UserStatisticsDTO(ProjectsStatisticsDTO.FromProjects(storedProjects),
+                                                                  TasksStatisticsDTO.FromTasks(storedTasks)
+                                                                  )
+            ));
 
         }
     }

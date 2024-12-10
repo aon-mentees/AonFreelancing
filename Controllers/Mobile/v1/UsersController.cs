@@ -62,7 +62,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "NotFound"));
 
         }
-        [HttpGet("/statistics")]
+        [HttpGet("statistics")]
         public async Task<IActionResult> GetUserStatistics()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
