@@ -262,6 +262,13 @@ namespace AonFreelancing.Controllers.Web.v1
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "no like found to be deleted"));
         }
 
+        [HttpGet("{projectId}/likes/count")]
+        public async Task<IActionResult> GetProjectLikesCount([FromRoute] long projectId)
+        {
+            if (!await projectService.IsProjectExistsAsync(projectId))
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+            return Ok(CreateSuccessResponse(new {likesCount = await projectLikeService.CountLikesForProjectAsync(projectId) }));
+        }
 
         [HttpGet("{projectId}/likes")]
         public async Task<IActionResult> GetLikesForProject([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = 15)
