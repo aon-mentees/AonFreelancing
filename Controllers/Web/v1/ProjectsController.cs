@@ -19,7 +19,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager,
                                     ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService,
-                                    NotificationService notificationService) : BaseController
+                                    NotificationService notificationService, ProjectService projectService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -58,30 +58,19 @@ namespace AonFreelancing.Controllers.Web.v1
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             string normalizedQuery = qur.ToLower().Replace(" ", "").Trim();
-            List<ProjectOutDTO>? storedProjects;
-            var query = mainAppContext.Projects.AsNoTracking().Include(p => p.Client).Include(p => p.ProjectLikes).AsQueryable();
-            int totalProjectsCount = await query.CountAsync();
+            PaginatedResult<Project> paginatedProjects = await projectService.FindClientFeedAsync(normalizedQuery, qualificationNames ?? [], page, pageSize);
+            List<ProjectOutDTO> projectOutDTOs = paginatedProjects.Result.Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl)).ToList();
+            PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
 
-            if (!string.IsNullOrEmpty(normalizedQuery))
-                query = query.Where(p => p.Title.ToLower().Contains(normalizedQuery));
-
-            if (qualificationNames != null && qualificationNames.Count > 0)
-                query = query.Where(p => qualificationNames.Contains(p.QualificationName));
-
-            storedProjects = await query.OrderByDescending(p => p.CreatedAt)
-                                        .Skip(page * pageSize)
-                                        .Take(pageSize)
-                                        .Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl))
-                                        .ToListAsync();
-            foreach (var p in storedProjects)
+            foreach (var p in projectOutDTOs)
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
 
-            return Ok(CreateSuccessResponse(new PaginatedResult<ProjectOutDTO>(totalProjectsCount, storedProjects)));
+            return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpGet("freelancerfeed")]
-        public async Task<IActionResult> GetProjectFeedAsync(
+        public async Task<IActionResult> GetFreelancerFeedAsync(
             [FromQuery(Name = "specializations")] List<string>? qualificationNames,
             [FromQuery(Name = "timeline")] int? duration,
             [FromQuery] PriceRange priceRange,
@@ -96,31 +85,14 @@ namespace AonFreelancing.Controllers.Web.v1
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             string normalizedQuery = qur.ToLower().Replace(" ", "").Trim();
-            var query = mainAppContext.Projects.AsNoTracking().Include(p => p.Client).Include(p => p.ProjectLikes).AsQueryable();
-            int totalProjectsCount = await query.CountAsync();
+            PaginatedResult<Project> paginatedProjects = await projectService.FindFreelancerFeedAsync(normalizedQuery, qualificationNames ?? [], priceRange, duration, page, pageSize);
+            List<ProjectOutDTO> projectOutDTOs = paginatedProjects.Result.Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl)).ToList();
+            PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
 
-            if (!string.IsNullOrEmpty(normalizedQuery))
-                query = query.Where(p => p.Title.ToLower().Contains(normalizedQuery));
-
-            if (qualificationNames != null && qualificationNames.Count > 0)
-                query = query.Where(p => qualificationNames.Contains(p.QualificationName));
-
-            if (duration.HasValue)
-                query = query.Where(p => p.Duration >= duration.Value);
-
-            if (priceRange.MinPrice != null && priceRange.MaxPrice != null)
-                query = query.Where(p => p.Budget >= priceRange.MinPrice && p.Budget <= priceRange.MaxPrice);
-
-
-            List<ProjectOutDTO>? storedProjects = await query.OrderByDescending(p => p.CreatedAt)
-                                                             .Skip(page * pageSize)
-                                                             .Take(pageSize)
-                                                             .Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl))
-                                                             .ToListAsync();
-            foreach (var p in storedProjects)
+            foreach (var p in projectOutDTOs)
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
 
-            return Ok(CreateSuccessResponse(new PaginatedResult<ProjectOutDTO>(totalProjectsCount, storedProjects)));
+            return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
 
 
@@ -181,6 +153,32 @@ namespace AonFreelancing.Controllers.Web.v1
 
             await mainAppContext.SaveChangesAsync();
             return Ok();
+        }
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPut("{projectId}/bids/{bidId}/reject")]
+        public async Task<IActionResult> RejectBidAsync([FromRoute] long projectId, [FromRoute] long bidId)
+        {
+
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
+
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
+
+            if (authenticatedClientId != storedProject.ClientId)
+                return Forbid();
+
+            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
+
+            Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
+            if (storedBid == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found."));
+
+            await projectService.RejectProjectBidAsync(storedBid);
+
+            return Ok(CreateSuccessResponse("Bid rejected."));
         }
 
 
@@ -265,7 +263,18 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
 
+        [HttpGet("{projectId}/likes")]
+        public async Task<IActionResult> GetLikesForProject([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = 15)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+            if (!await projectService.IsProjectExistsAsync(projectId))
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
 
+            var paginatedLikes = await projectLikeService.FindLikesForProjectAsync(projectId, page, pageSize);
+            var paginatedLikesDTO = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+            return Ok(CreateSuccessResponse(paginatedLikesDTO));
+        }
 
         [HttpGet("{projectId}/tasks")]
         public async Task<IActionResult> GetTasksByProjectIdAsync([FromRoute] long projectId,
