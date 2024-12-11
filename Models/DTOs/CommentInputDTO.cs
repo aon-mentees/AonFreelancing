@@ -1,5 +1,7 @@
 ﻿using AonFreelancing.Attributes;
+using AonFreelancing.Utilities;
 using System.ComponentModel.DataAnnotations;
+
 
 namespace AonFreelancing.Models.DTOs
 {
@@ -8,7 +10,7 @@ namespace AonFreelancing.Models.DTOs
         [Required(ErrorMessage ="Can't create empty comment !")]
         public string Content { get; set; }
 
-        [MaxFileSize(1024 * 1024 * 5)]
+        [MaxFileSize(Constants.MAX_FILE_SIZE)]
         [AllowedFileExtensions([".jpg", ".jpeg", ".png"])]
         public IFormFile? ImageFile { get; set; }
     }

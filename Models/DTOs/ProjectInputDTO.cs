@@ -31,7 +31,7 @@ namespace AonFreelancing.Models.DTOs
         [Range(0, int.MaxValue)]
         public decimal Budget { get; set; }
 
-        [MaxFileSize(1024 * 1024 * 5)]
+        [MaxFileSize(Constants.MAX_FILE_SIZE)]
         [AllowedFileExtensions([".jpg", ".jpeg", ".png"])]
         public IFormFile? ImageFile { get; set; }
     }

@@ -38,5 +38,7 @@
         //public const string NOTIFICATION_TYPE_LIKE = "";
 
         public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
+
+        public const int MAX_FILE_SIZE = 1024 * 1024 * 5;
     }
 }

@@ -359,7 +359,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
 
         [HttpGet("{projectId}/comments")]
-        public async Task<IActionResult> GetComments([FromRoute] long projectId, [FromQuery] int pageNumber = 1, [FromQuery]int pageSize = 10)
+        public async Task<IActionResult> GetProjectComments([FromRoute] long projectId, [FromQuery] int pageNumber = 0, [FromQuery]int pageSize = 10)
         {
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             var projectExists = await mainAppContext.Projects.AnyAsync(p => p.Id == projectId);
@@ -371,9 +371,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                 .Where(c => c.ProjectId == projectId)
                                                 .OrderByDescending(c => c.CreatedAt)
                                                 .Include(c => c.User)
-                                                .Skip((pageNumber - 1) * pageSize) 
+                                                .Skip(pageNumber * pageSize) 
                                                 .Take(pageSize) 
-                                                .Select(c => new CommentOutputDTO
+                                                .Select(c => new CommentOutDTO
                                                 {
                                                     Id = c.Id,
                                                     Content = c.Content,
