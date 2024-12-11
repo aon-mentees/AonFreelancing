@@ -39,6 +39,11 @@
 
         public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
 
+        public const int COMMENTS_DEFAULT_PAGE_SIZE = 10;
         public const int MAX_FILE_SIZE = 1024 * 1024 * 5;
+        public const string JPG = ".jpg";
+        public const string JPEG = ".jpeg";
+        public const string PNG = ".png";
+        public const string GIF = ".gif";
     }
 }

@@ -104,7 +104,7 @@ namespace AonFreelancing.Contexts
                                                        .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<Comment>()
             .HasOne(c => c.Project)
-            .WithMany()
+            .WithMany(p => p.Comments)
             .HasForeignKey(c => c.ProjectId)
             .OnDelete(DeleteBehavior.NoAction);
 

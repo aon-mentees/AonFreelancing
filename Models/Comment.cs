@@ -4,7 +4,7 @@ namespace AonFreelancing.Models
 {
     public class Comment
     {
-        public int Id { get; set; }                      
+        public long Id { get; set; }                      
         public string Content { get; set; }       
         public DateTime CreatedAt { get; set; }
         public long ProjectId { get; set; }

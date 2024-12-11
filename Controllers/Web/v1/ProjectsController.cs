@@ -19,7 +19,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager,
                                     ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService,
-                                    NotificationService notificationService) : BaseController
+                                    NotificationService notificationService, CommentService commentService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -49,7 +49,7 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("clientfeed")]
         public async Task<IActionResult> GetClientFeedAsync(
             [FromQuery] List<string>? qualificationNames, [FromQuery] int page = 0,
-            [FromQuery] int pageSize = 8, [FromQuery] string qur = ""
+            [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE, [FromQuery] string qur = ""
         )
         {
             if (!ModelState.IsValid)
@@ -86,7 +86,7 @@ namespace AonFreelancing.Controllers.Web.v1
             [FromQuery(Name = "timeline")] int? duration,
             [FromQuery] PriceRange priceRange,
             [FromQuery] int page = 0,
-            [FromQuery] int pageSize = 8,
+            [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE,
             [FromQuery] string qur = ""
         )
         {
@@ -325,10 +325,10 @@ namespace AonFreelancing.Controllers.Web.v1
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
 
             Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
-
+            //Service to ba added (For me)
             if (commentInputDTO.ImageFile != null)
                 comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
-
+            //Service to ba added (For me)
             await mainAppContext.Comments.AddAsync(comment);
             await mainAppContext.SaveChangesAsync();
 
@@ -336,7 +336,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [HttpGet("{projectId}/comments")]
-        public async Task<IActionResult> GetComments([FromRoute] long projectId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetProjectCommentsAsync([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE)
         {
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             var projectExists = await mainAppContext.Projects.AnyAsync(p => p.Id == projectId);
@@ -344,21 +344,7 @@ namespace AonFreelancing.Controllers.Web.v1
             if (!projectExists)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found !"));
 
-            var comments = await mainAppContext.Comments
-                                                .Where(c => c.ProjectId == projectId)
-                                                .OrderByDescending(c => c.CreatedAt)
-                                                .Include(c => c.User)
-                                                .Skip((pageNumber - 1) * pageSize)
-                                                .Take(pageSize)
-                                                .Select(c => new CommentOutputDTO
-                                                {
-                                                    Id = c.Id,
-                                                    Content = c.Content,
-                                                    CommenterName = c.User.Name,
-                                                    CommenterId = c.UserId,
-                                                    CreatedAt = c.CreatedAt,
-                                                    ImageUrl = c.ImageUrl != null ? $"{imagesBaseUrl}/{c.ImageUrl}" : null
-                                                }).ToListAsync();
+            List<CommentOutDTO?> comments = await commentService.GetProjectCommentsAsync(projectId, page, pageSize, imagesBaseUrl);
 
             return Ok(CreateSuccessResponse(comments));
         }
