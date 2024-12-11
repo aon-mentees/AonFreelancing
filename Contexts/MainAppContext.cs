@@ -32,7 +32,7 @@ namespace AonFreelancing.Contexts
             builder.Entity<TempUser>().ToTable("TempUser")
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
             
-
+            builder.Entity<Bid>().ToTable("Bids");
             builder.Entity<Freelancer>().ToTable("Freelancers");
             builder.Entity<Client>().ToTable("Clients");
             builder.Entity<SystemUser>().ToTable("SystemUsers");
