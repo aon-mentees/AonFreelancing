@@ -19,7 +19,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager,
                                     ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService,
-                                    NotificationService notificationService) : BaseController
+                                    NotificationService notificationService, CommentService commentService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -49,7 +49,7 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("clientfeed")]
         public async Task<IActionResult> GetClientFeedAsync(
             [FromQuery] List<string>? qualificationNames, [FromQuery] int page = 0,
-            [FromQuery] int pageSize = 8, [FromQuery] string qur = ""
+            [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE, [FromQuery] string qur = ""
         )
         {
             if (!ModelState.IsValid)
@@ -86,7 +86,7 @@ namespace AonFreelancing.Controllers.Web.v1
             [FromQuery(Name = "timeline")] int? duration,
             [FromQuery] PriceRange priceRange,
             [FromQuery] int page = 0,
-            [FromQuery] int pageSize = 8,
+            [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE,
             [FromQuery] string qur = ""
         )
         {
@@ -308,5 +308,45 @@ namespace AonFreelancing.Controllers.Web.v1
             return Ok("Unliked successfully");
         }
 
+        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT},{Constants.USER_TYPE_FREELANCER}")]
+        [HttpPost("{projectId}/comments")]
+        public async Task<IActionResult> CreateCommentAsync([FromRoute] long projectId, [FromForm] CommentInputDTO commentInputDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            User? authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
+            if (authenticatedUser == null)
+                return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),
+                    "Unauthorized user"));
+
+            Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+
+            Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
+            //Service to ba added (For me)
+            if (commentInputDTO.ImageFile != null)
+                comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
+            //Service to ba added (For me)
+            await mainAppContext.Comments.AddAsync(comment);
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Commented"));
+        }
+
+        [HttpGet("{projectId}/comments")]
+        public async Task<IActionResult> GetProjectCommentsAsync([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE)
+        {
+            string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+            var projectExists = await mainAppContext.Projects.AnyAsync(p => p.Id == projectId);
+
+            if (!projectExists)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found !"));
+
+            List<CommentOutDTO?> comments = await commentService.GetProjectCommentsAsync(projectId, page, pageSize, imagesBaseUrl);
+
+            return Ok(CreateSuccessResponse(comments));
+        }
     }
 }

@@ -37,6 +37,7 @@ namespace AonFreelancing
             builder.Services.AddScoped<ProjectLikeService>();
             builder.Services.AddScoped<ProjectService>();
             builder.Services.AddScoped<RatingService>();
+            builder.Services.AddScoped<CommentService>();
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()
                 .AddEntityFrameworkStores<MainAppContext>()

@@ -20,4 +20,8 @@
     <PackageReference Include="Twilio" Version="7.6.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>
