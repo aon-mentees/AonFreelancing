@@ -14,11 +14,11 @@ using System.Linq;
 [Authorize]
 [Route("api/mobile/v1/tasks")]
 [ApiController]
-public class TasksController(MainAppContext mainAppContext,AuthService authService, TaskService taskService, UserService userService, RoleService roleService) : BaseController
+public class TasksController(AuthService authService, TaskService taskService, UserService userService) : BaseController
 {
     // Start task (Freelacner can) To Do -> in progress (Update started at)
     [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-    [HttpPut("{id}/StartTask")]
+    [HttpPut("{id}/start-task")]
     public async Task<IActionResult> StartTaskAsync(long id)
     {
         if (!ModelState.IsValid)
@@ -26,6 +26,7 @@ public class TasksController(MainAppContext mainAppContext,AuthService authServi
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
         TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
+
         if(storedUser is null)
             return Unauthorized();
         if(storedTask is null)
@@ -40,7 +41,7 @@ public class TasksController(MainAppContext mainAppContext,AuthService authServi
 
     // Submit task (Freelacner can) In progress -> in review
     [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-    [HttpPut("{id}/SubmitTask")]
+    [HttpPut("{id}/submit-task")]
     public async Task<IActionResult> SubmitTaskAsync(long id)
     {
         if (!ModelState.IsValid)
@@ -62,7 +63,7 @@ public class TasksController(MainAppContext mainAppContext,AuthService authServi
 
     // Implement Task approval (only clients owner can) In review -> Done (Update CompletedAt )
     [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-    [HttpPut("{id}/ApproveTask")]
+    [HttpPut("{id}/approve-task")]
     public async Task<IActionResult> ApproveTaskAsync(long id)
     {
         if (!ModelState.IsValid)
@@ -84,7 +85,7 @@ public class TasksController(MainAppContext mainAppContext,AuthService authServi
 
     // rejection (only clients owner can) In review -> (In progress ? To Do) 
     [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-    [HttpPut("{id}/RejectTask")]
+    [HttpPut("{id}/reject-task")]
     public async Task<IActionResult> RejectTaskAsync(long id)
     {
         if (!ModelState.IsValid)
