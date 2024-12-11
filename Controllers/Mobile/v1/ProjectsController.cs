@@ -47,7 +47,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("client-feed")]
         public async Task<IActionResult> GetClientFeedAsync(
             [FromQuery] List<string>? qualificationNames, [FromQuery] int page = 0,
-            [FromQuery] int pageSize = 8, [FromQuery] string qur = ""
+            [FromQuery] int pageSize = Constants.PROJECTS_DEFAULT_PAGE_SIZE, [FromQuery] string qur = ""
         )
         {
             if (!ModelState.IsValid)
@@ -59,10 +59,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
             PaginatedResult<Project> paginatedProjects = await projectService.FindClientFeedAsync(normalizedQuery, qualificationNames ?? [], page, pageSize);
             List<ProjectOutDTO> projectOutDTOs = paginatedProjects.Result.Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl)).ToList();
             PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
-          
-            foreach(var p in projectOutDTOs)
+
+
+            foreach (var p in projectOutDTOs)
+            {
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
-            
+                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
+                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+            }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
 
@@ -73,7 +77,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             [FromQuery(Name = "timeline")] int? duration,
             [FromQuery] PriceRange priceRange,
             [FromQuery] int page = 0,
-            [FromQuery] int pageSize = 8,
+            [FromQuery] int pageSize = Constants.PROJECTS_DEFAULT_PAGE_SIZE,
             [FromQuery] string qur = ""
         )
         {
@@ -89,8 +93,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
             PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
 
             foreach (var p in projectOutDTOs)
+            {
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
-
+                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
+                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+            }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
 

@@ -45,7 +45,7 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("clientfeed")]
         public async Task<IActionResult> GetClientFeedAsync(
             [FromQuery] List<string>? qualificationNames, [FromQuery] int page = 0,
-            [FromQuery] int pageSize = 8, [FromQuery] string qur = ""
+            [FromQuery] int pageSize = Constants.PROJECTS_DEFAULT_PAGE_SIZE, [FromQuery] string qur = ""
         )
         {
             if (!ModelState.IsValid)
@@ -59,8 +59,11 @@ namespace AonFreelancing.Controllers.Web.v1
             PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
 
             foreach (var p in projectOutDTOs)
+            {
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
-
+                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
+                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+            }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
 
@@ -71,7 +74,7 @@ namespace AonFreelancing.Controllers.Web.v1
             [FromQuery(Name = "timeline")] int? duration,
             [FromQuery] PriceRange priceRange,
             [FromQuery] int page = 0,
-            [FromQuery] int pageSize = 8,
+            [FromQuery] int pageSize = Constants.PROJECTS_DEFAULT_PAGE_SIZE,
             [FromQuery] string qur = ""
         )
         {
@@ -86,8 +89,11 @@ namespace AonFreelancing.Controllers.Web.v1
             PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
 
             foreach (var p in projectOutDTOs)
+            {
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
-
+                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
+                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+            }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
 

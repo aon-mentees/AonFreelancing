@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using AonFreelancing.Utilities;
 using System.Text.Json.Serialization;
+using AonFreelancing.Models.Responses;
 
 namespace AonFreelancing.Models.DTOs
 {
@@ -23,7 +24,7 @@ namespace AonFreelancing.Models.DTOs
         public string ClientName { get; set; }
         public long ClientId { get; set; }
         public bool IsLiked { get; set; }
-
+        public PaginatedResult<ProjectLikeOutputDTO> PaginatedLikes { get; set; }
         public string ImageUrl { get; set; }
 
         ProjectOutDTO(Project project, string imageBaseUrl)

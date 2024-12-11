@@ -38,5 +38,9 @@
         //public const string NOTIFICATION_TYPE_LIKE = "";
 
         public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
+
+        public const int LIKES_DEFAULT_PAGE_SIZE = 10;
+        public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
+
     }
 }
