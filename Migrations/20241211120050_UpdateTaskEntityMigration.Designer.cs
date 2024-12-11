@@ -4,6 +4,7 @@ using AonFreelancing.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    partial class MainAppContextModelSnapshot : ModelSnapshot
+    [Migration("20241211120050_UpdateTaskEntityMigration")]
+    partial class UpdateTaskEntityMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -262,38 +265,6 @@ namespace AonFreelancing.Migrations
                         .IsUnique();
 
                     b.ToTable("ProjectLikes");
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("RatedUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("RaterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<double>("RatingValue")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RatedUserId");
-
-                    b.HasIndex("RaterUserId");
-
-                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Skill", b =>
@@ -699,21 +670,6 @@ namespace AonFreelancing.Migrations
                     b.HasOne("AonFreelancing.Models.Project", null)
                         .WithMany("ProjectLikes")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
-                {
-                    b.HasOne("AonFreelancing.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("RatedUserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AonFreelancing.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("RaterUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
