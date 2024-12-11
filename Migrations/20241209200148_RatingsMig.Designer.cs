@@ -4,6 +4,7 @@ using AonFreelancing.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    partial class MainAppContextModelSnapshot : ModelSnapshot
+    [Migration("20241209200148_RatingsMig")]
+    partial class RatingsMig
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,7 +104,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("SystemUserId");
 
-                    b.ToTable("Bids", (string)null);
+                    b.ToTable("Bids");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
@@ -348,9 +351,6 @@ namespace AonFreelancing.Migrations
 
                     b.Property<long>("ProjectId")
                         .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
