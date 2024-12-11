@@ -19,7 +19,7 @@ public class UserService : MainDbService
         _userManager = userManager;
     }
 
-    public async Task<User?> GetByIdAsync(int id) => await _mainAppContext.Users.FindAsync(id);
+    public async Task<User?> GetByIdAsync(long id) => await _mainAppContext.Users.FindAsync(id);
     public async Task<IEnumerable<User>> GetAllAsync() => await _mainAppContext.Users.ToListAsync();
     public async Task<User?> GetByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.Users.Where(tu => tu.PhoneNumber == phoneNumber).FirstOrDefaultAsync();
     public User Create(UserRegistrationRequest request) => new User(request);
