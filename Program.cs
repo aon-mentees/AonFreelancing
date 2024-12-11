@@ -35,7 +35,6 @@ namespace AonFreelancing
             builder.Services.AddScoped<OTPService>();
             builder.Services.AddScoped<TempUserService>();
             builder.Services.AddScoped<UserService>();
-            builder.Services.AddScoped<RemoveService>();
             builder.Services.AddScoped<RoleService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<NotificationService>();

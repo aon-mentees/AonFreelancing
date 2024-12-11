@@ -11,7 +11,7 @@ public class TaskService(MainAppContext mainAppContext, UserService userService)
     public async Task<TaskEntity?> FindTaskByIdAsync(long id) => await mainAppContext.Tasks.FindAsync(id);
     public async Task<bool> AuthorizedToUpdateAsync(long userId, TaskEntity storedTask)
     {
-        User? storedUser = await userService.GetByIdAsync(userId);
+        User? storedUser = await userService.FindByIdAsync(userId);
         if(storedUser is null ||
             !(storedUser.GetType() is Freelancer) ||
             storedUser.Id != storedTask.Project.FreelancerId)

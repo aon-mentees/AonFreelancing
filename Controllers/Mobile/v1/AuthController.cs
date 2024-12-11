@@ -24,7 +24,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            var storedOTP = await _authService.GetOtpByPhoneNumber(phoneNumberReq.PhoneNumber);
+            var storedOTP = await _authService.FindOtpByPhoneNumber(phoneNumberReq.PhoneNumber);
             if (storedOTP == null)
                 return NotFound(CreateErrorResponse(
                 StatusCodes.Status404NotFound.ToString(), "No OTP entry found for the specified phone number."));
@@ -39,17 +39,17 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return Ok(CreateSuccessResponse("OTP code resent to your phone number, during testing you may not receive it, please use 123456"));
         }
         [HttpPost("send-verification-code")]
-        public async Task<IActionResult> SendVerificationCodeAsync([FromBody] TempUserDTO tempUserDTO)
+        public async Task<IActionResult> SendVerificationCodeAsync([FromBody] PhoneNumberReq phoneNumberReq)
         {
             //checks input validation
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            var validationResult = await _authService.CanSendOtpAsync(tempUserDTO.PhoneNumber);
+            var validationResult = await _authService.CanSendOtpAsync(phoneNumberReq.PhoneNumber);
               if (!validationResult.IsSuccess)           
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
             
-            string generatedOtpCode = await _authService.CreateTempUserAndOtp(tempUserDTO);
-            await _authService.SendOtpAsync(generatedOtpCode, tempUserDTO.PhoneNumber);
+            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq);
+            await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
             
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
         }
@@ -103,7 +103,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                     .ToList()
                 });
             await _authService.AssignRoleToUserAsync(newUser, userRegistrationRequest.UserType);
-            await _authService.RemoveEntity(storedTempUser);
+            await _authService.RemoveTempUser(storedTempUser);
 
             return CreatedAtAction(nameof(UsersController.GetProfileByIdAsync), "users", new { id = newUser.Id }, null);
         }
@@ -115,11 +115,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return CustomBadRequest();
             if (await _authService.ValidateCredentialsAsync(req.Email, req.Password))
             {
-                User? storedUser = await _authService.GetUserByEmailAsync(req.Email);
+                User? storedUser = await _authService.FindUserByEmailAsync(req.Email);
                 if (!storedUser.PhoneNumberConfirmed)
                     return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),"Verify Your Account First"));
                 
-                string role = await _authService.GetUserRoleAsync(storedUser);
+                string role = await _authService.FindUserRoleAsync(storedUser);
                 string token = await _authService.GenerateAuthToken(storedUser, role);
                 return Ok(CreateSuccessResponse(new LoginResponse(token, new UserDetailsDTO(storedUser, role ?? string.Empty))));
             }

@@ -22,13 +22,5 @@ namespace AonFreelancing.Models
             CreatedDate = DateTime.Now;
             ExpiresAt = DateTime.Now.AddMinutes(expireInMinutes);
         }
-
-        public Otp(OtpInputDTO otpDTO)
-        {
-            Code = otpDTO.Code;
-            PhoneNumber = otpDTO.PhoneNumber;
-            CreatedDate = DateTime.Now;
-            ExpiresAt = otpDTO.ExpiresAt;
-        }
     }
 }

@@ -18,9 +18,9 @@ namespace AonFreelancing.Services
     {
         public TempUserService(MainAppContext mainAppContext) : base(mainAppContext){}
         
-        public async Task<TempUser?> GetByIdAsync(int id) => await _mainAppContext.TempUsers.FindAsync(id);
-        public async Task<IEnumerable<TempUser>> GetAllAsync() => await _mainAppContext.TempUsers.ToListAsync();
-        public async Task<TempUser?> GetByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.TempUsers.Where(tu => tu.PhoneNumber == phoneNumber).FirstOrDefaultAsync();
-        public TempUser Create(TempUserDTO tempUserDTO) => new TempUser(tempUserDTO.PhoneNumber);
+        public async Task<TempUser?> FindByIdAsync(int id) => await _mainAppContext.TempUsers.FindAsync(id);
+        public async Task<IEnumerable<TempUser>> FindAllAsync() => await _mainAppContext.TempUsers.ToListAsync();
+        public async Task<TempUser?> FindByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.TempUsers.Where(tu => tu.PhoneNumber == phoneNumber).FirstOrDefaultAsync();
+        public TempUser Create(string phoneNumber) => new TempUser(phoneNumber);
     }
 }

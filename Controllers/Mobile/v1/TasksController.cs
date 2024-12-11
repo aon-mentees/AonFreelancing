@@ -25,7 +25,7 @@ public class TasksController(MainAppContext mainAppContext,AuthService authServi
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
         TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
-        User? storedUser = await userService.GetByIdAsync(authenticatedUserId);
+        User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
         if(storedTask is null)
@@ -47,7 +47,7 @@ public class TasksController(MainAppContext mainAppContext,AuthService authServi
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
         TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
-        User? storedUser = await userService.GetByIdAsync(authenticatedUserId);
+        User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
         if(storedTask is null)
@@ -69,7 +69,7 @@ public class TasksController(MainAppContext mainAppContext,AuthService authServi
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
         TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
-        User? storedUser = await userService.GetByIdAsync(authenticatedUserId);
+        User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
         if(storedTask is null)
@@ -91,7 +91,7 @@ public class TasksController(MainAppContext mainAppContext,AuthService authServi
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
         TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
-        User? storedUser = await userService.GetByIdAsync(authenticatedUserId);
+        User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
         if(storedTask is null)
