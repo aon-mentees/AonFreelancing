@@ -115,6 +115,22 @@ FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<F
             }
             return notificationOutputDTOs;
         }
+
+        [HttpPatch("about")]
+        public async Task<IActionResult> UpdateAboutAsync([FromBody] UserAboutInputDTO userAboutInputDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            var storedUser = await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+
+            storedUser.About = userAboutInputDTO.About;
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Users About section updated successfully"));
+        }
     }
 
 }

@@ -23,6 +23,18 @@ namespace AonFreelancing.Services
                 await _iNotificationsHubContext.Clients.Clients(connections).GetLikeNotification(likeNotificationDTO);
         }
 
+        public async Task SendApprovalNotification(BidApprovalNotificationOutputDTO bidApprovalNotification, long receiverId)
+        {
+            var connections = _inMemorySignalRUserConnectionService.GetConnections(receiverId);
+            if (!connections.IsNullOrEmpty())
+                await _iNotificationsHubContext.Clients.Clients(connections).GetBidApprovalNotification(bidApprovalNotification);
+        }
+        public async Task SendRejectionNotification(BidRejectionNotificationOutputDTO bidRejectionNotification, long receiverId)
+        {
+            var connections = _inMemorySignalRUserConnectionService.GetConnections(receiverId);
+            if (!connections.IsNullOrEmpty())
+                await _iNotificationsHubContext.Clients.Clients(connections).GetBidRejectionNotification(bidRejectionNotification);
+        }
 
     }
 }

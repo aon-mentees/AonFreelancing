@@ -1,16 +1,19 @@
-﻿using AonFreelancing.Contexts;
-using AonFreelancing.Models.DTOs.NoftificationDTOs;
-using AonFreelancing.Models.DTOs;
-using AonFreelancing.Models.Responses;
+﻿
+using AonFreelancing.Contexts;
+using AonFreelancing.Hubs;
 using AonFreelancing.Models;
+using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.DTOs.NoftificationDTOs;
+using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
+using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using AonFreelancing.Utilities;
-using Microsoft.EntityFrameworkCore;
 
 namespace AonFreelancing.Controllers.Web.v1
 {
@@ -42,7 +45,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-        [HttpGet("clientfeed")]
+        [HttpGet("client-feed")]
         public async Task<IActionResult> GetClientFeedAsync(
             [FromQuery] List<string>? qualificationNames, [FromQuery] int page = 0,
             [FromQuery] int pageSize = Constants.PROJECTS_DEFAULT_PAGE_SIZE, [FromQuery] string qur = ""
@@ -68,8 +71,8 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpGet("freelancerfeed")]
-        public async Task<IActionResult> GetFreelancerFeedAsync(
+        [HttpGet("freelancer-feed")]
+        public async Task<IActionResult> GetProjectFeedAsync(
             [FromQuery(Name = "specializations")] List<string>? qualificationNames,
             [FromQuery(Name = "timeline")] int? duration,
             [FromQuery] PriceRange priceRange,
@@ -159,6 +162,8 @@ namespace AonFreelancing.Controllers.Web.v1
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
+
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
 
@@ -172,8 +177,16 @@ namespace AonFreelancing.Controllers.Web.v1
             if (storedBid == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found."));
 
+            // Notification
+            string notificationMessage = string.Format(Constants.BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
+            string notificationTitle = Constants.BID_REJECTION_NOTIFICATION_TITLE;
+            var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
             await projectService.RejectProjectBidAsync(storedBid);
 
+            await notificationService.CreateAsync(rejectionNotification);
+            await pushNotificationService.SendRejectionNotification(
+                BidRejectionNotificationOutputDTO.FromRejectionNotification(rejectionNotification),
+                rejectionNotification.ReceiverId);
             return Ok(CreateSuccessResponse("Bid rejected."));
         }
 
@@ -310,7 +323,7 @@ namespace AonFreelancing.Controllers.Web.v1
             LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, storedProject.Id, likerId, likerName);
 
             await notificationService.CreateAsync(newLikeNotification);
-            await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification),newLikeNotification.ReceiverId);
+            await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification), newLikeNotification.ReceiverId);
             return Ok("Liked Successfully");
         }
         private async Task<IActionResult> UnLikeProjectAsync(ProjectLike storedProjectLike)

@@ -4,6 +4,7 @@ using AonFreelancing.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    partial class MainAppContextModelSnapshot : ModelSnapshot
+    [Migration("20241210195643_InitialMiragtion")]
+    partial class InitialMiragtion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,6 +66,9 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<long?>("ClientId")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("FreelancerId")
                         .HasColumnType("bigint");
 
@@ -85,13 +91,20 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<long?>("SystemUserId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
 
                     b.HasIndex("FreelancerId");
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Bids", (string)null);
+                    b.HasIndex("SystemUserId");
+
+                    b.ToTable("Bids");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Certification", b =>
@@ -289,7 +302,39 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("ProjectId", "LikerId")
                         .IsUnique();
 
-                    b.ToTable("ProjectLikes", (string)null);
+                    b.ToTable("ProjectLikes");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("RatedUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RaterUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<double>("RatingValue")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RatedUserId");
+
+                    b.HasIndex("RaterUserId");
+
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Skill", b =>
@@ -311,7 +356,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Skills", (string)null);
+                    b.ToTable("Skills");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.TaskEntity", b =>
@@ -344,9 +389,6 @@ namespace AonFreelancing.Migrations
 
                     b.Property<long>("ProjectId")
                         .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -623,8 +665,12 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.Bid", b =>
                 {
+                    b.HasOne("AonFreelancing.Models.Client", null)
+                        .WithMany("Bids")
+                        .HasForeignKey("ClientId");
+
                     b.HasOne("AonFreelancing.Models.Freelancer", "Freelancer")
-                        .WithMany()
+                        .WithMany("Bids")
                         .HasForeignKey("FreelancerId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -634,6 +680,10 @@ namespace AonFreelancing.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.SystemUser", null)
+                        .WithMany("Bids")
+                        .HasForeignKey("SystemUserId");
 
                     b.Navigation("Freelancer");
 
@@ -698,6 +748,21 @@ namespace AonFreelancing.Migrations
                     b.HasOne("AonFreelancing.Models.Project", null)
                         .WithMany("ProjectLikes")
                         .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("RatedUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("RaterUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
@@ -832,6 +897,8 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
                 {
+                    b.Navigation("Bids");
+
                     b.Navigation("Projects");
                 });
 
@@ -842,6 +909,11 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Certifications");
 
                     b.Navigation("Skills");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.SystemUser", b =>
+                {
+                    b.Navigation("Bids");
                 });
 #pragma warning restore 612, 618
         }

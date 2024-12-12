@@ -10,10 +10,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace AonFreelancing.Controllers.Mobile.v1
+namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/freelancers")]
+    [Route("api/web/v1/freelancers")]
     [ApiController]
     public class FreelancersController(FreelancerService freelancerService, AuthService authService)
         : BaseController
@@ -41,7 +41,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             Certification? certification = Certification.FromCertificationInputDTO(certificationInputDTO, freelancerId);
-
 
             await freelancerService.AddAsync(certification);
             await freelancerService.SaveChangesAsync();
@@ -94,7 +93,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return Forbid();
 
             await freelancerService.DeleteAsync(storedCertification);
-            
+
             return NoContent();
         }
     }

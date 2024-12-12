@@ -22,11 +22,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{id}/profile")]
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
-            FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<Freelancer>()
-                                                                                    .Include(f=>f.Skills)
-                                                                                    .Where(f => f.Id == id)
-                                                                                    .Select(f => FreelancerResponseDTO.FromFreelancer(f))
-                                                                                    .FirstOrDefaultAsync();
+            FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext
+                .Users.OfType<Freelancer>()
+                .Include(f=>f.Skills)
+                .Where(f => f.Id == id)
+                .Select(f => FreelancerResponseDTO.FromFreelancer(f))
+                .FirstOrDefaultAsync();
 
             if (storedFreelancerDTO != null)
                 return Ok(CreateSuccessResponse(storedFreelancerDTO));
@@ -41,6 +42,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
                     Id = c.Id,
                     Name = c.Name,
                     Username = c.UserName ?? string.Empty,
+                    Email = c.Email ?? string.Empty,
+                    About = c.About ?? string.Empty,
                     PhoneNumber = c.PhoneNumber ?? string.Empty,
                     UserType = Constants.USER_TYPE_CLIENT,
                     IsPhoneNumberVerified = c.PhoneNumberConfirmed,

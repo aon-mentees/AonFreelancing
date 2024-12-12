@@ -21,7 +21,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Route("api/mobile/v1/projects")]
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
-        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService,ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService) : BaseController
+        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, 
+        ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService) 
+        : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -135,6 +137,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)
@@ -152,6 +156,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 
+            // Notification 
+            string notificationMessage = string.Format(Constants.BID_APPROVAL_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
+            string notificationTitle = Constants.BID_APPROVAL_NOTIFICATION_TITLE;
+            var approvalNotification = new BidApprovalNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+
+            await notificationService.CreateAsync(approvalNotification);
+            await pushNotificationService.SendApprovalNotification(
+                BidApprovalNotificationOutputDTO.FromApprovalNotification(approvalNotification),
+                approvalNotification.ReceiverId);
+
             return Ok(CreateSuccessResponse("Bid approved."));
         }
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
@@ -160,6 +174,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
@@ -178,6 +193,15 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             await projectService.RejectProjectBidAsync(storedBid);
 
+            // Notification
+            string notificationMessage = string.Format(Constants.BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
+            string notificationTitle = Constants.BID_REJECTION_NOTIFICATION_TITLE;
+            var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+
+            await notificationService.CreateAsync(rejectionNotification);
+            await pushNotificationService.SendRejectionNotification(
+                BidRejectionNotificationOutputDTO.FromRejectionNotification(rejectionNotification),
+                rejectionNotification.ReceiverId);
             return Ok(CreateSuccessResponse("Bid rejected."));
         }
 
