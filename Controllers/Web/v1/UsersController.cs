@@ -1,7 +1,9 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.DTOs.NoftificationDTOs;
 using AonFreelancing.Models.Responses;
+using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,7 +16,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/users")]
     [ApiController]
-    public class UsersController(MainAppContext mainAppContext, RoleManager<ApplicationRole> roleManager)
+    public class UsersController(MainAppContext mainAppContext, RoleManager<ApplicationRole> roleManager, AuthService authService, NotificationService notificationService)
         : BaseController
     {
         [HttpGet("{id}/profile")]
@@ -87,6 +89,32 @@ FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<F
             ));
 
         }
+        [HttpGet("notifications")]
+        public async Task<IActionResult> GetNotifications()
+        {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            var storedNotifications = await notificationService.FindNotificationsForUserAsync(authenticatedUserId);
+            var notificationOutputDTOs = ToNotificationOutputDTOs(storedNotifications);
+
+            //this method calls must be placed after loading the notifications to their corresponding DTOs, prevent prematurely modifying the IsRead property of notificationOutputDTO.
+            await notificationService.MarkNotificationsAsReadAsync(storedNotifications);
+
+            return Ok(CreateSuccessResponse(notificationOutputDTOs));
+        }
+        private static List<NotificationOutputDTO> ToNotificationOutputDTOs(List<Notification> notifications)
+        {
+            var notificationOutputDTOs = new List<NotificationOutputDTO>();
+            foreach (var notification in notifications)
+            {
+                switch (notification)
+                {
+                    case LikeNotification likeNotification:
+                        notificationOutputDTOs.Add(LikeNotificationOutputDTO.FromLikeNotification(likeNotification));
+                        break;
+                }
+            }
+            return notificationOutputDTOs;
+        }
     }
-   
+
 }

@@ -1,5 +1,8 @@
-﻿namespace AonFreelancing.Models.DTOs.NoftificationDTOs
+﻿using System.Text.Json.Serialization;
+
+namespace AonFreelancing.Models.DTOs.NoftificationDTOs
 {
+    [JsonDerivedType(typeof(LikeNotificationOutputDTO))]
     public class NotificationOutputDTO
     {
         public long Id { get; set; }
