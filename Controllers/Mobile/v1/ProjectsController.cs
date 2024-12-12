@@ -21,7 +21,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Route("api/mobile/v1/projects")]
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
-        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService,ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService) : BaseController
+        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, 
+        ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService) 
+        : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]

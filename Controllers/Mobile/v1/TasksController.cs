@@ -14,18 +14,19 @@ using System.Linq;
 [Authorize]
 [Route("api/mobile/v1/tasks")]
 [ApiController]
-public class TasksController(AuthService authService, TaskService taskService, UserService userService, RoleService roleService) : BaseController
+public class TasksController(AuthService authService, TaskService taskService, UserService userService) : BaseController
 {
     // Start task (Freelacner can) To Do -> in progress (Update started at)
     [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-    [HttpPatch("{taskId}/StartTask")]
-    public async Task<IActionResult> StartTaskAsync(long taskId)
+    [HttpPut("{id}/start-task")]
+    public async Task<IActionResult> StartTaskAsync(long id)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
         TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
+
         if(storedUser is null)
             return Unauthorized();
         if(storedTask is null)
@@ -40,8 +41,8 @@ public class TasksController(AuthService authService, TaskService taskService, U
 
     // Submit task (Freelacner can) In progress -> in review
     [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-    [HttpPatch("{taskId}/SubmitTask")]
-    public async Task<IActionResult> SubmitTaskAsync(long taskId)
+    [HttpPut("{id}/submit-task")]
+    public async Task<IActionResult> SubmitTaskAsync(long id)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
@@ -62,8 +63,8 @@ public class TasksController(AuthService authService, TaskService taskService, U
 
     // Implement Task approval (only clients owner can) In review -> Done (Update CompletedAt )
     [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-    [HttpPatch("{taskId}/ApproveTask")]
-    public async Task<IActionResult> ApproveTaskAsync(long taskId)
+    [HttpPut("{id}/approve-task")]
+    public async Task<IActionResult> ApproveTaskAsync(long id)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
@@ -84,8 +85,8 @@ public class TasksController(AuthService authService, TaskService taskService, U
 
     // rejection (only clients owner can) In review -> (In progress ? To Do) 
     [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-    [HttpPatch("{taskId}/RejectTask")]
-    public async Task<IActionResult> RejectTaskAsync(long taskId)
+    [HttpPut("{id}/reject-task")]
+    public async Task<IActionResult> RejectTaskAsync(long id)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
