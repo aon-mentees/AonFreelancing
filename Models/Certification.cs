@@ -27,7 +27,7 @@ namespace AonFreelancing.Models
             IssueDate = certificationInputDTO.IssueDate;
             ExpiryDate = certificationInputDTO.ExpiryDate;
         }
-        public static Certification FromCertification(CertificationInputDTO certificationInputDTO, long freelancerId) 
+        public static Certification FromCertificationInputDTO(CertificationInputDTO certificationInputDTO, long freelancerId) 
             => new Certification(certificationInputDTO, freelancerId);
 
     }
