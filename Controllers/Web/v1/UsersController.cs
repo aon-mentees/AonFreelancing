@@ -15,7 +15,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/users")]
     [ApiController]
-    public class UsersController(MainAppContext mainAppContext, AuthService authService, RoleManager<ApplicationRole> roleManager)
+    public class UsersController(MainAppContext mainAppContext, UserManager<User> userManager, AuthService authService, RoleManager<ApplicationRole> roleManager)
         : BaseController
     {
         [HttpGet("{id}/profile")]
@@ -75,14 +75,11 @@ FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<F
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            long authenticatedUserId = authService.GetUserId(identity);
-
-            var user = await mainAppContext.Users.FindAsync(authenticatedUserId);
-            if (user == null)
+            var storedUser = await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
 
-            user.About = userAboutInputDTO.About;
+            storedUser.About = userAboutInputDTO.About;
             await mainAppContext.SaveChangesAsync();
 
             return Ok(CreateSuccessResponse("Users About section updated successfully"));
