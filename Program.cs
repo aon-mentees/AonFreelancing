@@ -14,6 +14,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace AonFreelancing
 {
@@ -24,16 +25,23 @@ namespace AonFreelancing
             var builder = WebApplication.CreateBuilder(args);
 
             var conf = builder.Configuration;
-            builder.Services.AddControllers(o => o.SuppressAsyncSuffixInActionNames = false);
+            builder.Services.AddControllers(o => o.SuppressAsyncSuffixInActionNames = false)
+                            .AddJsonOptions(options => options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals);
             builder.Services.AddSingleton<OtpManager>();
             builder.Services.AddSingleton<JwtService>();
             builder.Services.AddSingleton<FileStorageService>();
             builder.Services.AddSingleton<InMemorySignalRUserConnectionService>();
             builder.Services.AddScoped<PushNotificationService>();
+            builder.Services.AddScoped<OTPService>();
+            builder.Services.AddScoped<TempUserService>();
+            builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<RoleService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<NotificationService>();
             builder.Services.AddScoped<ProjectLikeService>();
             builder.Services.AddScoped<ProjectService>();
+            builder.Services.AddScoped<RatingService>();
+            builder.Services.AddScoped<TaskService>();
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()
                 .AddEntityFrameworkStores<MainAppContext>()
@@ -108,6 +116,7 @@ namespace AonFreelancing
             {
                 options.SuppressModelStateInvalidFilter = true;
             });
+
 
             var app = builder.Build();
 

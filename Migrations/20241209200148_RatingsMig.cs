@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class RatingsMig : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -231,6 +231,33 @@ namespace AonFreelancing.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Ratings",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RaterUserId = table.Column<long>(type: "bigint", nullable: false),
+                    RatedUserId = table.Column<long>(type: "bigint", nullable: false),
+                    RatingValue = table.Column<double>(type: "float", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Ratings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Ratings_AspNetUsers_RatedUserId",
+                        column: x => x.RatedUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Ratings_AspNetUsers_RaterUserId",
+                        column: x => x.RaterUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -561,6 +588,16 @@ namespace AonFreelancing.Migrations
                 column: "FreelancerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Ratings_RatedUserId",
+                table: "Ratings",
+                column: "RatedUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ratings_RaterUserId",
+                table: "Ratings",
+                column: "RaterUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Skills_UserId",
                 table: "Skills",
                 column: "UserId");
@@ -606,6 +643,9 @@ namespace AonFreelancing.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProjectLikes");
+
+            migrationBuilder.DropTable(
+                name: "Ratings");
 
             migrationBuilder.DropTable(
                 name: "Skills");

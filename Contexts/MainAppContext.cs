@@ -20,6 +20,8 @@ namespace AonFreelancing.Contexts
         public DbSet<Skill> Skills { get; set; }
         public DbSet<ProjectLike> ProjectLikes { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Rating> Ratings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
@@ -29,7 +31,7 @@ namespace AonFreelancing.Contexts
             builder.Entity<TempUser>().ToTable("TempUser")
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
             
-
+            builder.Entity<Bid>().ToTable("Bids");
             builder.Entity<Freelancer>().ToTable("Freelancers");
             builder.Entity<Client>().ToTable("Clients");
             builder.Entity<SystemUser>().ToTable("SystemUsers");
@@ -49,6 +51,10 @@ namespace AonFreelancing.Contexts
               .Property(t => t.Status).HasDefaultValue(Constants.TASK_STATUS_TO_DO);
 
             builder.Entity<ProjectLike>().HasIndex(pl => new { pl.ProjectId, pl.LikerId }).IsUnique();
+
+            builder.Entity<Rating>().HasIndex(r => r.RaterUserId).IsUnique(false);
+            builder.Entity<Rating>().HasIndex(r => r.RatedUserId).IsUnique(false);
+
             //set up relationships
             builder.Entity<TempUser>().HasOne<Otp>()
                                     .WithOne()
@@ -96,6 +102,19 @@ namespace AonFreelancing.Contexts
                                                        .HasForeignKey(ln => ln.LikerId)
                                                        .HasPrincipalKey(u => u.Id)
                                                        .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Rating>()
+                  .HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(r => r.RatedUserId)
+                  .HasPrincipalKey(u => u.Id)
+                  .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<Rating>()
+                    .HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(r => r.RaterUserId)
+                    .HasPrincipalKey(u => u.Id)
+                    .OnDelete(DeleteBehavior.NoAction);
 
             base.OnModelCreating(builder);
         }
