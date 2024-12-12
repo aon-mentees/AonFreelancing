@@ -24,7 +24,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
-        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
 
         if(storedUser is null)
@@ -47,7 +47,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
-        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
@@ -56,7 +56,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if(authenticatedUserId != storedTask.Project.FreelancerId)
             return Forbid();
         if(storedTask.Status != Constants.TASK_STATUS_IN_PROGRESS)
-            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_PROGRESS } to start."));
+            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_PROGRESS } to submit."));
         await taskService.SubmitTaskAsync(storedTask);
         return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
     }
@@ -69,16 +69,16 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
-        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
         if(storedTask is null)
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
-        if(authenticatedUserId != storedTask.Project.FreelancerId)
+        if(authenticatedUserId != storedTask.Project.ClientId)
             return Forbid();
         if(storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
-            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to start."));
+            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to approve."));
         await taskService.ApproveTaskAsync(storedTask);
         return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
     }
@@ -91,17 +91,17 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
-        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
         if(storedTask is null)
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
-        if(authenticatedUserId != storedTask.Project.FreelancerId)
+        if(authenticatedUserId != storedTask.Project.ClientId)
             return Forbid();
         if(storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
-            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to start."));
-        await taskService.ApproveTaskAsync(storedTask);
+            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to reject."));
+        await taskService.RejectTaskAsync(storedTask);
         return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
     }
-}
+}   
