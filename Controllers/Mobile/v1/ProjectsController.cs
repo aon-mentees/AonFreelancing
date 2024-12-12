@@ -216,7 +216,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await projectService.RejectProjectBidAsync(storedBid);
 
             // Notification
-            string notificationMessage = string.Format(Constants.BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT, storedBid, storedProject.Title);
+            string notificationMessage = string.Format(Constants.BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
             string notificationTitle = Constants.BID_REJECTION_NOTIFICATION_TITLE;
             var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
 
