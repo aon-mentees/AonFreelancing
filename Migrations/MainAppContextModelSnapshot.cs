@@ -91,7 +91,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Bids");
+                    b.ToTable("Bids", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
