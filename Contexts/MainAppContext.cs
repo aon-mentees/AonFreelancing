@@ -73,6 +73,12 @@ namespace AonFreelancing.Contexts
                 .HasForeignKey(b => b.FreelancerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<TaskEntity>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks) 
+                .HasForeignKey(t => t.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
             builder.Entity<Skill>().HasOne<Freelancer>()
                                     .WithMany(f=>f.Skills)
                                     .HasForeignKey(s=>s.UserId)
