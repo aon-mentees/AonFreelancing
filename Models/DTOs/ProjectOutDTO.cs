@@ -22,6 +22,7 @@ namespace AonFreelancing.Models.DTOs
         public string? CreationTime {  get; set; }
         public string ClientName {  get; set; }
         public long ClientId {  get; set; }
+        public bool IsLiked {  get; set; }
 
         public string ImageUrl {  get; set; }
 

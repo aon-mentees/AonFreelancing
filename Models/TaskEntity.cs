@@ -4,6 +4,7 @@ namespace AonFreelancing.Models
 {
     public class TaskEntity
     {
+        // StartredAt
         public long Id { get; set; }
         public long ProjectId { get; set; }
         public Project? Project { get; set; }
@@ -12,6 +13,7 @@ namespace AonFreelancing.Models
         public DateTime? DeadlineAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public string Notes { get; set; }
+        public DateTime? StartedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }

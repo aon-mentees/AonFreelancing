@@ -1,27 +1,25 @@
-﻿
-using AonFreelancing.Contexts;
-using AonFreelancing.Hubs;
-using AonFreelancing.Models;
-using AonFreelancing.Models.DTOs;
+﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models.DTOs.NoftificationDTOs;
+using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.Responses;
+using AonFreelancing.Models;
 using AonFreelancing.Services;
-using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using AonFreelancing.Utilities;
+using Microsoft.EntityFrameworkCore;
 
-namespace AonFreelancing.Controllers.Mobile.v1
+namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/projects")]
+    [Route("api/web/v1/projects")]
     [ApiController]
-    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
-        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService,ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService) : BaseController
+    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager,
+                                    ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService,
+                                    NotificationService notificationService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -44,11 +42,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await mainAppContext.Projects.AddAsync(newProject);
             await mainAppContext.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProjectDetailsAsync),new {id = newProject.Id},null);
+            return CreatedAtAction(nameof(GetProjectDetailsAsync), new { id = newProject.Id }, null);
         }
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-        [HttpGet("client-feed")]
+        [HttpGet("clientfeed")]
         public async Task<IActionResult> GetClientFeedAsync(
             [FromQuery] List<string>? qualificationNames, [FromQuery] int page = 0,
             [FromQuery] int pageSize = 8, [FromQuery] string qur = ""
@@ -75,14 +73,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                         .Take(pageSize)
                                         .Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl))
                                         .ToListAsync();
-            foreach(var p in  storedProjects)
+            foreach (var p in storedProjects)
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
-            
+
             return Ok(CreateSuccessResponse(new PaginatedResult<ProjectOutDTO>(totalProjectsCount, storedProjects)));
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpGet("freelancer-feed")]
+        [HttpGet("freelancerfeed")]
         public async Task<IActionResult> GetProjectFeedAsync(
             [FromQuery(Name = "specializations")] List<string>? qualificationNames,
             [FromQuery(Name = "timeline")] int? duration,
@@ -159,51 +157,30 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-
-            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
+            Project? storedProject = await mainAppContext.Projects.Where(p => p.Id == projectId)
+                                                                 .Include(p => p.Bids)
+                                                                 .FirstOrDefaultAsync();
 
             if (storedProject == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
 
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
 
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "project status is not 'Available'"));
 
-            Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
+            Bid? storedBid = storedProject.Bids.Where(b => b.Id == bidId).FirstOrDefault();
             if (storedBid == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found or already rejected."));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "bid not found"));
 
-            await projectService.ApproveProjectBidAsync(storedBid, storedProject);
+            storedBid.Status = Constants.BIDS_STATUS_APPROVED;
+            storedBid.ApprovedAt = DateTime.Now;
+            storedProject.Status = Constants.PROJECT_STATUS_CLOSED;
+            storedProject.FreelancerId = storedBid.FreelancerId;
 
-            return Ok(CreateSuccessResponse("Bid approved."));
-        }
-        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-        [HttpPut("{projectId}/bids/{bidId}/reject")]
-        public async Task<IActionResult> RejectBidAsync([FromRoute] long projectId, [FromRoute] long bidId)
-        {
-
-            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-
-            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
-
-            if (storedProject == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
-
-            if (authenticatedClientId != storedProject.ClientId)
-                return Forbid();
-
-            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
-
-            Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
-            if (storedBid == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found."));
-
-            await projectService.RejectProjectBidAsync(storedBid);
-
-            return Ok(CreateSuccessResponse("Bid rejected."));
+            await mainAppContext.SaveChangesAsync();
+            return Ok();
         }
 
 
@@ -247,14 +224,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
         public async Task<IActionResult> CreateTaskAsync(long projectId, [FromBody] TaskInputDTO taskInputDTO)
         {
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p=>p.Id == projectId);
-            if (storedProject == null )
+            Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId);
+            if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
-            if(storedProject.Status != Constants.PROJECT_STATUS_CLOSED)
+            if (storedProject.Status != Constants.PROJECT_STATUS_CLOSED)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "project is not status closed yet"));
-            
+
 
             TaskEntity? newTask = TaskEntity.FromInputDTO(taskInputDTO, projectId);
             await mainAppContext.Tasks.AddAsync(newTask);
@@ -278,16 +255,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
             ProjectLike? storedLike = await projectLikeService.Find(authenticatedUserId, projectId);
             if (storedLike != null && action == Constants.PROJECT_LIKE_ACTION)
                 return Conflict(CreateErrorResponse("409", "you cannot like the same project twice"));
-            
+
             if (storedLike != null && action == Constants.PROJECT_UNLIKE_ACTION)
                 return await UnLikeProjectAsync(storedLike);
             if (storedLike == null && action == Constants.PROJECT_LIKE_ACTION)
-                return  await LikeProjectAsync(storedProject,authenticatedUserId, authenticatedLikerName);
+                return await LikeProjectAsync(storedProject, authenticatedUserId, authenticatedLikerName);
 
-            return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),"no like found to be deleted"));
+            return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "no like found to be deleted"));
         }
 
-     
+
 
 
         [HttpGet("{projectId}/tasks")]
@@ -297,7 +274,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
-            
+
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId);
 
