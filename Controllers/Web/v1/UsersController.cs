@@ -70,20 +70,19 @@ FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<F
         }
 
         [HttpPatch("about")]
-        public async Task<IActionResult> UpdateAboutAsync([FromBody] UserAboutInputDTO updateUsersAboutDTO)
+        public async Task<IActionResult> UpdateAboutAsync([FromBody] UserAboutInputDTO userAboutInputDTO)
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
             var identity = HttpContext.User.Identity as ClaimsIdentity;
-            
             long authenticatedUserId = authService.GetUserId(identity);
 
             var user = await mainAppContext.Users.FindAsync(authenticatedUserId);
             if (user == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
 
-            user.About = updateUsersAboutDTO.About;
+            user.About = userAboutInputDTO.About;
             await mainAppContext.SaveChangesAsync();
 
             return Ok(CreateSuccessResponse("Users About section updated successfully"));
