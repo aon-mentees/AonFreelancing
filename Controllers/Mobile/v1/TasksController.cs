@@ -87,6 +87,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
     [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
     [HttpPut("{taskId}/reject-task")]
     public async Task<IActionResult> RejectTaskAsync(long taskId)
+
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
