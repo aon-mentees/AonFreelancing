@@ -55,6 +55,11 @@ namespace AonFreelancing.Services
         {
             await _mainAppContext.SaveChangesAsync();
         }
+        public async Task ApplyBidAsync(Bid? bid)
+        {
+            await _mainAppContext.AddAsync(bid);
+            await _mainAppContext.SaveChangesAsync();
+        }
 
         // Check if User 1 Worked With User 2 
         public async Task<bool> IsUser1WorkedWithUser2Async(long userId1, long userId2)

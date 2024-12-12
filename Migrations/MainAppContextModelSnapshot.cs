@@ -593,6 +593,27 @@ namespace AonFreelancing.Migrations
                     b.ToTable("LikeNotifications", (string)null);
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.SubmitBidNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("FreelancerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FreelancerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.HasIndex("FreelancerId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("SubmitBidNotifications", (string)null);
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
                 {
                     b.HasBaseType("AonFreelancing.Models.User");
@@ -798,6 +819,27 @@ namespace AonFreelancing.Migrations
                         .WithMany()
                         .HasForeignKey("LikerId")
                         .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.SubmitBidNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Freelancer", null)
+                        .WithMany()
+                        .HasForeignKey("FreelancerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.SubmitBidNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AonFreelancing.Models.Project", null)

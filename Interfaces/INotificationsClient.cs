@@ -8,6 +8,7 @@ namespace AonFreelancing.Interfaces
     public interface INotificationsClient
     {
         Task GetLikeNotification(LikeNotificationOutputDTO likeNotification);
-        
+        Task GetBidSubmissionNotification(BidSubmissionNotificationOutputDTO submitBidNotification);
+
     }
 }

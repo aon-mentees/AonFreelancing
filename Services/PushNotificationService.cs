@@ -1,5 +1,6 @@
 ﻿using AonFreelancing.Hubs;
 using AonFreelancing.Interfaces;
+using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs.NoftificationDTOs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
@@ -22,7 +23,12 @@ namespace AonFreelancing.Services
             if (!connections.IsNullOrEmpty())
                 await _iNotificationsHubContext.Clients.Clients(connections).GetLikeNotification(likeNotificationDTO);
         }
-
+        public async Task SendSubmitBidNotification(BidSubmissionNotificationOutputDTO submitBidNotificationOutDTO, long receiverId)
+        {
+            var connections = _inMemorySignalRUserConnectionService.GetConnections(receiverId);
+            if (!connections.IsNullOrEmpty())
+                await _iNotificationsHubContext.Clients.Clients(connections).GetBidSubmissionNotification(submitBidNotificationOutDTO);
+        }
 
     }
 }

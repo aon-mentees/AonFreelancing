@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
         // Replace this token with a valid token
-        const jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiY2xpZW50IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZ2l2ZW5uYW1lIjoibmlnZ2VyIHRoZSBjbGllbnQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJtb2hhbW1lZEBleGFtcGxlLmNvbSIsImV4cCI6NzczMzY2MTI5MiwiaXNzIjoiQW9uUGxhdGZvcm0iLCJhdWQiOiJUcmFpbmVycy5UcmFpbmVlcyJ9.gpA5-b3Gw9DGXeZF9aRq5DaYLzcQqIyRB_5T2vwMq5Y";
+        const jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiY2xpZW50IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZ2l2ZW5uYW1lIjoieW91c2lmIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoieW91c2lmMUBleGFtcGxlLmNvbSIsImV4cCI6MTczNDAxOTAwOCwiaXNzIjoiQW9uIiwiYXVkIjoiQW9uIERldiJ9.G77ZmmzauX7VyhJzAu7JAj3UkH7Iv4A14s_ssINZCyk";
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/Hubs/Notifications", {
@@ -36,6 +36,10 @@
         connection.on("GetLikeNotification", (likeNotificationDTO) => {
             alert(`New Like from ${likeNotificationDTO.likerName}`);
             console.log("Received like notification:", likeNotificationDTO);
+        });
+        connection.on("GetBidSubmissionNotification", (submitBidNotificationDTO) => {
+            alert(`New Bid apply from ${submitBidNotificationDTO.freelancerId}`);
+            console.log("Received Bid apply notification:", submitBidNotificationDTO);
         });
 
         start();

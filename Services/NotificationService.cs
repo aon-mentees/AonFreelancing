@@ -1,5 +1,7 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
+using AonFreelancing.Models.DTOs.NoftificationDTOs;
+using AonFreelancing.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AonFreelancing.Services
@@ -29,6 +31,8 @@ namespace AonFreelancing.Services
             _mainAppContext.Remove(storedLikeNotification);
             await _mainAppContext.SaveChangesAsync();
         }
+
+
         //public async Task DeleteWithrojectLikeAsync(ProjectLike projectLike)
         //{
         //    LikeNotification? storedLikeNotification = await _mainAppContext.Notifications.FirstOrDefaultAsync(n => n. == projectLike.Id);

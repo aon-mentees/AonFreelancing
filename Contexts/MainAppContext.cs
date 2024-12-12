@@ -39,6 +39,7 @@ namespace AonFreelancing.Contexts
 
             builder.Entity<Notification>().ToTable("Notifications");
             builder.Entity<LikeNotification>().ToTable("LikeNotifications");
+            builder.Entity<SubmitBidNotification>().ToTable("SubmitBidNotifications");
 
 
 
@@ -101,6 +102,19 @@ namespace AonFreelancing.Contexts
                                                        .HasForeignKey(ln => ln.LikerId)
                                                        .HasPrincipalKey(u => u.Id)
                                                        .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<SubmitBidNotification>().HasOne<Project>()
+                                               .WithMany()
+                                               .HasForeignKey(sn => sn.ProjectId)
+                                               .HasPrincipalKey(p => p.Id)
+                                               .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<SubmitBidNotification>().HasOne<Freelancer>()
+                                                       .WithMany()
+                                                       .HasForeignKey(sn => sn.FreelancerId)
+                                                       .HasPrincipalKey(u => u.Id)
+                                                       .OnDelete(DeleteBehavior.NoAction);
+
+
 
             builder.Entity<Rating>()
                   .HasOne<User>()
