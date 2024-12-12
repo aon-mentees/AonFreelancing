@@ -69,15 +69,14 @@ FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<F
 
         }
 
-        // I need your opinion on updating about for user :)
-        // Add it here? Or add it to every controller?
         [HttpPatch("about")]
-        public async Task<IActionResult> UpdateAboutAsync([FromBody] UpdateUsersAboutDTO updateUsersAboutDTO)
+        public async Task<IActionResult> UpdateAboutAsync([FromBody] UserAboutInputDTO updateUsersAboutDTO)
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
             var identity = HttpContext.User.Identity as ClaimsIdentity;
+            
             long authenticatedUserId = authService.GetUserId(identity);
 
             var user = await mainAppContext.Users.FindAsync(authenticatedUserId);
@@ -87,7 +86,7 @@ FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<F
             user.About = updateUsersAboutDTO.About;
             await mainAppContext.SaveChangesAsync();
 
-            return Ok(CreateSuccessResponse(new { Message = "Users About section updated successfully" }));
+            return Ok(CreateSuccessResponse("Users About section updated successfully"));
         }
     }
 }
