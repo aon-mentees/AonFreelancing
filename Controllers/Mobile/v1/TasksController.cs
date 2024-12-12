@@ -18,8 +18,8 @@ public class TasksController(AuthService authService, TaskService taskService, U
 {
     // Start task (Freelacner can) To Do -> in progress (Update started at)
     [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-    [HttpPut("{id}/start-task")]
-    public async Task<IActionResult> StartTaskAsync(long id)
+    [HttpPut("{taskId}/start-task")]
+    public async Task<IActionResult> StartTaskAsync(long taskId)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
@@ -41,8 +41,8 @@ public class TasksController(AuthService authService, TaskService taskService, U
 
     // Submit task (Freelacner can) In progress -> in review
     [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-    [HttpPut("{id}/submit-task")]
-    public async Task<IActionResult> SubmitTaskAsync(long id)
+    [HttpPut("{taskId}/submit-task")]
+    public async Task<IActionResult> SubmitTaskAsync(long taskId)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
@@ -63,8 +63,8 @@ public class TasksController(AuthService authService, TaskService taskService, U
 
     // Implement Task approval (only clients owner can) In review -> Done (Update CompletedAt )
     [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-    [HttpPut("{id}/approve-task")]
-    public async Task<IActionResult> ApproveTaskAsync(long id)
+    [HttpPut("{taskId}/approve-task")]
+    public async Task<IActionResult> ApproveTaskAsync(long taskId)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
@@ -85,8 +85,8 @@ public class TasksController(AuthService authService, TaskService taskService, U
 
     // rejection (only clients owner can) In review -> (In progress ? To Do) 
     [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-    [HttpPut("{id}/reject-task")]
-    public async Task<IActionResult> RejectTaskAsync(long id)
+    [HttpPut("{taskId}/reject-task")]
+    public async Task<IActionResult> RejectTaskAsync(long taskId)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();

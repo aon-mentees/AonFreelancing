@@ -159,9 +159,7 @@ namespace AonFreelancing.Controllers.Web.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-
-            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
-
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)

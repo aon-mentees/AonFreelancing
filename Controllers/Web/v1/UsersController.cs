@@ -16,7 +16,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/users")]
     [ApiController]
-    public class UsersController(MainAppContext mainAppContext, RoleManager<ApplicationRole> roleManager, AuthService authService, NotificationService notificationService)
+    public class UsersController(MainAppContext mainAppContext, RoleManager<ApplicationRole> roleManager, AuthService authService, NotificationService notificationService, UserManager<User> userManager)
         : BaseController
     {
         [HttpGet("{id}/profile")]
