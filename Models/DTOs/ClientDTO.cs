@@ -22,4 +22,13 @@ namespace AonFreelancing.Models.DTOs
         public string CompanyName { get; set; }
         public IEnumerable<ProjectDetailsDTO>? Projects { get; set; }
     }
+
+    public class ClientUpdateDTO
+    {
+        [StringLength(64, ErrorMessage = "The Name cannot exceed 64 characters.")]
+        public string Name { get; set; }
+
+        [StringLength(128, ErrorMessage = "The CompanyName cannot exceed 128 characters.")]
+        public string CompanyName { get; set; }
+    }
 }
