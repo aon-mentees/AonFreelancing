@@ -21,6 +21,8 @@ namespace AonFreelancing.Models.DTOs
             Id = freelancer.Id;
             Name = freelancer.Name;
             Username = freelancer.UserName;
+            Email = freelancer.Email;
+            About = freelancer.About;
             PhoneNumber = freelancer.PhoneNumber;
             UserType = Constants.USER_TYPE_FREELANCER;
             IsPhoneNumberVerified = freelancer.PhoneNumberConfirmed;

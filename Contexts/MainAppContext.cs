@@ -21,6 +21,7 @@ namespace AonFreelancing.Contexts
         public DbSet<ProjectLike> ProjectLikes { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Rating> Ratings { get; set; }
+        public DbSet<Certification> Certifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -73,6 +74,12 @@ namespace AonFreelancing.Contexts
                 .HasForeignKey(b => b.FreelancerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<TaskEntity>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks) 
+                .HasForeignKey(t => t.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
             builder.Entity<Skill>().HasOne<Freelancer>()
                                     .WithMany(f=>f.Skills)
                                     .HasForeignKey(s=>s.UserId)
@@ -122,6 +129,11 @@ namespace AonFreelancing.Contexts
                                                         .HasPrincipalKey(u => u.Id)
                                                         .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<Certification>().HasOne(c => c.Freelancer)
+                                           .WithMany(f => f.Certifications)
+                                           .HasForeignKey(c => c.FreelancerId)
+                                           .HasPrincipalKey(f => f.Id)
+                                           .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<Rating>()
                   .HasOne<User>()
                   .WithMany()
