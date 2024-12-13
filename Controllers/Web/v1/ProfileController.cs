@@ -44,7 +44,7 @@ namespace AonFreelancing.Controllers.Web.v1
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "NotFound"));
         }
 
-        [HttpGet("/statistics")]
+        [HttpGet("statistics")]
         public async Task<IActionResult> GetUserStatisticsAsync()
         {
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
@@ -60,6 +60,24 @@ namespace AonFreelancing.Controllers.Web.v1
 
             return Ok(CreateSuccessResponse(new UserStatisticsDTO(ProjectsStatisticsDTO.FromProjects(storedProjects),
                                                                   TasksStatisticsDTO.FromTasks(storedTasks))));
+        }
+
+        [HttpPatch("about")]
+        public async Task<IActionResult> UpdateAboutAsync([FromBody] UserAboutInputDTO userAboutInputDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+            long authonticatedUser = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
+            User? storedUser = await mainAppContext.Users.FindAsync(authonticatedUser);
+
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+
+            storedUser.About = userAboutInputDTO.About;
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Users About section updated successfully"));
         }
     }
 
