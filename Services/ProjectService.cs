@@ -62,5 +62,13 @@ namespace AonFreelancing.Services
             return await _mainAppContext.Projects.AnyAsync(p => (p.ClientId == userId1 && p.FreelancerId == userId2) ||
                                                                 (p.ClientId == userId2 && p.FreelancerId == userId1));
         }
+
+        public async Task<Project?> FindProjectAsync(long projectId)
+        {
+            return await _mainAppContext.Projects
+                .Where(p => p.Id == projectId && !p.IsDeleted) 
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

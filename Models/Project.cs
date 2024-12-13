@@ -36,6 +36,10 @@ namespace AonFreelancing.Models
         public List<TaskEntity>? Tasks { get; set; }
         public List<ProjectLike>? ProjectLikes { get; set; }
 
+        public bool IsDeleted { get; set; }  
+        public DateTime? DeletedAt { get; set; } 
+
+
         public Project() { }
         Project(ProjectInputDto inputDto,long clientId)
         {
@@ -47,6 +51,7 @@ namespace AonFreelancing.Models
             Budget = inputDto.Budget;
             PriceType = inputDto.PriceType;
             CreatedAt = DateTime.Now;
+            IsDeleted = false;
         }
         public static Project FromInputDTO(ProjectInputDto inputDto, long clientId) => new Project(inputDto, clientId);
 
