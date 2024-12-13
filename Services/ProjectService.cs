@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace AonFreelancing.Services
 {
-    public class ProjectService
+    public class ProjectService 
     {
         private readonly MainAppContext _mainAppContext;
         private readonly OtpManager _otpManager;
@@ -35,6 +35,11 @@ namespace AonFreelancing.Services
         public async Task<Bid?> FindBidsAsync(Project project, long bidId)
         {
             return project.Bids.Where(b => b.Id == bidId && b.Status!=Constants.BIDS_STATUS_REJECTED).FirstOrDefault();
+        }
+        public async Task ApplyBidAsync(Bid? bid)
+        {
+            await _mainAppContext.AddAsync(bid);
+            await _mainAppContext.SaveChangesAsync();
         }
         public async Task ApproveProjectBidAsync(Bid bid,Project project)
         {

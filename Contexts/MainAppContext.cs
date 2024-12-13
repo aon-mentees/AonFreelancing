@@ -22,7 +22,7 @@ namespace AonFreelancing.Contexts
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<Certification> Certifications { get; set; }
-
+        public DbSet<Education> Educations { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
@@ -131,11 +131,29 @@ namespace AonFreelancing.Contexts
                                                         .HasPrincipalKey(u => u.Id)
                                                         .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<SubmitBidNotification>().HasOne<Project>()
+                                               .WithMany()
+                                               .HasForeignKey(sn => sn.ProjectId)
+                                               .HasPrincipalKey(p => p.Id)
+                                               .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<SubmitBidNotification>().HasOne<Freelancer>()
+                                                       .WithMany()
+                                                       .HasForeignKey(sn => sn.FreelancerId)
+                                                       .HasPrincipalKey(u => u.Id)
+                                                       .OnDelete(DeleteBehavior.NoAction);
+
             builder.Entity<Certification>().HasOne(c => c.Freelancer)
                                            .WithMany(f => f.Certifications)
                                            .HasForeignKey(c => c.FreelancerId)
                                            .HasPrincipalKey(f => f.Id)
                                            .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Education>().HasOne(e => e.Freelancer)
+                                          .WithMany(f => f.Education)
+                                          .HasForeignKey(c => c.freelancerId)
+                                          .HasPrincipalKey(f => f.Id)
+                                          .OnDelete(DeleteBehavior.NoAction);
+
             builder.Entity<Rating>()
                   .HasOne<User>()
                   .WithMany()

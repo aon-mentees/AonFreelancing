@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class SoftDeleteProjectMig : Migration
+    public partial class LastMigAfterMerge : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -325,6 +325,28 @@ namespace AonFreelancing.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Education",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    freelancerId = table.Column<long>(type: "bigint", nullable: false),
+                    Institution = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Degree = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    startDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    endDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Education", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Education_Freelancers_freelancerId",
+                        column: x => x.freelancerId,
+                        principalTable: "Freelancers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Projects",
                 columns: table => new
                 {
@@ -479,6 +501,36 @@ namespace AonFreelancing.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ProjectLikes_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubmitBidNotification",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    FreelancerId = table.Column<long>(type: "bigint", nullable: false),
+                    FreelancerName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubmitBidNotification", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubmitBidNotification_Freelancers_FreelancerId",
+                        column: x => x.FreelancerId,
+                        principalTable: "Freelancers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_SubmitBidNotification_Notifications_Id",
+                        column: x => x.Id,
+                        principalTable: "Notifications",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SubmitBidNotification_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id");
@@ -666,6 +718,11 @@ namespace AonFreelancing.Migrations
                 column: "FreelancerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Education_freelancerId",
+                table: "Education",
+                column: "freelancerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LikeNotifications_LikerId",
                 table: "LikeNotifications",
                 column: "LikerId");
@@ -717,6 +774,16 @@ namespace AonFreelancing.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SubmitBidNotification_FreelancerId",
+                table: "SubmitBidNotification",
+                column: "FreelancerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubmitBidNotification_ProjectId",
+                table: "SubmitBidNotification",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_ProjectId",
                 table: "Tasks",
                 column: "ProjectId");
@@ -756,6 +823,9 @@ namespace AonFreelancing.Migrations
                 name: "Certifications");
 
             migrationBuilder.DropTable(
+                name: "Education");
+
+            migrationBuilder.DropTable(
                 name: "LikeNotifications");
 
             migrationBuilder.DropTable(
@@ -771,6 +841,9 @@ namespace AonFreelancing.Migrations
                 name: "Skills");
 
             migrationBuilder.DropTable(
+                name: "SubmitBidNotification");
+
+            migrationBuilder.DropTable(
                 name: "Tasks");
 
             migrationBuilder.DropTable(
@@ -780,10 +853,10 @@ namespace AonFreelancing.Migrations
                 name: "Bids");
 
             migrationBuilder.DropTable(
-                name: "Notifications");
+                name: "TempUser");
 
             migrationBuilder.DropTable(
-                name: "TempUser");
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "Projects");
