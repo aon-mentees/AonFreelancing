@@ -105,7 +105,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await _authService.AssignRoleToUserAsync(newUser, userRegistrationRequest.UserType);
             await _authService.RemoveTempUser(storedTempUser);
 
-            return CreatedAtAction(nameof(ProfileController.GetProfileByIdAsync), "users", new { id = newUser.Id }, null);
+            return CreatedAtAction(nameof(ProfileController.GetProfileByIdAsync), "Profile", new { id = newUser.Id }, null);
         }
 
         [HttpPost("login")]
