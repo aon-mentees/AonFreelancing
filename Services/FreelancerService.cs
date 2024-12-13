@@ -20,5 +20,11 @@ namespace AonFreelancing.Services
             return await _mainAppContext.Certifications
                 .FirstOrDefaultAsync(c => c.Id == certificationId);
         } 
+
+        public async Task<Freelancer?>FindFreelancerById(long id)
+        {
+
+            return await _mainAppContext.Users.OfType<Freelancer>().FirstOrDefaultAsync(f => f.Id == id);
+        }
     }
 }

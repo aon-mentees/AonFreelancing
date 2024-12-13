@@ -96,5 +96,30 @@ namespace AonFreelancing.Controllers.Web.v1
 
             return NoContent();
         }
+        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+        [HttpPatch("{id}")]
+
+        public async Task<IActionResult> UpdateFreelancer(long id, [FromBody] FreelancerUpdateDTO updateFreelancerDTO)
+        {
+            if (!ModelState.IsValid)
+
+                return CustomBadRequest();
+
+            var stordFreelancer = await freelancerService.FindFreelancerById(id);
+
+            if (stordFreelancer == null)
+                return CustomBadRequest();
+            if (!string.IsNullOrEmpty(updateFreelancerDTO.Qualification))
+                stordFreelancer.qualificationName = updateFreelancerDTO.Qualification;
+
+            if (!string.IsNullOrEmpty(updateFreelancerDTO.Name))
+                stordFreelancer.qualificationName = updateFreelancerDTO.Name;
+
+            freelancerService.UpdateAsync(stordFreelancer);
+
+            return Ok(CreateSuccessResponse("Freelancer Update Successfuly"));
+
+
+        }
     }
 }

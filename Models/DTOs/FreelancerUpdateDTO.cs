@@ -1,6 +1,11 @@
 ﻿namespace AonFreelancing.Models.DTOs
 {
-    public class UpdateFreelancerDTO
+    public class FreelancerUpdateDTO
     {
+
+        public string Name { get; set; }    
+
+
+        public string? Qualification { get; set; }
     }
 }
