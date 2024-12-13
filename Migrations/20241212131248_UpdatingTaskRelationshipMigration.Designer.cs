@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241209200148_RatingsMig")]
-    partial class RatingsMig
+    [Migration("20241212131248_UpdatingTaskRelationshipMigration")]
+    partial class UpdatingTaskRelationshipMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -104,7 +104,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("SystemUserId");
 
-                    b.ToTable("Bids");
+                    b.ToTable("Bids", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
@@ -351,6 +351,9 @@ namespace AonFreelancing.Migrations
 
                     b.Property<long>("ProjectId")
                         .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()

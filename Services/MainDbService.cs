@@ -13,6 +13,13 @@ namespace AonFreelancing.Services
         {
             await _mainAppContext.AddAsync(obj);
         }
+
+        public async Task UpdateAsync(object obj)
+        {
+            _mainAppContext.Update(obj);
+            await _mainAppContext.SaveChangesAsync();
+        }
+
         public void Remove(object obj)
         {
             _mainAppContext.Remove(obj);

@@ -23,7 +23,6 @@ namespace AonFreelancing.Models.DTOs
         [Range(1, 365)]
         public int Duration { get; set; } //Number of days
 
-        [Required]
         [AllowedValues(Constants.PROJECT_PRICETYPE_PERHOUR, Constants.PROJECT_PRICETYPE_FIXED, ErrorMessage ="Price type is invalid.")]
         public string? PriceType { get; set; }
 

@@ -12,6 +12,9 @@ namespace AonFreelancing.Models.DTOs
             Name = freelancer.Name;
             Username = freelancer.UserName;
             PhoneNumber = freelancer.PhoneNumber ?? string.Empty;
+            Email = freelancer.Email;
+            About = freelancer.About;
+            PhoneNumber = freelancer.PhoneNumber;
             UserType = Constants.USER_TYPE_FREELANCER;
             IsPhoneNumberVerified = freelancer.PhoneNumberConfirmed;
             Skills = freelancer.Skills.Select(s => SkillOutDTO.FromSkill(s)).ToList();
