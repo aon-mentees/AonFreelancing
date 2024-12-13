@@ -83,7 +83,7 @@ namespace AonFreelancing.Contexts
                 
             builder.Entity<Skill>().HasOne<Freelancer>()
                                     .WithMany(f=>f.Skills)
-                                    .HasForeignKey(s=>s.UserId)
+                                    .HasForeignKey(s=>s.FreelancerId)
                                     .HasPrincipalKey(f=>f.Id);
 
             builder.Entity<ProjectLike>().HasOne<User>()

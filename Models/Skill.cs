@@ -7,13 +7,13 @@ namespace AonFreelancing.Models
     public class Skill
     {
         public long Id { get; set; }
-        public long UserId { get; set; }
+        public long FreelancerId { get; set; }
         public string Name { get; set; }
         public Skill() { }
         Skill(SkillInputDTO inputDTO, long userId)
         {
             Name = inputDTO.Name;
-            UserId = userId;
+            FreelancerId = userId;
         }
         public static Skill FromInputDTO(SkillInputDTO inputDTO, long userId) => new Skill(inputDTO, userId);
     }

@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
         // Replace this token with a valid token
-        const jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiZnJlZWxhbmNlciIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6IkFiZHVscmFobWFuIEFobWVkIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoidXNlcjJAZXhhbXBsZS5jb20iLCJleHAiOjYxNzMzODUzMTc0LCJpc3MiOiJBb24iLCJhdWQiOiJBb24gRGV2In0.8xWknhC2VrXlrAs41-rLxChrkLcdJ8MqVWo9ComD3Xk";
+        const jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiZnJlZWxhbmNlciIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6Im5pZ2dlciB0aGUgZnJlZWxhbmNlciIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Im1vaGFtbWVkMkBleGFtcGxlLmNvbSIsImV4cCI6NzczNDA3MzU5MiwiaXNzIjoiQW9uUGxhdGZvcm0iLCJhdWQiOiJUcmFpbmVycy5UcmFpbmVlcyJ9.TpMr627etxkiMfjdhUTXfo8NgI2v5vAiGlkxcuoJmyA";
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/Hubs/Notifications", {

@@ -8,10 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace AonFreelancing.Controllers.Mobile.v1
+namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/skills")]
+    [Route("api/web/v1/skills")]
     [ApiController]
     public class SkillsController (MainAppContext mainAppContext): BaseController
     {

@@ -22,7 +22,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager,
                                     ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService,
-                                    NotificationService notificationService, ProjectService projectService) : BaseController
+                                    NotificationService notificationService, ProjectService projectService, BidService bidService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -112,13 +112,13 @@ namespace AonFreelancing.Controllers.Web.v1
             Project? storedProject = mainAppContext.Projects.Where(p => p.Id == projectId).Include(p => p.Bids).FirstOrDefault();
 
             if (storedProject == null)
-                return NotFound(CreateErrorResponse("404", "project not found"));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse("409", "cannot submit a bid for project that is not available for bids"));
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "cannot submit a bid for project that is not available for bids"));
             if (storedProject.Budget <= bidInputDTO.ProposedPrice)
-                return BadRequest(CreateErrorResponse("400", "proposed price must be less than the project's budget"));
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "proposed price must be less than the project's budget"));
             if (storedProject.Bids.Any() && storedProject.Bids.OrderBy(b => b.ProposedPrice).First().ProposedPrice <= bidInputDTO.ProposedPrice)
-                return BadRequest(CreateErrorResponse("400", "proposed price must be less than earlier proposed prices"));
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "proposed price must be less than earlier proposed prices"));
 
             Bid? newBid = Bid.FromInputDTO(bidInputDTO, authenticatedFreelancerId, projectId);
             await mainAppContext.AddAsync(newBid);
@@ -126,7 +126,15 @@ namespace AonFreelancing.Controllers.Web.v1
 
             return StatusCode(StatusCodes.Status201Created);
         }
+        [HttpGet("{projectId}/bids")]
+        public async Task<IActionResult> GetBidsByProjectId(long projectId, int page = 0, int pageSize = Constants.BIDS_DEFAULT_PAGE_SIZE)
+        {
+            PaginatedResult<Bid> paginatedBids = await bidService.FindByProjectIdWithFreelancer(projectId, page, pageSize);
+            List<BidOutputDTO> bidOutputDTOs = paginatedBids.Result.Select(b => BidOutputDTO.FromBid(b)).ToList();
+            PaginatedResult<BidOutputDTO> paginatedBidOutputDTOs = new PaginatedResult<BidOutputDTO>(paginatedBids.Total, bidOutputDTOs);
 
+            return Ok(paginatedBidOutputDTOs);
+        }
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPut("{projectId}/bids/{bidId}/approve")]

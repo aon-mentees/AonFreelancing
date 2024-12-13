@@ -111,6 +111,12 @@ FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users.OfType<F
                     case LikeNotification likeNotification:
                         notificationOutputDTOs.Add(LikeNotificationOutputDTO.FromLikeNotification(likeNotification));
                         break;
+                    case BidRejectionNotification bidRejectionNotification:
+                        notificationOutputDTOs.Add(BidRejectionNotificationOutputDTO.FromRejectionNotification(bidRejectionNotification));
+                        break;
+                    case BidApprovalNotification bidApprovalNotification:
+                        notificationOutputDTOs.Add(BidApprovalNotificationOutputDTO.FromApprovalNotification(bidApprovalNotification));
+                        break;
                 }
             }
             return notificationOutputDTOs;
