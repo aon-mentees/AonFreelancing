@@ -123,9 +123,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
-            if(educationInputDTO.startDate<DateTime.Now)
+
+            if (educationInputDTO.startDate < DateTime.Now)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Start date should be less than today's date."));
-           
+
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             bool isFreelancerEducationExists = await freelancerService.FindExistingFreelancerEducationAsync(freelancerId, educationInputDTO.Institution, educationInputDTO.Degree);
