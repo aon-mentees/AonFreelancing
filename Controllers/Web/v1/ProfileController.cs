@@ -44,7 +44,7 @@ namespace AonFreelancing.Controllers.Web.v1
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "NotFound"));
         }
 
-        [HttpGet("/statistics")]
+        [HttpGet("statistics")]
         public async Task<IActionResult> GetUserStatisticsAsync()
         {
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
