@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdatingTaskRelationshipMigration : Migration
+    public partial class FreelancerEducation : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -301,6 +301,52 @@ namespace AonFreelancing.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Certifications",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FreelancerId = table.Column<long>(type: "bigint", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Issuer = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CredentialId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CredentialUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IssueDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Certifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Certifications_Freelancers_FreelancerId",
+                        column: x => x.FreelancerId,
+                        principalTable: "Freelancers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Education",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    freelancerId = table.Column<long>(type: "bigint", nullable: false),
+                    Institution = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Degree = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    startDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    endDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Education", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Education_Freelancers_freelancerId",
+                        column: x => x.freelancerId,
+                        principalTable: "Freelancers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Projects",
                 columns: table => new
                 {
@@ -312,7 +358,7 @@ namespace AonFreelancing.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    PriceType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PriceType = table.Column<string>(type: "nvarchar(max)", nullable: true, defaultValue: "fixed"),
                     Duration = table.Column<int>(type: "int", nullable: false),
                     Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     QualificationName = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -459,6 +505,36 @@ namespace AonFreelancing.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SubmitBidNotification",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    FreelancerId = table.Column<long>(type: "bigint", nullable: false),
+                    FreelancerName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubmitBidNotification", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubmitBidNotification_Freelancers_FreelancerId",
+                        column: x => x.FreelancerId,
+                        principalTable: "Freelancers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_SubmitBidNotification_Notifications_Id",
+                        column: x => x.Id,
+                        principalTable: "Notifications",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SubmitBidNotification_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tasks",
                 columns: table => new
                 {
@@ -482,6 +558,68 @@ namespace AonFreelancing.Migrations
                         name: "FK_Tasks_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BidApprovalNotification",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    ApproverId = table.Column<long>(type: "bigint", nullable: false),
+                    ApproverName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BidId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BidApprovalNotification", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BidApprovalNotification_AspNetUsers_ApproverId",
+                        column: x => x.ApproverId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_BidApprovalNotification_Bids_BidId",
+                        column: x => x.BidId,
+                        principalTable: "Bids",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_BidApprovalNotification_Notifications_Id",
+                        column: x => x.Id,
+                        principalTable: "Notifications",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BidRejectionNotification",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    RejectorId = table.Column<long>(type: "bigint", nullable: false),
+                    RejectorName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BidId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BidRejectionNotification", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BidRejectionNotification_AspNetUsers_RejectorId",
+                        column: x => x.RejectorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_BidRejectionNotification_Bids_BidId",
+                        column: x => x.BidId,
+                        principalTable: "Bids",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_BidRejectionNotification_Notifications_Id",
+                        column: x => x.Id,
+                        principalTable: "Notifications",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -533,6 +671,26 @@ namespace AonFreelancing.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_BidApprovalNotification_ApproverId",
+                table: "BidApprovalNotification",
+                column: "ApproverId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BidApprovalNotification_BidId",
+                table: "BidApprovalNotification",
+                column: "BidId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BidRejectionNotification_BidId",
+                table: "BidRejectionNotification",
+                column: "BidId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BidRejectionNotification_RejectorId",
+                table: "BidRejectionNotification",
+                column: "RejectorId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Bids_ClientId",
                 table: "Bids",
                 column: "ClientId");
@@ -551,6 +709,16 @@ namespace AonFreelancing.Migrations
                 name: "IX_Bids_SystemUserId",
                 table: "Bids",
                 column: "SystemUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Certifications_FreelancerId",
+                table: "Certifications",
+                column: "FreelancerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Education_freelancerId",
+                table: "Education",
+                column: "freelancerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LikeNotifications_LikerId",
@@ -604,6 +772,16 @@ namespace AonFreelancing.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SubmitBidNotification_FreelancerId",
+                table: "SubmitBidNotification",
+                column: "FreelancerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubmitBidNotification_ProjectId",
+                table: "SubmitBidNotification",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_ProjectId",
                 table: "Tasks",
                 column: "ProjectId");
@@ -634,7 +812,16 @@ namespace AonFreelancing.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Bids");
+                name: "BidApprovalNotification");
+
+            migrationBuilder.DropTable(
+                name: "BidRejectionNotification");
+
+            migrationBuilder.DropTable(
+                name: "Certifications");
+
+            migrationBuilder.DropTable(
+                name: "Education");
 
             migrationBuilder.DropTable(
                 name: "LikeNotifications");
@@ -652,22 +839,28 @@ namespace AonFreelancing.Migrations
                 name: "Skills");
 
             migrationBuilder.DropTable(
+                name: "SubmitBidNotification");
+
+            migrationBuilder.DropTable(
                 name: "Tasks");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "SystemUsers");
-
-            migrationBuilder.DropTable(
-                name: "Notifications");
+                name: "Bids");
 
             migrationBuilder.DropTable(
                 name: "TempUser");
 
             migrationBuilder.DropTable(
+                name: "Notifications");
+
+            migrationBuilder.DropTable(
                 name: "Projects");
+
+            migrationBuilder.DropTable(
+                name: "SystemUsers");
 
             migrationBuilder.DropTable(
                 name: "Clients");
