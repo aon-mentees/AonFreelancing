@@ -142,6 +142,7 @@ namespace AonFreelancing.Controllers.Web.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)
@@ -158,6 +159,16 @@ namespace AonFreelancing.Controllers.Web.v1
                 return Forbid();
 
             await projectService.ApproveProjectBidAsync(storedBid, storedProject);
+
+            // Notification 
+            string notificationMessage = string.Format(Constants.BID_APPROVAL_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
+            string notificationTitle = Constants.BID_APPROVAL_NOTIFICATION_TITLE;
+            var approvalNotification = new BidApprovalNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+
+            await notificationService.CreateAsync(approvalNotification);
+            await pushNotificationService.SendApprovalNotification(
+                BidApprovalNotificationOutputDTO.FromApprovalNotification(approvalNotification),
+                approvalNotification.ReceiverId);
 
             return Ok(CreateSuccessResponse("Bid approved."));
         }
@@ -197,13 +208,12 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
 
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProjectDetailsAsync(long id)
         {
-            var storedProject = await mainAppContext.Projects.Where(p => p.Id == id)
-                                                        .Include(p => p.Tasks)
-                                                        .Include(p => p.Bids)
-                                                        .ThenInclude(b => b.Freelancer)
+            var storedProject = await mainAppContext.Projects.Include(p => p.Tasks)
+                                                        .Where(p => p.Id == id)
                                                         .FirstOrDefaultAsync();
 
             if (storedProject == null)
@@ -215,10 +225,6 @@ namespace AonFreelancing.Controllers.Web.v1
             if (totalNumberOFTasks > 0)
                 percentage = (numberOfCompletedTasks / totalNumberOFTasks) * 100;
 
-            var orderedBids = storedProject.Bids
-                .OrderByDescending(b => b.ProposedPrice)
-                .Select(b => BidOutputDTO.FromBid(b));
-
             return Ok(CreateSuccessResponse(new
             {
                 storedProject.Id,
@@ -227,8 +233,7 @@ namespace AonFreelancing.Controllers.Web.v1
                 storedProject.Budget,
                 storedProject.Duration,
                 storedProject.Description,
-                Percentage = percentage,
-                Bids = orderedBids
+                Percentage = percentage
             }));
         }
 

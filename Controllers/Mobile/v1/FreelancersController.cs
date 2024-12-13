@@ -16,7 +16,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/freelancers")]
     [ApiController]
-    public class FreelancersController(FreelancerService freelancerService, AuthService authService, SkillsService skillsService)
+    public class FreelancersController(FreelancerService freelancerService, AuthService authService)
         : BaseController
     {
         [HttpGet("{id}/certifications")]
@@ -98,14 +98,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
             
             return NoContent();
         }
-        [HttpGet("{freelancerId}/skills")]
-        public async Task<IActionResult> GetSkillsByFreelancerIdAsync(long freelancerId, int page = 0, int pageSize = Constants.SKILLS_DEFAULT_PAGE_SIZE)
-        {
-            PaginatedResult<Skill> paginatedSkills = await skillsService.FindSkillsByFreelancerIdAsync(freelancerId, page, pageSize);
-            List<SkillOutputDTO> skillOutputDTOs = paginatedSkills.Result.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
-            PaginatedResult<SkillOutputDTO> paginatedSkillsOutputDTO = new PaginatedResult<SkillOutputDTO>(paginatedSkills.Total, skillOutputDTOs);
-
-            return Ok(CreateSuccessResponse(paginatedSkillsOutputDTO));
-        }
+     
     }
 }

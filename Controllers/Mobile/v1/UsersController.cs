@@ -16,7 +16,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/users")]
     [ApiController]
-    public class UsersController(MainAppContext mainAppContext, RoleManager<ApplicationRole> roleManager, AuthService authService, NotificationService notificationService)
+    public class UsersController(MainAppContext mainAppContext, RoleManager<ApplicationRole> roleManager, UserManager<User> userManager, AuthService authService, NotificationService notificationService)
         : BaseController
     {
         [HttpGet("{id}/profile")]
@@ -119,7 +119,21 @@ namespace AonFreelancing.Controllers.Mobile.v1
             }
             return notificationOutputDTOs;
         }
+        [HttpPatch("about")]
+        public async Task<IActionResult> UpdateAboutAsync([FromBody] UserAboutInputDTO userAboutInputDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
 
+            var storedUser = await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+
+            storedUser.About = userAboutInputDTO.About;
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Users About section updated successfully"));
+        }
     }
 
 }

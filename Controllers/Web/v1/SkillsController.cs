@@ -1,6 +1,8 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.Responses;
+using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +15,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/skills")]
     [ApiController]
-    public class SkillsController (MainAppContext mainAppContext): BaseController
+    public class SkillsController (MainAppContext mainAppContext, SkillsService skillsService): BaseController
     {
         [Authorize(Roles =Constants.USER_TYPE_FREELANCER)]
         [HttpPost]
@@ -50,6 +52,15 @@ namespace AonFreelancing.Controllers.Web.v1
             await mainAppContext.SaveChangesAsync();
 
             return NoContent();
+        }
+        [HttpGet("{freelancerId}/skills")]
+        public async Task<IActionResult> GetSkillsByFreelancerIdAsync(long freelancerId, int page = 0, int pageSize = Constants.SKILLS_DEFAULT_PAGE_SIZE)
+        {
+            PaginatedResult<Skill> paginatedSkills = await skillsService.FindSkillsByFreelancerIdAsync(freelancerId, page, pageSize);
+            List<SkillOutputDTO> skillOutputDTOs = paginatedSkills.Result.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
+            PaginatedResult<SkillOutputDTO> paginatedSkillsOutputDTO = new PaginatedResult<SkillOutputDTO>(paginatedSkills.Total, skillOutputDTOs);
+
+            return Ok(CreateSuccessResponse(paginatedSkillsOutputDTO));
         }
     }
 }
