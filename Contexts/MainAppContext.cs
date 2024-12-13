@@ -38,6 +38,8 @@ namespace AonFreelancing.Contexts
             builder.Entity<SystemUser>().ToTable("SystemUsers");
             builder.Entity<Otp>().ToTable("otps", o => o.HasCheckConstraint("CK_CODE","LEN([Code]) = 6"));
 
+            builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PRICE_TYPE", $"[PriceType] IN ('{Constants.PROJECT_PRICETYPE_FIXED}', '{Constants.PROJECT_PRICETYPE_PERHOUR}')"))
+                .Property(p => p.PriceType).HasDefaultValue(Constants.PROJECT_PRICETYPE_FIXED);
             builder.Entity<Notification>().ToTable("Notifications");
             builder.Entity<LikeNotification>().ToTable("LikeNotifications");
             builder.Entity<BidApprovalNotification>().ToTable("BidApprovalNotification");
