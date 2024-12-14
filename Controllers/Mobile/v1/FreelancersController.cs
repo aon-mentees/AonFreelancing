@@ -113,7 +113,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             var storedUser = await userService.FindByIdAsync(id);
             if(storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
-            var isFreelancer = await userService.IsFreelancer(id);
+            var isFreelancer = await userService.IsFreelancer(storedUser);
             if(!isFreelancer)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a freelancer"));
             var responseDTO = activitiesService.FreelancerActivities(id);
