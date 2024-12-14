@@ -6,6 +6,8 @@ using System.Data;
 using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.Requests;
 using Microsoft.AspNetCore.Identity;
+using AonFreelancing.Utilities;
+using Microsoft.AspNetCore.Http.HttpResults;
 namespace AonFreelancing.Services;
 
 
@@ -34,6 +36,16 @@ public class UserService : MainDbService
     public async Task<IdentityResult> CreateAsync(User user, string password) => await _userManager.CreateAsync(user, password);
     public async Task AddToRoleAsync(User user, string storedRole) => await _userManager.AddToRoleAsync(user, storedRole);
     public async Task<bool> CheckPasswordAsync(User storedUser, string password) => await _userManager.CheckPasswordAsync(storedUser, password);
-
-   
+    public async Task<bool> IsClient(long id)
+    {
+        var clientRoleId = await _mainAppContext.Roles.Where(r=> r.Name == Constants.USER_TYPE_CLIENT).Select(r=> r.Id).FirstOrDefaultAsync();
+        var isClient = await _mainAppContext.UserRoles.AnyAsync(u=> u.UserId == id && u.RoleId == clientRoleId);
+        return isClient;
+    }
+    public async Task<bool> IsFreelancer(long id)
+    {
+        var freelancerRoleId = await _mainAppContext.Roles.Where(r=> r.Name == Constants.USER_TYPE_FREELANCER).Select(r=> r.Id).FirstOrDefaultAsync();
+        var isFreelancer = await _mainAppContext.UserRoles.AnyAsync(u=> u.UserId == id && u.RoleId == freelancerRoleId);
+        return isFreelancer;
+    }
 }
