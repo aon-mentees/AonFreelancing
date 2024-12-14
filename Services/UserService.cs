@@ -6,6 +6,9 @@ using System.Data;
 using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.Requests;
 using Microsoft.AspNetCore.Identity;
+using AonFreelancing.Utilities;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.Net.Http.Headers;
 namespace AonFreelancing.Services;
 
 
@@ -34,6 +37,6 @@ public class UserService : MainDbService
     public async Task<IdentityResult> CreateAsync(User user, string password) => await _userManager.CreateAsync(user, password);
     public async Task AddToRoleAsync(User user, string storedRole) => await _userManager.AddToRoleAsync(user, storedRole);
     public async Task<bool> CheckPasswordAsync(User storedUser, string password) => await _userManager.CheckPasswordAsync(storedUser, password);
-
-   
+    public async Task<bool> IsClient(User storedUser) => await _userManager.IsInRoleAsync(storedUser, Constants.USER_TYPE_CLIENT);
+    public async Task<bool> IsFreelancer(User storedUser) => await _userManager.IsInRoleAsync(storedUser, Constants.USER_TYPE_FREELANCER);
 }

@@ -14,7 +14,7 @@ using System.Security.Claims;
 namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
-    [Route("api/web/v1/users")]
+    [Route("api/web/v1/profiles")]
     [ApiController]
     public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService)
         : BaseController
