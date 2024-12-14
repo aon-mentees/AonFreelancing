@@ -14,7 +14,7 @@
             ApproverName = bidApprovalNotification.ApproverName;
             BidId = bidApprovalNotification.BidId;
         }
-        public static BidApprovalNotificationOutputDTO FromApprovalNotification(BidApprovalNotification bidApprovalNotification) => new BidApprovalNotificationOutputDTO(bidApprovalNotification);
+        public static BidApprovalNotificationOutputDTO FromBidApprovalNotification(BidApprovalNotification bidApprovalNotification) => new BidApprovalNotificationOutputDTO(bidApprovalNotification);
 
     }
 }

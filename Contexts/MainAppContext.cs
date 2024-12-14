@@ -141,6 +141,28 @@ namespace AonFreelancing.Contexts
                                                        .HasForeignKey(sn => sn.FreelancerId)
                                                        .HasPrincipalKey(u => u.Id)
                                                        .OnDelete(DeleteBehavior.NoAction);
+            /////
+            builder.Entity<TaskApprovalNotification>().HasOne<TaskEntity>()
+                                                        .WithMany()
+                                                        .HasForeignKey(tan => tan.TaskId)
+                                                        .HasPrincipalKey(b => b.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<TaskApprovalNotification>().HasOne<User>()
+                                                        .WithMany()
+                                                        .HasForeignKey(tan => tan.ApproverId)
+                                                        .HasPrincipalKey(u => u.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<TaskRejectionNotification>().HasOne<TaskEntity>()
+                                                        .WithMany()
+                                                        .HasForeignKey(tan => tan.TaskId)
+                                                        .HasPrincipalKey(b => b.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<TaskRejectionNotification>().HasOne<User>()
+                                                        .WithMany()
+                                                        .HasForeignKey(tan => tan.RejectorId)
+                                                        .HasPrincipalKey(u => u.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            ///
 
             builder.Entity<Certification>().HasOne(c => c.Freelancer)
                                            .WithMany(f => f.Certifications)

@@ -37,12 +37,16 @@
         public const string LIKE_NOTIFICATION_MESSAGE_FORMAT = "{0} liked your project {1}";
         public const string BID_APPROVAL_NOTIFICATION_MESSAGE_FORMAT = "{0} approved your bid on project {1}";
         public const string BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT = "{0} rejected your bid on project {1}";
+        public const string SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT = "{0} Applied a bid on your project {1}";
+        public const string TASK_APPROVAL_NOTIFICATION_MESSAGE_FORMAT = "{0} approved your task on project {1}";
+        public const string TASK_REJECTION_NOTIFICATION_MESSAGE_FORMAT = "{0} rejected your task on project {1}";
 
+        public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
         public const string BID_APPROVAL_NOTIFICATION_TITLE = "You’ve Got a bid approved";
         public const string BID_REJECTION_NOTIFICATION_TITLE = "You’ve Got a bid rejected";
-        public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
-
-        public const string SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT = "{0} Applied a bid on your project {1}";
         public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
+        public const string TASK_APPROVAL_NOTIFICATION_TITLE = "You’ve Got a task approved";
+        public const string TASK_REJECTION_NOTIFICATION_TITLE = "You’ve Got a task rejected";
+
     }
 }
