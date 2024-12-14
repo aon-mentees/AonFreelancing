@@ -14,9 +14,9 @@ namespace AonFreelancing.Models.DTOs
         public string Title { get; set; }
         public string? Description { get; set; }
         public string Qualifications { get; set; }
-        public string PriceType { get; set; }
-        public string Status { get; set; }
-        public decimal Budget { get; set; }
+        //public string PriceType { get; set; }
+        public string Status {  get; set; }
+        public decimal Budget {  get; set; }
         public DateTime CreatedAt { get; set; }
         //public DateTime? StartDate {  get; set; }
         //public DateTime? EndDate { get; set; }
@@ -34,7 +34,7 @@ namespace AonFreelancing.Models.DTOs
             Title = project.Title;
             Description = project.Description;
             Qualifications = project.QualificationName;
-            PriceType = project.PriceType;
+            //PriceType = project.PriceType;
             Status = project.Status;
             Budget = project.Budget;
             CreatedAt = project.CreatedAt;

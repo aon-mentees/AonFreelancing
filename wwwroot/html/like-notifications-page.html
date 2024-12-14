@@ -47,7 +47,10 @@
             alert(`Your bid rejected from ${BidRejectionNotificationOutputDTO.rejectorName}`);
             console.log("Received reject notification:", BidRejectionNotificationOutputDTO);
         });
-
+        connection.on("GetBidSubmissionNotification", (submitBidNotificationDTO) => {
+            alert(`New Bid apply from ${submitBidNotificationDTO.freelancerId}`);
+            console.log("Received Bid apply notification:", submitBidNotificationDTO);
+        });
 
         start();
     </script>

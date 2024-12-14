@@ -2,17 +2,7 @@
 
 namespace AonFreelancing.Models.DTOs
 {
-    //public class FreelancerDTO : UserDTO
-    //{
-
-    //    public string Skills { get; set; }
-    //}
-
-    //public class FreelancerRequestDTO : UserDTO
-    //{
-    //    public string Skills { get; set; }
-    //}
-
+   
     public class FreelancerResponseDTO : UserResponseDTO
     {
         public List<SkillOutputDTO>Skills { get; set; }
@@ -26,10 +16,11 @@ namespace AonFreelancing.Models.DTOs
             PhoneNumber = freelancer.PhoneNumber;
             UserType = Constants.USER_TYPE_FREELANCER;
             IsPhoneNumberVerified = freelancer.PhoneNumberConfirmed;
+            Skills = freelancer.Skills.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
             Role = new RoleResponseDTO { Name = Constants.USER_TYPE_FREELANCER };
             Skills = freelancer.Skills.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
         }
-        public static FreelancerResponseDTO FromFreelancer(Freelancer freelancer)=>new FreelancerResponseDTO(freelancer);
+        public static FreelancerResponseDTO FromFreelancer(Freelancer freelancer)=> new FreelancerResponseDTO(freelancer);
     }
 
     public class FreelancerShortOutDTO
