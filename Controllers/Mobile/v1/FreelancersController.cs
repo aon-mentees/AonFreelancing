@@ -1,6 +1,7 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -118,13 +119,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("education")]
-        public async Task<IActionResult> SAddEducationAsync([FromForm] EducationInputDTO educationInputDTO)
+        public async Task<IActionResult> AddEducationAsync([FromForm] EducationInputDTO educationInputDTO)
         {
 
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            if (educationInputDTO.startDate < DateTime.Now)
+            if (educationInputDTO.StartDate > DateTime.Now)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Start date should be less than today's date."));
 
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
@@ -162,8 +163,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             storedEducation.Institution = educationInputDTO.Institution;
             storedEducation.Degree = educationInputDTO.Degree;
-            storedEducation.startDate = educationInputDTO.startDate;
-            storedEducation.endDate = educationInputDTO.endDate;
+            storedEducation.startDate = educationInputDTO.StartDate;
+            storedEducation.endDate = educationInputDTO.EndDate;
 
             await freelancerService.SaveChangesAsync();
 

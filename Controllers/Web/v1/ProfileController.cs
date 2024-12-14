@@ -1,6 +1,7 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.DTOs.NoftificationDTOs;
 using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
@@ -15,7 +16,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/users")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService)
         : BaseController
     {
         [HttpGet("{id}/profile")]
@@ -78,6 +79,41 @@ namespace AonFreelancing.Controllers.Web.v1
             await mainAppContext.SaveChangesAsync();
 
             return Ok(CreateSuccessResponse("Users About section updated successfully"));
+        }
+        [HttpGet("notifications")]
+        public async Task<IActionResult> GetNotifications()
+        {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            var storedNotifications = await notificationService.FindNotificationsForUserAsync(authenticatedUserId);
+            var notificationOutputDTOs = ToNotificationOutputDTOs(storedNotifications);
+
+            //this method calls must be placed after loading the notifications to their corresponding DTOs, prevent prematurely modifying the IsRead property of notificationOutputDTO.
+            await notificationService.MarkNotificationsAsReadAsync(storedNotifications);
+
+            return Ok(CreateSuccessResponse(notificationOutputDTOs));
+        }
+        private static List<NotificationOutputDTO> ToNotificationOutputDTOs(List<Notification> notifications)
+        {
+            var notificationOutputDTOs = new List<NotificationOutputDTO>();
+            foreach (var notification in notifications)
+            {
+                switch (notification)
+                {
+                    case LikeNotification likeNotification:
+                        notificationOutputDTOs.Add(LikeNotificationOutputDTO.FromLikeNotification(likeNotification));
+                        break;
+                    case BidRejectionNotification bidRejectionNotification:
+                        notificationOutputDTOs.Add(BidRejectionNotificationOutputDTO.FromRejectionNotification(bidRejectionNotification));
+                        break;
+                    case BidApprovalNotification bidApprovalNotification:
+                        notificationOutputDTOs.Add(BidApprovalNotificationOutputDTO.FromApprovalNotification(bidApprovalNotification));
+                        break;
+                    case SubmitBidNotification bidSubmissionNotification:
+                        notificationOutputDTOs.Add(BidSubmissionNotificationOutputDTO.FromSubmitBidNotification(bidSubmissionNotification));
+                        break;
+                }
+            }
+            return notificationOutputDTOs;
         }
     }
 
