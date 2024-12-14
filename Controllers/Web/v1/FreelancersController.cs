@@ -16,7 +16,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/freelancers")]
     [ApiController]
-    public class FreelancersController(FreelancerService freelancerService, AuthService authService)
+    public class FreelancersController(FreelancerService freelancerService, AuthService authService, UserService userService, ActivitiesService activitiesService)
         : BaseController
     {
         [HttpGet("{id}/certifications")]
@@ -186,6 +186,20 @@ namespace AonFreelancing.Controllers.Web.v1
 
             await freelancerService.DeleteAsync(storedEducation);
             return NoContent();
+        }
+
+        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+        [HttpGet("{id}/activities")]
+        public async Task<IActionResult> GetActivitiesAsync(long id)
+        {
+            var storedUser = await userService.FindByIdAsync(id);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
+            var isFreelancer = await userService.IsFreelancer(id);
+            if (!isFreelancer)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a freelancer"));
+            var responseDTO = activitiesService.FreelancerActivities(id);
+            return Ok(CreateSuccessResponse(responseDTO));
         }
     }
 }

@@ -110,8 +110,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{id}/activities")]
         public async Task<IActionResult> GetActivitiesAsync(long id)
         {
-            if (!ModelState.IsValid)
-                return CustomBadRequest();
             var storedUser = await userService.FindByIdAsync(id);
             if(storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));

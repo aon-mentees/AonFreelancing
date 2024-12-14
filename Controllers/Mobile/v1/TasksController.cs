@@ -24,7 +24,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
-        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id, includeProject: true);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
 
         if(storedUser is null)
@@ -47,7 +47,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
-        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id, includeProject: true);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
@@ -69,7 +69,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
-        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id, includeProject: true);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
@@ -91,7 +91,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
-        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(id, includeProject: true);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
         User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
         if(storedUser is null)
             return Unauthorized();
