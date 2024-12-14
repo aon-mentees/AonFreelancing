@@ -10,10 +10,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AonFreelancing.Services;
 
-namespace AonFreelancing.Controllers.Mobile.v1
+namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/clients")]
+    [Route("api/web/v1/clients")]
     [ApiController]
     public class ClientsController(MainAppContext mainAppContext,
                                     ActivitiesService activitiesService,
