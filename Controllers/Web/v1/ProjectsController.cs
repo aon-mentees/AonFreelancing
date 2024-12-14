@@ -316,22 +316,15 @@ namespace AonFreelancing.Controllers.Web.v1
                 return CustomBadRequest();
 
             User? authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
-            if (authenticatedUser == null)
-                return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),
-                    "Unauthorized user"));
-
             Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
 
             Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
-            //Service to ba added (For me)
             if (commentInputDTO.ImageFile != null)
                 comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
-            //Service to ba added (For me)
-            await mainAppContext.Comments.AddAsync(comment);
-            await mainAppContext.SaveChangesAsync();
 
+            await commentService.SaveCommentAsync(comment);
             return Ok(CreateSuccessResponse("Commented"));
         }
 

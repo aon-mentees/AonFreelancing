@@ -18,5 +18,16 @@ namespace AonFreelancing.Services
                                         .Select(c => (CommentOutDTO?)new CommentOutDTO(c, c.User.Name, imagesBaseUrl))
                                         .ToListAsync();
         }
+
+        public async Task SaveCommentAsync(Comment comment)
+        {
+            await mainAppContext.Comments.AddAsync(comment);
+            await mainAppContext.SaveChangesAsync();
+        }
+
+        public async Task<int> CountCommentsForProjectAsync(long projectId)
+        {
+            return await mainAppContext.Comments.CountAsync(c => c.ProjectId == projectId);
+        }
     }
 }
