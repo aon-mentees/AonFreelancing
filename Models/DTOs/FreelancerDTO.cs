@@ -5,20 +5,19 @@ namespace AonFreelancing.Models.DTOs
    
     public class FreelancerResponseDTO : UserResponseDTO
     {
-        public List<SkillOutDTO> Skills { get; set; }
+        public List<SkillOutputDTO>Skills { get; set; }
         FreelancerResponseDTO(Freelancer freelancer)
         {
             Id = freelancer.Id;
             Name = freelancer.Name;
             Username = freelancer.UserName;
-            PhoneNumber = freelancer.PhoneNumber ?? string.Empty;
             Email = freelancer.Email;
             About = freelancer.About;
             PhoneNumber = freelancer.PhoneNumber;
             UserType = Constants.USER_TYPE_FREELANCER;
             IsPhoneNumberVerified = freelancer.PhoneNumberConfirmed;
-            Skills = freelancer.Skills.Select(s => SkillOutDTO.FromSkill(s)).ToList();
-            Role = new RoleResponseDTO { Name = Constants.USER_TYPE_FREELANCER };
+            Skills = freelancer.Skills.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
+            //Role = new RoleResponseDTO { Name = Constants.USER_TYPE_FREELANCER };
         }
         public static FreelancerResponseDTO FromFreelancer(Freelancer freelancer)=> new FreelancerResponseDTO(freelancer);
     }

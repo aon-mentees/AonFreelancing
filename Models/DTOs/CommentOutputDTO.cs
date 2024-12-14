@@ -1,6 +1,6 @@
 ﻿namespace AonFreelancing.Models.DTOs
 {
-    public class CommentOutDTO
+    public class CommentOutputDTO
     {
         public long Id { get; set; }
         public string Content { get; set; }
@@ -10,7 +10,7 @@
 
         public string? ImageUrl { get; set; }
 
-        public CommentOutDTO(Comment comment, string commenterName, string imagesBaseUrl)
+        public CommentOutputDTO(Comment comment, string commenterName, string imagesBaseUrl)
         {
             Id = comment.Id;
             Content = comment.Content;

@@ -37,7 +37,7 @@ namespace AonFreelancing.Models
         public List<ProjectLike>? ProjectLikes { get; set; }
         public List<Comment>? Comments { get; set; }
         public Project() { }
-        Project(ProjectInputDto inputDto,long clientId)
+        Project(ProjectInputDTO inputDto,long clientId)
         {
             ClientId = clientId;
             Title = inputDto.Title;
@@ -48,7 +48,7 @@ namespace AonFreelancing.Models
             PriceType = inputDto.PriceType;
             CreatedAt = DateTime.Now;
         }
-        public static Project FromInputDTO(ProjectInputDto inputDto, long clientId) => new Project(inputDto, clientId);
+        public static Project FromInputDTO(ProjectInputDTO inputDto, long clientId) => new Project(inputDto, clientId);
 
     }
 }

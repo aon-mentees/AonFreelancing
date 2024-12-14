@@ -73,8 +73,9 @@ namespace AonFreelancing.Contexts
 
             builder.Entity<Bid>()
                 .HasOne(b => b.Freelancer)
-                .WithMany(f => f.Bids)
+                .WithMany()
                 .HasForeignKey(b => b.FreelancerId)
+                .HasPrincipalKey(f => f.Id)
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<TaskEntity>()
@@ -85,7 +86,7 @@ namespace AonFreelancing.Contexts
                 
             builder.Entity<Skill>().HasOne<Freelancer>()
                                     .WithMany(f=>f.Skills)
-                                    .HasForeignKey(s=>s.UserId)
+                                    .HasForeignKey(s=>s.FreelancerId)
                                     .HasPrincipalKey(f=>f.Id);
 
             builder.Entity<ProjectLike>().HasOne<User>()

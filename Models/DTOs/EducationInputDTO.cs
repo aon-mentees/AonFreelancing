@@ -10,7 +10,7 @@ namespace AonFreelancing.Models.DTOs
         [Required(ErrorMessage = "Degree cannot be null.")]
         public string Degree { get; set; }
 
-        public DateTime? startDate { get; set; }
-        public DateTime? endDate { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
     }
 }

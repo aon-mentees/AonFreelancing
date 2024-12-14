@@ -3,13 +3,14 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using AonFreelancing.Utilities;
 using System.Text.Json.Serialization;
+using AonFreelancing.Models.Responses;
 
 namespace AonFreelancing.Models.DTOs
 {
     public class ProjectOutDTO
     {
         public long Id { get; set; }
-        public int Duration {  get; set; }
+        public int Duration { get; set; }
         public string Title { get; set; }
         public string? Description { get; set; }
         public string Qualifications { get; set; }
@@ -19,16 +20,15 @@ namespace AonFreelancing.Models.DTOs
         public DateTime CreatedAt { get; set; }
         //public DateTime? StartDate {  get; set; }
         //public DateTime? EndDate { get; set; }
-        public string? CreationTime {  get; set; }
-        public string ClientName {  get; set; }
-        public long ClientId {  get; set; }
-        public bool IsLiked {  get; set; }
+        public string? CreationTime { get; set; }
+        public string ClientName { get; set; }
+        public long ClientId { get; set; }
+        public bool IsLiked { get; set; }
+        public PaginatedResult<ProjectLikeOutputDTO> PaginatedLikes { get; set; }
+        public PaginatedResult<CommentOutputDTO> paginatedComments    { get; set; }
+        public string ImageUrl { get; set; }
 
-        public string ImageUrl {  get; set; }
-
-        [JsonPropertyName("likes")]
-        public long LikesCount {  get; set; }
-        ProjectOutDTO(Project project,string imageBaseUrl)
+        ProjectOutDTO(Project project, string imageBaseUrl)
         {
             Id = project.Id;
             Duration = project.Duration;
@@ -44,11 +44,10 @@ namespace AonFreelancing.Models.DTOs
             CreationTime = StringOperations.GetTimeAgo(CreatedAt);
             ClientName = project.Client.Name;
             ClientId = project.Client.Id;
-            LikesCount = project.ProjectLikes.Count();
             if (project.ImageFileName != null)
                 ImageUrl = $"{imageBaseUrl}/{project.ImageFileName}";
         }
-        public static ProjectOutDTO FromProject(Project project,string imageBaseUrl) => new ProjectOutDTO(project,imageBaseUrl);
+        public static ProjectOutDTO FromProject(Project project, string imageBaseUrl) => new ProjectOutDTO(project, imageBaseUrl);
 
     }
 }

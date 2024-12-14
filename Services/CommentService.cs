@@ -1,22 +1,25 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.Responses;
 using Microsoft.EntityFrameworkCore;
 
 namespace AonFreelancing.Services
 {
     public class CommentService(MainAppContext mainAppContext)
     {
-        public async Task<List<CommentOutDTO?>> GetProjectCommentsAsync(long projectId, int page, int pageSize, string imagesBaseUrl)
+        public async Task<PaginatedResult<Comment>> GetProjectCommentsAsync(long projectId, int page, int pageSize, string imagesBaseUrl)
         {
-            return await mainAppContext.Comments
+            List<Comment> commentOut = await mainAppContext.Comments
                                         .Where(c => c.ProjectId == projectId)
                                         .OrderByDescending(c => c.CreatedAt)
                                         .Include(c => c.User)
                                         .Skip(page * pageSize)
                                         .Take(pageSize)
-                                        .Select(c => (CommentOutDTO?)new CommentOutDTO(c, c.User.Name, imagesBaseUrl))
                                         .ToListAsync();
+
+            int totalComments = await CountCommentsForProjectAsync(projectId);
+            return new PaginatedResult<Comment>(totalComments, commentOut);
         }
 
         public async Task SaveCommentAsync(Comment comment)

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class FreelancerEducation : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -391,15 +391,15 @@ namespace AonFreelancing.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    FreelancerId = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Skills", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Skills_Freelancers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Skills_Freelancers_FreelancerId",
+                        column: x => x.FreelancerId,
                         principalTable: "Freelancers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -418,18 +418,11 @@ namespace AonFreelancing.Migrations
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SubmittedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    RejectedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ClientId = table.Column<long>(type: "bigint", nullable: true),
-                    SystemUserId = table.Column<long>(type: "bigint", nullable: true)
+                    RejectedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Bids", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Bids_Clients_ClientId",
-                        column: x => x.ClientId,
-                        principalTable: "Clients",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Bids_Freelancers_FreelancerId",
                         column: x => x.FreelancerId,
@@ -439,11 +432,6 @@ namespace AonFreelancing.Migrations
                         name: "FK_Bids_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Bids_SystemUsers_SystemUserId",
-                        column: x => x.SystemUserId,
-                        principalTable: "SystemUsers",
                         principalColumn: "Id");
                 });
 
@@ -691,11 +679,6 @@ namespace AonFreelancing.Migrations
                 column: "RejectorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Bids_ClientId",
-                table: "Bids",
-                column: "ClientId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Bids_FreelancerId",
                 table: "Bids",
                 column: "FreelancerId");
@@ -704,11 +687,6 @@ namespace AonFreelancing.Migrations
                 name: "IX_Bids_ProjectId",
                 table: "Bids",
                 column: "ProjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Bids_SystemUserId",
-                table: "Bids",
-                column: "SystemUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Certifications_FreelancerId",
@@ -767,9 +745,9 @@ namespace AonFreelancing.Migrations
                 column: "RaterUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Skills_UserId",
+                name: "IX_Skills_FreelancerId",
                 table: "Skills",
-                column: "UserId");
+                column: "FreelancerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SubmitBidNotification_FreelancerId",
@@ -842,6 +820,9 @@ namespace AonFreelancing.Migrations
                 name: "SubmitBidNotification");
 
             migrationBuilder.DropTable(
+                name: "SystemUsers");
+
+            migrationBuilder.DropTable(
                 name: "Tasks");
 
             migrationBuilder.DropTable(
@@ -858,9 +839,6 @@ namespace AonFreelancing.Migrations
 
             migrationBuilder.DropTable(
                 name: "Projects");
-
-            migrationBuilder.DropTable(
-                name: "SystemUsers");
 
             migrationBuilder.DropTable(
                 name: "Clients");

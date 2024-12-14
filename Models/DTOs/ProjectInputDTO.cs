@@ -8,7 +8,7 @@ using static AonFreelancing.Utilities.Constants;
 
 namespace AonFreelancing.Models.DTOs
 {
-    public class ProjectInputDto
+    public class ProjectInputDTO
     {
         [Required]
         [MaxLength(512, ErrorMessage ="Title is too long.")]
