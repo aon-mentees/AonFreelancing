@@ -41,7 +41,7 @@ namespace AonFreelancing.Models
 
 
         public Project() { }
-        Project(ProjectInputDto inputDto,long clientId)
+        Project(ProjectInputDTO inputDto,long clientId)
         {
             ClientId = clientId;
             Title = inputDto.Title;
@@ -53,7 +53,7 @@ namespace AonFreelancing.Models
             CreatedAt = DateTime.Now;
             IsDeleted = false;
         }
-        public static Project FromInputDTO(ProjectInputDto inputDto, long clientId) => new Project(inputDto, clientId);
+        public static Project FromInputDTO(ProjectInputDTO inputDto, long clientId) => new Project(inputDto, clientId);
 
     }
 }
