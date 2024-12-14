@@ -120,6 +120,17 @@ namespace AonFreelancing
                 options.SuppressModelStateInvalidFilter = true;
             });
 
+            int preFlightMaxAge = int.Parse(builder.Configuration.GetSection("Cors")["PreFlightMaxAge"]);
+            builder.Services.AddCors(options => {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin();
+                    builder.AllowAnyHeader();
+                    builder.WithMethods();
+                    //builder.AllowCredentials();
+                    builder.SetPreflightMaxAge(TimeSpan.FromMinutes(preFlightMaxAge));
+                });
+            });
 
             var app = builder.Build();
 
@@ -152,6 +163,7 @@ namespace AonFreelancing
                 FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/html")),
                 RequestPath = "/pages"
             });
+            app.UseCors();
 
             app.UseAuthentication();
             app.UseAuthorization();
