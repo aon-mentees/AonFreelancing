@@ -47,7 +47,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProjectAsync(long id, [FromForm] ProjectInputDto projectInputDto)
+        public async Task<IActionResult> UpdateProjectAsync(long id, [FromForm] ProjectInputDTO projectInputDto)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
