@@ -10,6 +10,7 @@ namespace AonFreelancing.Interfaces
         Task GetLikeNotification(LikeNotificationOutputDTO likeNotification);
         Task GetBidApprovalNotification(BidApprovalNotificationOutputDTO bidApprovalNotification);
         Task GetBidRejectionNotification(BidRejectionNotificationOutputDTO bidRejectionNotification);
+        Task GetBidSubmissionNotification(BidSubmissionNotificationOutputDTO submitBidNotification);
 
     }
 }

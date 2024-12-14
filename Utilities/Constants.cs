@@ -42,5 +42,12 @@
         public const string BID_REJECTION_NOTIFICATION_TITLE = "You’ve Got a bid rejected";
         public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
 
+        public const int LIKES_DEFAULT_PAGE_SIZE = 10;
+        public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
+        public const int SKILLS_DEFAULT_PAGE_SIZE = 4;
+        public const int BIDS_DEFAULT_PAGE_SIZE = 10;
+
+        public const string SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT = "{0} Applied a bid on your project {1}";
+        public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
     }
 }
