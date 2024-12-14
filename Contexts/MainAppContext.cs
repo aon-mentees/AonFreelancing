@@ -23,6 +23,7 @@ namespace AonFreelancing.Contexts
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<Certification> Certifications { get; set; }
         public DbSet<Education> Educations { get; set; }
+        public DbSet<Comment> Comments { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
@@ -142,6 +143,17 @@ namespace AonFreelancing.Contexts
                                                        .HasForeignKey(sn => sn.FreelancerId)
                                                        .HasPrincipalKey(u => u.Id)
                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<Comment>()
+            .HasOne(c => c.Project)
+            .WithMany(p => p.Comments)
+            .HasForeignKey(c => c.ProjectId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Certification>().HasOne(c => c.Freelancer)
                                            .WithMany(f => f.Certifications)

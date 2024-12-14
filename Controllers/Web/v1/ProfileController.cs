@@ -19,7 +19,7 @@ namespace AonFreelancing.Controllers.Web.v1
     public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService)
         : BaseController
     {
-        [HttpGet("{id}/profile")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
             FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users
