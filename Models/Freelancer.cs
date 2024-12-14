@@ -12,7 +12,8 @@ namespace AonFreelancing.Models
     public class Freelancer : User
     {
         public List<Skill> Skills { get; set; }
-
+        public List<Certification> Certifications { get; set; }
+        public List<Education> Education { get; set; }
         public Freelancer() { }
         public Freelancer(UserRegistrationRequest registrationRequest)
         : base(registrationRequest)

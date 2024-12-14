@@ -21,8 +21,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Route("api/mobile/v1/projects")]
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
-        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService,ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService,
-        CommentService commentService) : BaseController
+        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, 
+        ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService, CommentService commentService) 
+        : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -135,21 +136,23 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return CustomBadRequest();
 
             long authenticatedFreelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = mainAppContext.Projects.Where(p => p.Id == projectId).Include(p => p.Bids).FirstOrDefault();
+            string authenticatedFreelancerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)
-                return NotFound(CreateErrorResponse("404", "project not found"));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse("409", "cannot submit a bid for project that is not available for bids"));
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Cannot submit a bid for project that is not available for bids."));
             if (storedProject.Budget <= bidInputDTO.ProposedPrice)
-                return BadRequest(CreateErrorResponse("400", "proposed price must be less than the project's budget"));
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Proposed price must be less than the project budget."));
             if (storedProject.Bids.Any() && storedProject.Bids.OrderBy(b => b.ProposedPrice).First().ProposedPrice <= bidInputDTO.ProposedPrice)
-                return BadRequest(CreateErrorResponse("40", "proposed price must be less than earlier proposed prices"));
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Proposed price must be less than earlier proposed prices."));
+
 
             Bid? newBid = Bid.FromInputDTO(bidInputDTO, authenticatedFreelancerId, projectId);
-            await mainAppContext.AddAsync(newBid);
-            await mainAppContext.SaveChangesAsync();
-
+            await projectService.ApplyBidAsync(newBid);
+            await SubmitBidNotification(storedProject, authenticatedFreelancerId, authenticatedFreelancerName);
             return StatusCode(StatusCodes.Status201Created);
         }
 
@@ -160,6 +163,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
@@ -178,6 +182,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 
+            // Notification 
+            string notificationMessage = string.Format(Constants.BID_APPROVAL_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
+            string notificationTitle = Constants.BID_APPROVAL_NOTIFICATION_TITLE;
+            var approvalNotification = new BidApprovalNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+
+            await notificationService.CreateAsync(approvalNotification);
+            await pushNotificationService.SendApprovalNotification(
+                BidApprovalNotificationOutputDTO.FromApprovalNotification(approvalNotification),
+                approvalNotification.ReceiverId);
+
             return Ok(CreateSuccessResponse("Bid approved."));
         }
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
@@ -186,6 +200,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
@@ -204,6 +219,15 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             await projectService.RejectProjectBidAsync(storedBid);
 
+            // Notification
+            string notificationMessage = string.Format(Constants.BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
+            string notificationTitle = Constants.BID_REJECTION_NOTIFICATION_TITLE;
+            var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+
+            await notificationService.CreateAsync(rejectionNotification);
+            await pushNotificationService.SendRejectionNotification(
+                BidRejectionNotificationOutputDTO.FromRejectionNotification(rejectionNotification),
+                rejectionNotification.ReceiverId);
             return Ok(CreateSuccessResponse("Bid rejected."));
         }
 
@@ -288,8 +312,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),"no like found to be deleted"));
         }
 
-     
-
 
         [HttpGet("{projectId}/tasks")]
         public async Task<IActionResult> GetTasksByProjectIdAsync([FromRoute] long projectId,
@@ -330,6 +352,17 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await projectLikeService.UnlikeProjectAsync(storedProjectLike);
             await notificationService.DeleteForLikeAsync(storedProjectLike);
             return Ok("Unliked successfully");
+        }
+         private async Task SubmitBidNotification(Project storedProject, long freelancerId, string freelancerName)
+        {
+
+            string notificationMessage = string.Format(Constants.SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT, freelancerName, storedProject.Title);
+            string notificationTitle = Constants.SUBMIT_BID_NOTIFICATION_TITLE;
+            SubmitBidNotification newSubmitBidNotification = new SubmitBidNotification(notificationTitle, notificationMessage, storedProject.ClientId, storedProject.Id, freelancerId, freelancerName);
+
+            await notificationService.CreateAsync(newSubmitBidNotification);
+            await pushNotificationService.SendSubmitBidNotification(BidSubmissionNotificationOutputDTO.FromSubmitBidNotification(newSubmitBidNotification), newSubmitBidNotification.ReceiverId);
+
         }
 
         [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT},{Constants.USER_TYPE_FREELANCER}")]

@@ -2,65 +2,106 @@
 using AonFreelancing.Controllers;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Linq;
 
 [Authorize]
 [Route("api/mobile/v1/tasks")]
 [ApiController]
-public class TasksController(MainAppContext mainAppContext,AuthService authService) : BaseController
+public class TasksController(AuthService authService, TaskService taskService, UserService userService) : BaseController
 {
-    [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
-    [HttpPatch("{id}/update-status")]
-    public async Task<IActionResult> UpdateByIdAsync(long id, [FromBody] TaskStatusDto taskStatusDTO)
+    // Start task (Freelacner can) To Do -> in progress (Update started at)
+    [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+    [HttpPatch("{taskId}/start-task")]
+    public async Task<IActionResult> StartTaskAsync(long taskId)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
         long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
+        User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
 
-        var storedTask = await mainAppContext.Tasks.Include(t=>t.Project)
-                                                   .Where(t => t.Id == id && !t.IsDeleted)
-                                                   .FirstOrDefaultAsync();
-        if (storedTask == null)
+        if(storedUser is null)
+            return Unauthorized();
+        if(storedTask is null)
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
-        if (authenticatedUserId != storedTask.Project.ClientId && authenticatedUserId != storedTask.Project.FreelancerId)
+        if(authenticatedUserId != storedTask.Project.FreelancerId)
             return Forbid();
-        if (taskStatusDTO.NewStatus == Constants.TASK_STATUS_DONE)
-        {
-            if (storedTask.Status == Constants.TASK_STATUS_DONE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "this task status is 'done' already"));
-            if (storedTask.Status != Constants.TASK_STATUS_DONE)
-                storedTask.CompletedAt = DateTime.Now;
-        }
-        
-        storedTask.Status = taskStatusDTO.NewStatus;
-        await mainAppContext.SaveChangesAsync();
-
+        if(storedTask.Status != Constants.TASK_STATUS_TO_DO)
+            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_TO_DO } to submit."));
+        await taskService.StartTaskAsync(storedTask);
         return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
     }
-    [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateByIdAsync(long id, [FromBody] TaskInputDTO taskInputDTO)
+
+    // Submit task (Freelacner can) In progress -> in review
+    [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+    [HttpPatch("{taskId}/submit-task")]
+    public async Task<IActionResult> SubmitTaskAsync(long taskId)
     {
         if (!ModelState.IsValid)
             return CustomBadRequest();
-        long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-        TaskEntity? storedTask = await mainAppContext.Tasks.Include(t=>t.Project)
-                                                           .Where(t => t.Id == id && !t.IsDeleted)
-                                                           .FirstOrDefaultAsync();
-        if (storedTask == null)
+        long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
+        User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
+        if(storedUser is null)
+            return Unauthorized();
+        if(storedTask is null)
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
-        if (authenticatedClientId != storedTask.Project.ClientId )
+        if(authenticatedUserId != storedTask.Project.FreelancerId)
             return Forbid();
-
-        storedTask.UpdateFromInputDTO(taskInputDTO);
-        await mainAppContext.SaveChangesAsync();
-
+        if(storedTask.Status != Constants.TASK_STATUS_IN_PROGRESS)
+            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_PROGRESS } to submit."));
+        await taskService.SubmitTaskAsync(storedTask);
         return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
     }
 
-}
+    // Implement Task approval (only clients owner can) In review -> Done (Update CompletedAt )
+    [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+    [HttpPatch("{taskId}/approve-task")]
+    public async Task<IActionResult> ApproveTaskAsync(long taskId)
+    {
+        if (!ModelState.IsValid)
+            return CustomBadRequest();
+        long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
+        User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
+        if(storedUser is null)
+            return Unauthorized();
+        if(storedTask is null)
+            return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
+        if(authenticatedUserId != storedTask.Project.ClientId)
+            return Forbid();
+        if(storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
+            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to approve."));
+        await taskService.ApproveTaskAsync(storedTask);
+        return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
+    }
+
+    // rejection (only clients owner can) In review -> (In progress ? To Do) 
+    [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+    [HttpPatch("{taskId}/reject-task")]
+    public async Task<IActionResult> RejectTaskAsync(long taskId)
+    {
+        if (!ModelState.IsValid)
+            return CustomBadRequest();
+        long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
+        TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
+        User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
+        if(storedUser is null)
+            return Unauthorized();
+        if(storedTask is null)
+            return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
+        if(authenticatedUserId != storedTask.Project.ClientId)
+            return Forbid();
+        if(storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
+            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to reject."));
+        await taskService.RejectTaskAsync(storedTask);
+        return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
+    }
+}   

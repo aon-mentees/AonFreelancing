@@ -24,7 +24,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            var storedOTP = await _authService.FindOtpAsync(phoneNumberReq.PhoneNumber);
+            var storedOTP = await _authService.FindOtpByPhoneNumber(phoneNumberReq.PhoneNumber);
             if (storedOTP == null)
                 return NotFound(CreateErrorResponse(
                 StatusCodes.Status404NotFound.ToString(), "No OTP entry found for the specified phone number."));
@@ -48,7 +48,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
               if (!validationResult.IsSuccess)           
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
             
-            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq.PhoneNumber);
+            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq);
             await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
             
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
@@ -70,18 +70,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             string normalizedReceivedEmail = userRegistrationRequest.Email.ToUpper();
-            User? storedUser = await _authService.FindUserByNormalizedEmailAsync(normalizedReceivedEmail);
+            bool isUserExistsByNormalizedEmail = await _authService.IsUserExistsByNormalizedEmailAsync(normalizedReceivedEmail);
+            bool isUserExistsByPhoneNumber = await _authService.IsUserExistsByPhoneNumberAsync(userRegistrationRequest.PhoneNumber);
             TempUser? storedTempUser = await _authService.FindTempUserByPhoneNumberAsync(userRegistrationRequest.PhoneNumber);
 
-            if (storedUser != null)
-            {
-                if (storedUser.NormalizedEmail == normalizedReceivedEmail)
-                    return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This email address is already used"));
-                if (storedUser.PhoneNumber == userRegistrationRequest.PhoneNumber)
-                    return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This phone number is already used"));
-                if (storedTempUser == null)
-                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Submit and verify your phone number before registering your details"));
-            }
+            if (isUserExistsByNormalizedEmail)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This email address is already used"));
+            if (isUserExistsByPhoneNumber)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This phone number is already used"));
+            if (storedTempUser == null)
+                return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Submit and verify your phone number before registering your details"));
             User? newUser = null;
             if (userRegistrationRequest.UserType == Constants.USER_TYPE_FREELANCER)
                 newUser = new Freelancer(userRegistrationRequest);
@@ -105,9 +103,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
                     .ToList()
                 });
             await _authService.AssignRoleToUserAsync(newUser, userRegistrationRequest.UserType);
-            await _authService.RemoveEntity(storedTempUser);
+            await _authService.RemoveTempUser(storedTempUser);
 
-            return CreatedAtAction(nameof(UsersController.GetProfileByIdAsync), "users", new { id = newUser.Id }, null);
+            return CreatedAtAction(nameof(ProfileController.GetProfileByIdAsync), "Profile", new { id = newUser.Id }, null);
         }
 
         [HttpPost("login")]
@@ -119,8 +117,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
             {
                 User? storedUser = await _authService.FindUserByEmailAsync(req.Email);
                 if (!storedUser.PhoneNumberConfirmed)
-                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Verify Your Account First"));
-
+                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),"Verify Your Account First"));
+                
                 string role = await _authService.FindUserRoleAsync(storedUser);
                 string token = await _authService.GenerateAuthToken(storedUser, role);
                 return Ok(CreateSuccessResponse(new LoginResponse(token, new UserDetailsDTO(storedUser, role ?? string.Empty))));

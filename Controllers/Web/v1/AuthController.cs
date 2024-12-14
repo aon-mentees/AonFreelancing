@@ -24,7 +24,7 @@ namespace AonFreelancing.Controllers.Web.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            var storedOTP = await _authService.FindOtpAsync(phoneNumberReq.PhoneNumber);
+            var storedOTP = await _authService.FindOtpByPhoneNumber(phoneNumberReq.PhoneNumber);
             if (storedOTP == null)
                 return NotFound(CreateErrorResponse(
                 StatusCodes.Status404NotFound.ToString(), "No OTP entry found for the specified phone number."));
@@ -48,7 +48,7 @@ namespace AonFreelancing.Controllers.Web.v1
             if (!validationResult.IsSuccess)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), validationResult.ErrorMessage));
 
-            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq.PhoneNumber);
+            string generatedOtpCode = await _authService.CreateTempUserAndOtp(phoneNumberReq);
             await _authService.SendOtpAsync(generatedOtpCode, phoneNumberReq.PhoneNumber);
 
             return Ok(CreateSuccessResponse("OTP code sent to your phone number, during testing you may not receive it, please use 123456"));
@@ -105,9 +105,9 @@ namespace AonFreelancing.Controllers.Web.v1
                     .ToList()
                 });
             await _authService.AssignRoleToUserAsync(newUser, userRegistrationRequest.UserType);
-            await _authService.RemoveEntity(storedTempUser);
+            await _authService.RemoveTempUser(storedTempUser);
 
-            return CreatedAtAction(nameof(UsersController.GetProfileByIdAsync), "users", new { id = newUser.Id }, null);
+            return CreatedAtAction(nameof(ProfileController.GetProfileByIdAsync), "Profile", new { id = newUser.Id }, null);
         }
 
         [HttpPost("login")]

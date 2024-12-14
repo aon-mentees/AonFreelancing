@@ -10,10 +10,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace AonFreelancing.Controllers.Mobile.v1
+namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/freelancers")]
+    [Route("api/web/v1/freelancers")]
     [ApiController]
     public class FreelancersController(FreelancerService freelancerService, AuthService authService)
         : BaseController
@@ -126,14 +126,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             if (educationInputDTO.startDate < DateTime.Now)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Start date should be less than today's date."));
-
+        
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             bool isFreelancerEducationExists = await freelancerService.FindExistingFreelancerEducationAsync(freelancerId, educationInputDTO.Institution, educationInputDTO.Degree);
 
             if (isFreelancerEducationExists)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "You already have this education in your profile."));
-
             Education? education = Education.FromEducationInputDTO(educationInputDTO, freelancerId);
             await freelancerService.AddAsync(education);
             await freelancerService.SaveChangesAsync();
@@ -187,6 +186,5 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await freelancerService.DeleteAsync(storedEducation);
             return NoContent();
         }
-
     }
 }

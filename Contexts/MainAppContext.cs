@@ -21,7 +21,8 @@ namespace AonFreelancing.Contexts
         public DbSet<ProjectLike> ProjectLikes { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Rating> Ratings { get; set; }
-
+        public DbSet<Certification> Certifications { get; set; }
+        public DbSet<Education> Educations { get; set; }
         public DbSet<Comment> Comments { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -32,16 +33,18 @@ namespace AonFreelancing.Contexts
             builder.Entity<TempUser>().ToTable("TempUser")
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
             
-
+            builder.Entity<Bid>().ToTable("Bids");
             builder.Entity<Freelancer>().ToTable("Freelancers");
             builder.Entity<Client>().ToTable("Clients");
             builder.Entity<SystemUser>().ToTable("SystemUsers");
             builder.Entity<Otp>().ToTable("otps", o => o.HasCheckConstraint("CK_CODE","LEN([Code]) = 6"));
 
+            builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PRICE_TYPE", $"[PriceType] IN ('{Constants.PROJECT_PRICETYPE_FIXED}', '{Constants.PROJECT_PRICETYPE_PERHOUR}')"))
+                .Property(p => p.PriceType).HasDefaultValue(Constants.PROJECT_PRICETYPE_FIXED);
             builder.Entity<Notification>().ToTable("Notifications");
             builder.Entity<LikeNotification>().ToTable("LikeNotifications");
-
-
+            builder.Entity<BidApprovalNotification>().ToTable("BidApprovalNotification");
+            builder.Entity<BidRejectionNotification>().ToTable("BidRejectionNotification");
 
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PRICE_TYPE", $"[PriceType] IN ('{Constants.PROJECT_PRICETYPE_FIXED}', '{Constants.PROJECT_PRICETYPE_PERHOUR}')"));
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_QUALIFICATION_NAME", $"[QualificationName] IN ('{Constants.PROJECT_QUALIFICATION_UIUX}', '{Constants.PROJECT_QUALIFICATION_FRONTEND}', '{Constants.PROJECT_QUALIFICATION_MOBILE}', '{Constants.PROJECT_QUALIFICATION_BACKEND}', '{Constants.PROJECT_QUALIFICATION_FULLSTACK}')"));
@@ -74,6 +77,12 @@ namespace AonFreelancing.Contexts
                 .HasForeignKey(b => b.FreelancerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<TaskEntity>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks) 
+                .HasForeignKey(t => t.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
             builder.Entity<Skill>().HasOne<Freelancer>()
                                     .WithMany(f=>f.Skills)
                                     .HasForeignKey(s=>s.UserId)
@@ -102,6 +111,37 @@ namespace AonFreelancing.Contexts
                                                        .HasForeignKey(ln => ln.LikerId)
                                                        .HasPrincipalKey(u => u.Id)
                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<BidApprovalNotification>().HasOne<Bid>()
+                                                        .WithMany()
+                                                        .HasForeignKey(ban => ban.BidId)
+                                                        .HasPrincipalKey(b => b.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<BidApprovalNotification>().HasOne<User>()
+                                                        .WithMany()
+                                                        .HasForeignKey(ban => ban.ApproverId)
+                                                        .HasPrincipalKey(u => u.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<BidRejectionNotification>().HasOne<Bid>()
+                                                        .WithMany()
+                                                        .HasForeignKey(brn => brn.BidId)
+                                                        .HasPrincipalKey(b => b.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<BidRejectionNotification>().HasOne<User>()
+                                                        .WithMany()
+                                                        .HasForeignKey(brn => brn.RejectorId)
+                                                        .HasPrincipalKey(u => u.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<SubmitBidNotification>().HasOne<Project>()
+                                               .WithMany()
+                                               .HasForeignKey(sn => sn.ProjectId)
+                                               .HasPrincipalKey(p => p.Id)
+                                               .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<SubmitBidNotification>().HasOne<Freelancer>()
+                                                       .WithMany()
+                                                       .HasForeignKey(sn => sn.FreelancerId)
+                                                       .HasPrincipalKey(u => u.Id)
+                                                       .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<Comment>()
             .HasOne(c => c.Project)
             .WithMany(p => p.Comments)
@@ -113,6 +153,18 @@ namespace AonFreelancing.Contexts
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Certification>().HasOne(c => c.Freelancer)
+                                           .WithMany(f => f.Certifications)
+                                           .HasForeignKey(c => c.FreelancerId)
+                                           .HasPrincipalKey(f => f.Id)
+                                           .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Education>().HasOne(e => e.Freelancer)
+                                          .WithMany(f => f.Education)
+                                          .HasForeignKey(c => c.freelancerId)
+                                          .HasPrincipalKey(f => f.Id)
+                                          .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Rating>()
                   .HasOne<User>()

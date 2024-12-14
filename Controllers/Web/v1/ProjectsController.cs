@@ -1,25 +1,28 @@
-﻿using AonFreelancing.Contexts;
-using AonFreelancing.Models.DTOs.NoftificationDTOs;
-using AonFreelancing.Models.DTOs;
-using AonFreelancing.Models.Responses;
+﻿
+using AonFreelancing.Contexts;
+using AonFreelancing.Hubs;
 using AonFreelancing.Models;
+using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.DTOs.NoftificationDTOs;
+using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
+using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using AonFreelancing.Utilities;
-using Microsoft.EntityFrameworkCore;
 
 namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
     [Route("api/web/v1/projects")]
     [ApiController]
-    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager,
-                                    ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService,
-                                    NotificationService notificationService, CommentService commentService) : BaseController
+    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
+        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, 
+        ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService, CommentService commentService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -46,7 +49,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-        [HttpGet("clientfeed")]
+        [HttpGet("client-feed")]
         public async Task<IActionResult> GetClientFeedAsync(
             [FromQuery] List<string>? qualificationNames, [FromQuery] int page = 0,
             [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE, [FromQuery] string qur = ""
@@ -80,7 +83,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpGet("freelancerfeed")]
+        [HttpGet("freelancer-feed")]
         public async Task<IActionResult> GetProjectFeedAsync(
             [FromQuery(Name = "specializations")] List<string>? qualificationNames,
             [FromQuery(Name = "timeline")] int? duration,
@@ -132,21 +135,23 @@ namespace AonFreelancing.Controllers.Web.v1
                 return CustomBadRequest();
 
             long authenticatedFreelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = mainAppContext.Projects.Where(p => p.Id == projectId).Include(p => p.Bids).FirstOrDefault();
+            string authenticatedFreelancerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)
-                return NotFound(CreateErrorResponse("404", "project not found"));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse("409", "cannot submit a bid for project that is not available for bids"));
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Cannot submit a bid for project that is not available for bids."));
             if (storedProject.Budget <= bidInputDTO.ProposedPrice)
-                return BadRequest(CreateErrorResponse("400", "proposed price must be less than the project's budget"));
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Proposed price must be less than the project budget."));
             if (storedProject.Bids.Any() && storedProject.Bids.OrderBy(b => b.ProposedPrice).First().ProposedPrice <= bidInputDTO.ProposedPrice)
-                return BadRequest(CreateErrorResponse("40", "proposed price must be less than earlier proposed prices"));
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Proposed price must be less than earlier proposed prices."));
+
 
             Bid? newBid = Bid.FromInputDTO(bidInputDTO, authenticatedFreelancerId, projectId);
-            await mainAppContext.AddAsync(newBid);
-            await mainAppContext.SaveChangesAsync();
-
+            await projectService.ApplyBidAsync(newBid);
+            await SubmitBidNotification(storedProject, authenticatedFreelancerId, authenticatedFreelancerName);
             return StatusCode(StatusCodes.Status201Created);
         }
 
@@ -157,30 +162,72 @@ namespace AonFreelancing.Controllers.Web.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = await mainAppContext.Projects.Where(p => p.Id == projectId)
-                                                                 .Include(p => p.Bids)
-                                                                 .FirstOrDefaultAsync();
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
 
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
 
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "project status is not 'Available'"));
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
 
-            Bid? storedBid = storedProject.Bids.Where(b => b.Id == bidId).FirstOrDefault();
+            Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
             if (storedBid == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "bid not found"));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found or already rejected."));
 
-            storedBid.Status = Constants.BIDS_STATUS_APPROVED;
-            storedBid.ApprovedAt = DateTime.Now;
-            storedProject.Status = Constants.PROJECT_STATUS_CLOSED;
-            storedProject.FreelancerId = storedBid.FreelancerId;
+            await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 
-            await mainAppContext.SaveChangesAsync();
-            return Ok();
+            // Notification 
+            string notificationMessage = string.Format(Constants.BID_APPROVAL_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
+            string notificationTitle = Constants.BID_APPROVAL_NOTIFICATION_TITLE;
+            var approvalNotification = new BidApprovalNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+
+            await notificationService.CreateAsync(approvalNotification);
+            await pushNotificationService.SendApprovalNotification(
+                BidApprovalNotificationOutputDTO.FromApprovalNotification(approvalNotification),
+                approvalNotification.ReceiverId);
+
+            return Ok(CreateSuccessResponse("Bid approved."));
+        }
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPut("{projectId}/bids/{bidId}/reject")]
+        public async Task<IActionResult> RejectBidAsync([FromRoute] long projectId, [FromRoute] long bidId)
+        {
+
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+
+            Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
+
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
+
+            if (authenticatedClientId != storedProject.ClientId)
+                return Forbid();
+
+            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
+
+            Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
+            if (storedBid == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found."));
+
+            await projectService.RejectProjectBidAsync(storedBid);
+
+            // Notification
+            string notificationMessage = string.Format(Constants.BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
+            string notificationTitle = Constants.BID_REJECTION_NOTIFICATION_TITLE;
+            var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+
+            await notificationService.CreateAsync(rejectionNotification);
+            await pushNotificationService.SendRejectionNotification(
+                BidRejectionNotificationOutputDTO.FromRejectionNotification(rejectionNotification),
+                rejectionNotification.ReceiverId);
+            return Ok(CreateSuccessResponse("Bid rejected."));
         }
 
 
@@ -265,8 +312,6 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
 
-
-
         [HttpGet("{projectId}/tasks")]
         public async Task<IActionResult> GetTasksByProjectIdAsync([FromRoute] long projectId,
                                                                   [AllowedValues(Constants.TASK_STATUS_TO_DO,Constants.TASK_STATUS_DONE,Constants.TASK_STATUS_IN_PROGRESS,Constants.TASK_STATUS_IN_REVIEW,ErrorMessage = $"status should be one of the values: '{Constants.TASK_STATUS_TO_DO}', '{Constants.TASK_STATUS_DONE}', '{Constants.TASK_STATUS_IN_PROGRESS}', '{Constants.TASK_STATUS_IN_REVIEW}', or empty")]
@@ -298,7 +343,7 @@ namespace AonFreelancing.Controllers.Web.v1
             LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, storedProject.Id, likerId, likerName);
 
             await notificationService.CreateAsync(newLikeNotification);
-            await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification),newLikeNotification.ReceiverId);
+            await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification), newLikeNotification.ReceiverId);
             return Ok("Liked Successfully");
         }
         private async Task<IActionResult> UnLikeProjectAsync(ProjectLike storedProjectLike)
@@ -306,6 +351,17 @@ namespace AonFreelancing.Controllers.Web.v1
             await projectLikeService.UnlikeProjectAsync(storedProjectLike);
             await notificationService.DeleteForLikeAsync(storedProjectLike);
             return Ok("Unliked successfully");
+        }
+        private async Task SubmitBidNotification(Project storedProject, long freelancerId, string freelancerName)
+        {
+
+            string notificationMessage = string.Format(Constants.SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT, freelancerName, storedProject.Title);
+            string notificationTitle = Constants.SUBMIT_BID_NOTIFICATION_TITLE;
+            SubmitBidNotification newSubmitBidNotification = new SubmitBidNotification(notificationTitle, notificationMessage, storedProject.ClientId, storedProject.Id, freelancerId, freelancerName);
+
+            await notificationService.CreateAsync(newSubmitBidNotification);
+            await pushNotificationService.SendSubmitBidNotification(BidSubmissionNotificationOutputDTO.FromSubmitBidNotification(newSubmitBidNotification), newSubmitBidNotification.ReceiverId);
+
         }
 
         [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT},{Constants.USER_TYPE_FREELANCER}")]
