@@ -12,6 +12,9 @@ namespace AonFreelancing.Services
             await formFile.CopyToAsync(stream);
             return fileName;
         }
-
+        public void Delete(string fileName)
+        {
+            File.Delete(Path.Combine(ROOT, fileName));
+        }
     }
 }

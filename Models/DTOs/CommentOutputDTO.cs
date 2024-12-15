@@ -8,7 +8,7 @@
         public long CommenterId { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public string? ImageUrl { get; set; }
+        public string? ProfilePicture { get; set; }
 
         public CommentOutputDTO(Comment comment, string commenterName, string imagesBaseUrl)
         {
@@ -17,7 +17,7 @@
             CommenterName = commenterName;
             CommenterId = comment.UserId;
             CreatedAt = comment.CreatedAt;
-            ImageUrl = comment.ImageUrl != null ? $"{imagesBaseUrl}/{comment.ImageUrl}" : null;
+            ProfilePicture = comment.ImageUrl != null ? $"{imagesBaseUrl}/{comment.ImageUrl}" : null;
         }
     }
 }
