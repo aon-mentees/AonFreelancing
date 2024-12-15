@@ -89,7 +89,7 @@ namespace AonFreelancing.Contexts
                                     .HasForeignKey(s=>s.FreelancerId)
                                     .HasPrincipalKey(f=>f.Id);
 
-            builder.Entity<ProjectLike>().HasOne<User>()
+            builder.Entity<ProjectLike>().HasOne(pl => pl.LikerUser)
                                           .WithMany()
                                           .HasForeignKey(pl => pl.LikerId)
                                           .HasPrincipalKey(u => u.Id);

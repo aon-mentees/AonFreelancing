@@ -129,7 +129,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("FreelancerId");
 
-                    b.ToTable("Certifications");
+                    b.ToTable("Certifications", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
@@ -162,7 +162,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Education", b =>
@@ -194,7 +194,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("freelancerId");
 
-                    b.ToTable("Education");
+                    b.ToTable("Education", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
@@ -358,7 +358,7 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("ProjectId", "LikerId")
                         .IsUnique();
 
-                    b.ToTable("ProjectLikes");
+                    b.ToTable("ProjectLikes", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
@@ -390,7 +390,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("RaterUserId");
 
-                    b.ToTable("Ratings");
+                    b.ToTable("Ratings", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Skill", b =>
@@ -412,7 +412,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("FreelancerId");
 
-                    b.ToTable("Skills");
+                    b.ToTable("Skills", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.TaskEntity", b =>
@@ -765,7 +765,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("SubmitBidNotification");
+                    b.ToTable("SubmitBidNotification", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
