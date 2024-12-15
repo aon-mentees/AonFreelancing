@@ -56,5 +56,7 @@
 
         public const string SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT = "{0} Applied a bid on your project {1}";
         public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
+
+        public const int RATING_DEFAULT_PAGE_SIZE = 5;
     }
 }

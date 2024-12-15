@@ -27,10 +27,13 @@ namespace AonFreelancing.Services
         }
 
 
-        public async Task<List<Rating>> GetRatingsForUserAsync(long userId)
+        public async Task<List<Rating>> GetRatingsForUserAsync(long userId, int page, int pageSize)
         {
             return await _mainAppContext.Ratings
                 .Where(r => r.RatedUserId == userId)
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip(page * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
         }
 
@@ -55,5 +58,29 @@ namespace AonFreelancing.Services
                 .AnyAsync(r => r.RaterUserId == raterUserId && r.RatedUserId == ratedUserId);
         }
 
+        public async Task<UserRatingDTO> GetRatingCalculationForUserAsync(long userId)
+        {
+            var ratings = await _mainAppContext.Ratings
+                .Where(r => r.RatedUserId == userId)
+                .ToListAsync();
+
+            if (ratings != null && ratings.Any())
+            {
+                double avgRating = ratings.Average(r => r.RatingValue);
+                int totalRating = ratings.Count;
+
+                int highCount = ratings.Count(r => r.RatingValue >= 8);                      // Ratings 8-10 are high
+                int midCount = ratings.Count(r => r.RatingValue >= 4 && r.RatingValue < 8); // Ratings 4-7.9 are mid
+                int lowCount = ratings.Count(r => r.RatingValue < 4);                       // Ratings 1-3.9 are low
+
+                string highPercentage = $"{(double)highCount / totalRating * 100:0.##}%";
+                string midPercentage = $"{(double)midCount / totalRating * 100:0.##}%";
+                string lowPercentage = $"{(double)lowCount / totalRating * 100:0.##}%";
+
+                return new UserRatingDTO(avgRating, highPercentage, midPercentage, lowPercentage, totalRating);
+            }
+
+            return new UserRatingDTO(0, "0", "0", "0", 0);
+        }
     }
 }
