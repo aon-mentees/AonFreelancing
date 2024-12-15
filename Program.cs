@@ -128,7 +128,8 @@ namespace AonFreelancing
                 {
                     builder.AllowAnyOrigin();
                     builder.AllowAnyHeader();
-                    builder.WithMethods();
+                    builder.AllowAnyMethod();
+                    //builder.WithMethods();
                     //builder.AllowCredentials();
                     builder.SetPreflightMaxAge(TimeSpan.FromMinutes(preFlightMaxAge));
                 });

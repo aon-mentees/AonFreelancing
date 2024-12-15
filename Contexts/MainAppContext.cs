@@ -33,7 +33,7 @@ namespace AonFreelancing.Contexts
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
             builder.Entity<TempUser>().ToTable("TempUser")
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
-            
+            builder.Entity<User>().Property(u => u.ProfilePicture).HasDefaultValue(Constants.DEFAULT_USER_PROFILE_PICTURE);
             builder.Entity<Bid>().ToTable("Bids");
             builder.Entity<Freelancer>().ToTable("Freelancers");
             builder.Entity<Client>().ToTable("Clients");
@@ -92,7 +92,7 @@ namespace AonFreelancing.Contexts
                                     .HasForeignKey(s=>s.FreelancerId)
                                     .HasPrincipalKey(f=>f.Id);
 
-            builder.Entity<ProjectLike>().HasOne<User>()
+            builder.Entity<ProjectLike>().HasOne(pl => pl.LikerUser)
                                           .WithMany()
                                           .HasForeignKey(pl => pl.LikerId)
                                           .HasPrincipalKey(u => u.Id);

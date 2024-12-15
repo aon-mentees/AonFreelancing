@@ -7,7 +7,7 @@
         public string RejectorName { get; set; }
         public long BidId { get; set; } // spare
 
-        BidRejectionNotificationOutputDTO(BidRejectionNotification bidRejectionNotification) : base(bidRejectionNotification.Id, bidRejectionNotification.Title, bidRejectionNotification.Message, bidRejectionNotification.IsRead, bidRejectionNotification.CreatedAt)
+        BidRejectionNotificationOutputDTO(BidRejectionNotification bidRejectionNotification) : base(bidRejectionNotification.Id, bidRejectionNotification.Title, bidRejectionNotification.Message, bidRejectionNotification.IsRead, bidRejectionNotification.CreatedAt, bidRejectionNotification.Image)
         {
             ProjectId = bidRejectionNotification.ProjectId;
             RejectorId = bidRejectionNotification.RejectorId;
