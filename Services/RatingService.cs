@@ -80,7 +80,7 @@ namespace AonFreelancing.Services
                 return new UserRatingDTO(avgRating, highPercentage, midPercentage, lowPercentage, totalRating);
             }
 
-            return new UserRatingDTO(0, "0", "0", "0", 0);
+            return new UserRatingDTO(double.NaN, "0%", "0%", "0%", 0);
         }
     }
 }

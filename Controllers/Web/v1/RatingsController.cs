@@ -62,13 +62,17 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("average-rate")]
         public async Task<IActionResult> GetAverageRating([FromQuery] long userId)
         {
+            var storedUser = await _userService.FindByIdAsync(userId);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User Not Found !"));
+
             var average = await _ratingService.GetAverageRatingForUserAsync(userId);
             return Ok(CreateSuccessResponse(new { AverageRating = average }));
         }
 
         [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
-        [HttpGet("{userId}/user-rating")]
-        public async Task<IActionResult> GetUserRating([FromRoute] long userId)
+        [HttpGet("rating-card")]
+        public async Task<IActionResult> GetUserRating([FromQuery] long userId)
         {
             var storedUser = await _userService.FindByIdAsync(userId);
             if (storedUser == null)
