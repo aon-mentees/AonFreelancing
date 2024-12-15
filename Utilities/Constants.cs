@@ -13,7 +13,7 @@
 
         public const string PROJECT_STATUS_AVAILABLE = "available";
         public const string PROJECT_STATUS_CLOSED = "closed";
-
+        public const string PROJECT_STATUS_COMPLETED = "completed";
 
         public const string BIDS_STATUS_PENDING = "pending";
         public const string BIDS_STATUS_APPROVED = "approved";
