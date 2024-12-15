@@ -22,6 +22,7 @@ namespace AonFreelancing.Models.DTOs
         //public DateTime? EndDate { get; set; }
         public string? CreationTime { get; set; }
         public string ClientName { get; set; }
+        public string ClientProfilePicture { get; set; }
         public long ClientId { get; set; }
         public bool IsLiked { get; set; }
         public PaginatedResult<ProjectLikeOutputDTO> PaginatedLikes { get; set; }
@@ -46,6 +47,7 @@ namespace AonFreelancing.Models.DTOs
             ClientId = project.Client.Id;
             if (project.ImageFileName != null)
                 ImageUrl = $"{imageBaseUrl}/{project.ImageFileName}";
+            ClientProfilePicture = $"{imageBaseUrl}/{project.Client.ProfilePicture}";
         }
         public static ProjectOutDTO FromProject(Project project, string imageBaseUrl) => new ProjectOutDTO(project, imageBaseUrl);
 

@@ -9,8 +9,8 @@
 
         public SubmitBidNotification() { }
 
-        public SubmitBidNotification(string title, string message, long receiverId, long projectId, long freelancerId, string freelancerName)
-        : base(title, message, receiverId)
+        public SubmitBidNotification(string title, string message, long receiverId, string? image, long projectId, long freelancerId, string freelancerName)
+        : base(title, message, receiverId, image)
         {
             ProjectId = projectId;
             FreelancerId =freelancerId;

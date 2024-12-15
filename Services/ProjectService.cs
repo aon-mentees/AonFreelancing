@@ -129,5 +129,31 @@ namespace AonFreelancing.Services
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<PaginatedResult<Project>> FindProjectsByClientIdWithTasksAndClient(long clientId, int pageNumber, int pageSize, string status)
+        {
+            List<Project> storedProjects = await _mainAppContext.Projects.AsNoTracking()
+                                                                           .Include(p => p.Tasks)
+                                                                           .Include(p => p.Client)
+                                                                           .Where(p => p.ClientId == clientId)
+                                                                           .Where(p => p.Status.Contains(status))
+                                                                           .Skip(pageNumber * pageSize)
+                                                                           .Take(pageSize)
+                                                                           .ToListAsync();
+            int totalCount = await _mainAppContext.Projects.CountAsync(p => p.ClientId == clientId);
+            return new PaginatedResult<Project>(totalCount, storedProjects);
+        }
+        public async Task<PaginatedResult<Project>> FindProjectsByFreelancerIdWithTasksAndClient(long freelancerId, int pageNumber, int pageSize, string status)
+        {
+            List<Project> storedProjects = await _mainAppContext.Projects.AsNoTracking()
+                                                                           .Include(p => p.Tasks)
+                                                                           .Include(p=>p.Client)
+                                                                           .Where(p => p.FreelancerId == freelancerId)
+                                                                           .Where(p => p.Status.Contains(status))
+                                                                           .Skip(pageNumber * pageSize)
+                                                                           .Take(pageSize)
+                                                                           .ToListAsync();
+            int totalCount = await _mainAppContext.Projects.CountAsync(p => p.FreelancerId == freelancerId);
+            return new PaginatedResult<Project>(totalCount, storedProjects);
+        }
     }
 }

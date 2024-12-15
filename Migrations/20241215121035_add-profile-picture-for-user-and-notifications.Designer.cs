@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241211133410_modifyComments")]
-    partial class modifyComments
+    [Migration("20241215121035_add-profile-picture-for-user-and-notifications")]
+    partial class addprofilepictureforuserandnotifications
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -66,9 +66,6 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("ClientId")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("FreelancerId")
                         .HasColumnType("bigint");
 
@@ -91,20 +88,51 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("SystemUserId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ClientId");
 
                     b.HasIndex("FreelancerId");
 
                     b.HasIndex("ProjectId");
 
-                    b.HasIndex("SystemUserId");
+                    b.ToTable("Bids", (string)null);
+                });
 
-                    b.ToTable("Bids");
+            modelBuilder.Entity("AonFreelancing.Models.Certification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CredentialId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CredentialUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("FreelancerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("IssueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Issuer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FreelancerId");
+
+                    b.ToTable("Certifications");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
@@ -140,6 +168,38 @@ namespace AonFreelancing.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.Education", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Degree")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Institution")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("endDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("freelancerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("startDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("freelancerId");
+
+                    b.ToTable("Education");
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
                 {
                     b.Property<long>("Id")
@@ -150,6 +210,9 @@ namespace AonFreelancing.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
@@ -233,8 +296,9 @@ namespace AonFreelancing.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PriceType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("fixed");
 
                     b.Property<string>("QualificationName")
                         .IsRequired()
@@ -340,16 +404,16 @@ namespace AonFreelancing.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<long>("FreelancerId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("FreelancerId");
 
                     b.ToTable("Skills");
                 });
@@ -384,6 +448,9 @@ namespace AonFreelancing.Migrations
 
                     b.Property<long>("ProjectId")
                         .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -475,6 +542,12 @@ namespace AonFreelancing.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("ProfilePicture")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("default-user-profile-picture.jpg");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -608,6 +681,54 @@ namespace AonFreelancing.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.BidApprovalNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("ApproverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ApproverName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("BidId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.HasIndex("ApproverId");
+
+                    b.HasIndex("BidId");
+
+                    b.ToTable("BidApprovalNotification", (string)null);
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.BidRejectionNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("BidId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RejectorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RejectorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasIndex("BidId");
+
+                    b.HasIndex("RejectorId");
+
+                    b.ToTable("BidRejectionNotification", (string)null);
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
                 {
                     b.HasBaseType("AonFreelancing.Models.Notification");
@@ -627,6 +748,27 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("LikeNotifications", (string)null);
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.SubmitBidNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("FreelancerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FreelancerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.HasIndex("FreelancerId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("SubmitBidNotification");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
@@ -660,12 +802,8 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.Bid", b =>
                 {
-                    b.HasOne("AonFreelancing.Models.Client", null)
-                        .WithMany("Bids")
-                        .HasForeignKey("ClientId");
-
                     b.HasOne("AonFreelancing.Models.Freelancer", "Freelancer")
-                        .WithMany("Bids")
+                        .WithMany()
                         .HasForeignKey("FreelancerId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -676,13 +814,20 @@ namespace AonFreelancing.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("AonFreelancing.Models.SystemUser", null)
-                        .WithMany("Bids")
-                        .HasForeignKey("SystemUserId");
-
                     b.Navigation("Freelancer");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Certification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Freelancer", "Freelancer")
+                        .WithMany("Certifications")
+                        .HasForeignKey("FreelancerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Freelancer");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
@@ -702,6 +847,17 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Education", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Freelancer", "Freelancer")
+                        .WithMany("Education")
+                        .HasForeignKey("freelancerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Freelancer");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
@@ -774,7 +930,7 @@ namespace AonFreelancing.Migrations
                 {
                     b.HasOne("AonFreelancing.Models.Freelancer", null)
                         .WithMany("Skills")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("FreelancerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -841,6 +997,48 @@ namespace AonFreelancing.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.BidApprovalNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("ApproverId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Bid", null)
+                        .WithMany()
+                        .HasForeignKey("BidId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.BidApprovalNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.BidRejectionNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Bid", null)
+                        .WithMany()
+                        .HasForeignKey("BidId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.BidRejectionNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("RejectorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
                 {
                     b.HasOne("AonFreelancing.Models.Notification", null)
@@ -853,6 +1051,27 @@ namespace AonFreelancing.Migrations
                         .WithMany()
                         .HasForeignKey("LikerId")
                         .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.SubmitBidNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Freelancer", null)
+                        .WithMany()
+                        .HasForeignKey("FreelancerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.SubmitBidNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AonFreelancing.Models.Project", null)
@@ -902,21 +1121,16 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
                 {
-                    b.Navigation("Bids");
-
                     b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Freelancer", b =>
                 {
-                    b.Navigation("Bids");
+                    b.Navigation("Certifications");
+
+                    b.Navigation("Education");
 
                     b.Navigation("Skills");
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.SystemUser", b =>
-                {
-                    b.Navigation("Bids");
                 });
 #pragma warning restore 612, 618
         }

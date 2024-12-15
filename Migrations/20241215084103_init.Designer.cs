@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241214222425_InitMigration")]
-    partial class InitMigration
+    [Migration("20241215084103_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -133,6 +133,39 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("FreelancerId");
 
                     b.ToTable("Certifications");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Education", b =>
@@ -788,6 +821,25 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Freelancer");
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Project", "Project")
+                        .WithMany("Comments")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Education", b =>
                 {
                     b.HasOne("AonFreelancing.Models.Freelancer", "Freelancer")
@@ -1050,6 +1102,8 @@ namespace AonFreelancing.Migrations
             modelBuilder.Entity("AonFreelancing.Models.Project", b =>
                 {
                     b.Navigation("Bids");
+
+                    b.Navigation("Comments");
 
                     b.Navigation("ProjectLikes");
 

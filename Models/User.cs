@@ -19,7 +19,7 @@ namespace AonFreelancing.Models
     {
         public string Name { get; set; }
         public string? About {  get; set; }
-
+        public string ProfilePicture {  get; set; }
         public User() { }
         public User(UserRegistrationRequest request)
         {

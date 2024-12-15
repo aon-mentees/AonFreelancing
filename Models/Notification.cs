@@ -11,13 +11,16 @@ namespace AonFreelancing.Models
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
         public long ReceiverId { get; set; }
+        public string? Image { get; set; }
         public Notification() { }
-        public Notification(string title, string message, long receiverId)
+        public Notification(string title, string message, long receiverId, string? image)
         {
             Title = title;
             Message = message;
             CreatedAt = DateTime.Now;
             ReceiverId = receiverId;
+            Image = image;
+
         }
     }
 }
