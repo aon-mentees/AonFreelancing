@@ -25,9 +25,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             PaginatedResult<Certification> paginatedCertifications = await freelancerService.FindCertificationByFreelancerIdAsync(id, page, pageSize);
             List<CertificationOutDTO> certificationOutDTOs = paginatedCertifications.Result.Select(c => CertificationOutDTO.FromCertification(c)).ToList();
-            PaginatedResult<CertificationOutDTO> paginatedCertifiactionOutputDTO = new PaginatedResult<CertificationOutDTO>(paginatedCertifications.Total, certificationOutDTOs);
+            PaginatedResult<CertificationOutDTO> paginatedCertificationOutputDTO = new PaginatedResult<CertificationOutDTO>(paginatedCertifications.Total, certificationOutDTOs);
 
-            return Ok(CreateSuccessResponse(paginatedCertifiactionOutputDTO));
+            return Ok(CreateSuccessResponse(paginatedCertificationOutputDTO));
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
@@ -187,7 +187,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return NoContent();
         }
 
-        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpGet("{id}/activities")]
         public async Task<IActionResult> GetActivitiesAsync(long id)
         {
@@ -201,8 +200,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return Ok(CreateSuccessResponse(responseDTO));
         }
 
-        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpGet("{id}/work-experinces")]
+        [HttpGet("{id}/work-experience")]
         public async Task<IActionResult> GetWorkExperiencesAsync([FromRoute] long id, int page = 0, int pageSize = Constants.WORK_EXPERIENCES_DEFAULT_PAGE_SIZE)
         {
             bool isExists = await freelancerService.IsFreelancerExistsAsync(id);
@@ -217,18 +215,18 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return Ok(CreateSuccessResponse(paginatedWorkExperienceOutputDTO));
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpPost("work-experince")]
+        [HttpPost("work-experience")]
         public async Task<IActionResult> AddWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            bool isFreelancerWorkexperinceExists = await freelancerService.
+            bool isFreelancerWorkExperinceExists = await freelancerService.
                 FindExistingFreelancerWorkExperienceAsync(freelancerId, workExperienceInputDTO.JobTitle, workExperienceInputDTO.EmploymentType,
                 workExperienceInputDTO.EmployerName);
-
-            if (isFreelancerWorkexperinceExists)
+           
+            if (isFreelancerWorkExperinceExists)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "You already have this work experince in your profile."));
             WorkExperience? workExperience = WorkExperience.FromWorkExperienceinputDTO(workExperienceInputDTO, freelancerId);
 
@@ -238,7 +236,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return CreatedAtAction(nameof(GetWorkExperiencesAsync), new { id = workExperience.Id }, null);
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpPut("work-experince/{workExperienceId}")]
+        [HttpPut("work-experience/{workExperienceId}")]
         public async Task<IActionResult> UpdateWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
         {
             if (!ModelState.IsValid)
@@ -263,11 +261,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             await freelancerService.SaveChangesAsync();
 
-            WorkExperienceOutputDTO? workExpericeDTO = WorkExperienceOutputDTO.FromWorkExperience(storedworkExperience);
-            return Ok(CreateSuccessResponse(workExpericeDTO));
+            WorkExperienceOutputDTO? workExperienceDTO = WorkExperienceOutputDTO.FromWorkExperience(storedworkExperience);
+            return Ok(CreateSuccessResponse(workExperienceDTO));
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpDelete("work-experince/{workExperienceId}")]
+        [HttpDelete("work-experience/{workExperienceId}")]
         public async Task<IActionResult> DeleteWorkExperienceAsync([FromRoute] long workExperienceId)
         {
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);

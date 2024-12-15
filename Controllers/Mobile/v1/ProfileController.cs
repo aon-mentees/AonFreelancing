@@ -16,7 +16,7 @@ using static AonFreelancing.Utilities.Constants;
 namespace AonFreelancing.Controllers.Mobile.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/profile")]
+    [Route("api/mobile/v1/profiles")]
     [ApiController]
     public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService)
         : BaseController
