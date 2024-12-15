@@ -17,17 +17,19 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/profiles")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService)
         : BaseController
     {
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
+            string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+
             FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users
                 .OfType<Freelancer>()
                 .Include(f => f.Skills)
                 .Where(f => f.Id == id)
-                .Select(f => FreelancerResponseDTO.FromFreelancer(f))
+                .Select(f => FreelancerResponseDTO.FromFreelancer(f, imagesBaseUrl))
                 .FirstOrDefaultAsync();
 
             if (storedFreelancerDTO != null)
@@ -37,7 +39,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 .OfType<Client>()
                 .Where(c => c.Id == id)
                 .Include(c => c.Projects)
-                .Select(c => ClientResponseDTO.FromClient(c))
+                .Select(c => ClientResponseDTO.FromClient(c, imagesBaseUrl))
                 .FirstOrDefaultAsync();
 
             if (storedClientDTO != null)
@@ -153,6 +155,47 @@ namespace AonFreelancing.Controllers.Mobile.v1
             }
             return notificationOutputDTOs;
         }
+        [HttpPatch("profile-picture")]
+        public async  Task<IActionResult> CreateProfilePictureAsync(IFormFile imageFile)
+        {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
+            if (authenticatedUser == null)
+                return Unauthorized();
+
+            string imageFileName = await fileStorageService.SaveAsync(imageFile);
+            if (authenticatedUser.ProfilePicture != DEFAULT_USER_PROFILE_PICTURE)
+                fileStorageService.Delete(authenticatedUser.ProfilePicture);
+
+            authenticatedUser.ProfilePicture = imageFileName;
+            await userService.SaveChangesAsync();
+            return NoContent();
+        }
+        [HttpDelete("profile-picture")]
+        public async Task<IActionResult> DeleteProfilePictureAsync()
+        {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
+            if (authenticatedUser == null)
+                return Unauthorized();
+            if (authenticatedUser.ProfilePicture != DEFAULT_USER_PROFILE_PICTURE)
+                fileStorageService.Delete(authenticatedUser.ProfilePicture);
+
+            authenticatedUser.ProfilePicture = DEFAULT_USER_PROFILE_PICTURE;
+            await userService.SaveChangesAsync();
+            return NoContent();
+        }
+        //[HttpGet("profile-picture/{userId}")]
+        //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
+        //{
+        //    User? storedUser = await userService.FindByIdAsync(userId);
+        //    if (storedUser== null)
+        //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+                
+        //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+        //    string imageUrl = $"{imagesBaseUrl}/{storedUser.ProfilePicture}";
+        //    return Ok(CreateSuccessResponse(imageUrl));
+        //}
     }
 
 }

@@ -14,8 +14,8 @@ namespace AonFreelancing.Models
 
         public LikeNotification() { }
 
-        public LikeNotification(string title, string message, long receiverId, long projectId, long likerId,string likerName)
-        : base(title, message, receiverId)
+        public LikeNotification(string title, string message, long receiverId, string? image, long projectId, long likerId,string likerName)
+        : base(title, message, receiverId, image)
         {
             ProjectId = projectId;
             LikerName = likerName;
