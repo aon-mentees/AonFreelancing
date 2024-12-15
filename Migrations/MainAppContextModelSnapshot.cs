@@ -129,7 +129,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("FreelancerId");
 
-                    b.ToTable("Certifications", (string)null);
+                    b.ToTable("Certifications");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
@@ -162,7 +162,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Education", b =>
@@ -194,7 +194,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("freelancerId");
 
-                    b.ToTable("Education", (string)null);
+                    b.ToTable("Education");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Notification", b =>
@@ -358,7 +358,7 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("ProjectId", "LikerId")
                         .IsUnique();
 
-                    b.ToTable("ProjectLikes", (string)null);
+                    b.ToTable("ProjectLikes");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
@@ -390,7 +390,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("RaterUserId");
 
-                    b.ToTable("Ratings", (string)null);
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Skill", b =>
@@ -412,7 +412,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("FreelancerId");
 
-                    b.ToTable("Skills", (string)null);
+                    b.ToTable("Skills");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.TaskEntity", b =>
@@ -573,6 +573,48 @@ namespace AonFreelancing.Migrations
                     b.ToTable("AspNetUsers", (string)null);
 
                     b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.WorkExperience", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("EmployerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmploymentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("FreelancerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FreelancerId");
+
+                    b.ToTable("WorkExperiences", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_EMPLOYMENTTYPE", "[EmploymentType] IN ('full-time', 'part-time', 'contract', 'internship')");
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
@@ -765,7 +807,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("SubmitBidNotification", (string)null);
+                    b.ToTable("SubmitBidNotification");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
@@ -895,7 +937,7 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.ProjectLike", b =>
                 {
-                    b.HasOne("AonFreelancing.Models.User", null)
+                    b.HasOne("AonFreelancing.Models.User", "LikerUser")
                         .WithMany()
                         .HasForeignKey("LikerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -906,6 +948,8 @@ namespace AonFreelancing.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("LikerUser");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
@@ -941,6 +985,17 @@ namespace AonFreelancing.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.WorkExperience", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Freelancer", "Freelancer")
+                        .WithMany("WorkExperiences")
+                        .HasForeignKey("FreelancerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Freelancer");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
@@ -1128,6 +1183,8 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Education");
 
                     b.Navigation("Skills");
+
+                    b.Navigation("WorkExperiences");
                 });
 #pragma warning restore 612, 618
         }
