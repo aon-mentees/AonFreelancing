@@ -18,12 +18,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
         private readonly RatingService _ratingService;
         private readonly AuthService _authService;
         private readonly ProjectService _projectService;
+        private readonly UserService _userService;
 
-        public RatingsController(RatingService ratingService, AuthService authService, ProjectService projectService)
+        public RatingsController(RatingService ratingService, AuthService authService, ProjectService projectService, UserService userService)
         {
             _ratingService = ratingService;
             _authService = authService;
             _projectService = projectService;
+            _userService = userService;
         }
 
         [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
@@ -50,9 +52,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
         [HttpGet]
-        public async Task<IActionResult> GetRatingsForUser([FromQuery] long userId)
+        public async Task<IActionResult> GetRatingsForUser([FromQuery] long userId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.RATING_DEFAULT_PAGE_SIZE)
         {
-            IEnumerable<RatingOutputDTO> storedRatings = (await _ratingService.GetRatingsForUserAsync(userId)).Select(r => new RatingOutputDTO(r));
+            IEnumerable<RatingOutputDTO> storedRatings = (await _ratingService.GetRatingsForUserAsync(userId, page, pageSize)).Select(r => new RatingOutputDTO(r));
             return Ok(CreateSuccessResponse(storedRatings));
         }
 
@@ -60,8 +62,24 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("average-rate")]
         public async Task<IActionResult> GetAverageRating([FromQuery] long userId)
         {
+            var storedUser = await _userService.FindByIdAsync(userId);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User Not Found !"));
+
             var average = await _ratingService.GetAverageRatingForUserAsync(userId);
             return Ok(CreateSuccessResponse(new { AverageRating = average }));
+        }
+
+        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
+        [HttpGet("rating-summary")]
+        public async Task<IActionResult> GetUserRating([FromQuery] long userId)
+        {
+            var storedUser = await _userService.FindByIdAsync(userId);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User Not Found !"));
+
+            RatingSummaryDTO userRating = await _ratingService.GetRatingCalculationForUserAsync(userId);
+            return Ok(CreateSuccessResponse(userRating));
         }
     }
 }

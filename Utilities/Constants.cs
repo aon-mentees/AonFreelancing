@@ -65,5 +65,7 @@
         public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
 
         public const string DEFAULT_USER_PROFILE_PICTURE = "default-user-profile-picture.jpg";
+
+        public const int RATING_DEFAULT_PAGE_SIZE = 5;
     }
 }
