@@ -9,7 +9,13 @@ namespace AonFreelancing.Services
     {
         public FreelancerService(MainAppContext mainAppContext) : base(mainAppContext) { }
 
-        ///Certifications
+
+        public async Task<bool> IsFreelancerExistsAsync(long freelancerId)
+        {
+            return await _mainAppContext.Users.OfType<Freelancer>()
+                .AnyAsync(f => f.Id == freelancerId);
+        }
+        //Certifications
         public async Task<PaginatedResult<Certification>> FindCertificationByFreelancerIdAsync(long freelancerId, int pageNumber, int pageSize)
         {
             List<Certification> storedCertifications = await _mainAppContext.Certifications
@@ -38,7 +44,8 @@ namespace AonFreelancing.Services
                 .AnyAsync(c => c.FreelancerId == freelancerId && c.Name == name && c.Issuer == issuer && expiryDate > DateTime.Now);
         }
 
-        ///Educations
+        //Educations 
+
         public async Task<PaginatedResult<Education>> FindEducationByFreelancerIdAsync(long freelancerId, int pageNumber, int pageSize)
         {
             List<Education> storedEducations = await _mainAppContext.Educations
@@ -67,7 +74,7 @@ namespace AonFreelancing.Services
                 .AnyAsync(e => e.freelancerId == freelancerId && e.Institution == institution && e.Degree == degree);
         }
 
-        ///WorkExperiences
+        //WorkExperiences
         public async Task<PaginatedResult<WorkExperience>> FindWorkExperienceByFreelancerIdAsync(long freelancerId, int pageNumber, int pageSize)
         {
             List<WorkExperience> storedWorkExperiences = await _mainAppContext.WorkExperiences

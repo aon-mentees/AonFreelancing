@@ -16,8 +16,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
         : BaseController
     {
         [HttpGet("{id}/certifications")]
-        public async Task<IActionResult> GetAllCertificationsAsync([FromRoute] long id, int page = 0, int pageSize = Constants.CERTFICATION_DEFAULT_PAGE_SIZE)
+        public async Task<IActionResult> GetAllCertificationsAsync([FromRoute] long id, int page = 0, int pageSize = Constants.CERTIFICATION_DEFAULT_PAGE_SIZE)
         {
+            bool isExists = await freelancerService.IsFreelancerExistsAsync(id);
+
+            if (!isExists)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Freelancer not found"));
+
             PaginatedResult<Certification> paginatedCertifications = await freelancerService.FindCertificationByFreelancerIdAsync(id, page, pageSize);
             List<CertificationOutDTO> certificationOutDTOs = paginatedCertifications.Result.Select(c => CertificationOutDTO.FromCertification(c)).ToList();
             PaginatedResult<CertificationOutDTO> paginatedCertifiactionOutputDTO = new PaginatedResult<CertificationOutDTO>(paginatedCertifications.Total, certificationOutDTOs);
@@ -99,6 +104,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{id}/education")]
         public async Task<IActionResult> GetAllEducationAsync([FromRoute] long id, int page = 0, int pageSize = Constants.EDUCATION_DEFAULT_PAGE_SIZE)
         {
+            bool isExists = await freelancerService.IsFreelancerExistsAsync(id);
+
+            if (!isExists)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Freelancer not found"));
+
             PaginatedResult<Education> paginatedEducation = await freelancerService.FindEducationByFreelancerIdAsync(id, page, pageSize);
             List<EducationOutputDTO> educationOutputDTOs = paginatedEducation.Result.Select(e => EducationOutputDTO.FromEducation(e)).ToList();
             PaginatedResult<EducationOutputDTO> paginatedEducationOutputDTO = new PaginatedResult<EducationOutputDTO>(paginatedEducation.Total, educationOutputDTOs);
@@ -195,6 +205,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{id}/work-experinces")]
         public async Task<IActionResult> GetWorkExperiencesAsync([FromRoute] long id, int page = 0, int pageSize = Constants.WORK_EXPERIENCES_DEFAULT_PAGE_SIZE)
         {
+            bool isExists = await freelancerService.IsFreelancerExistsAsync(id);
+
+            if (!isExists)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Freelancer not found"));
+
             PaginatedResult<WorkExperience> paginatedWorkExperiences = await freelancerService.FindWorkExperienceByFreelancerIdAsync(id, page, pageSize);
             List<WorkExperienceOutputDTO> workExperienceOutDTOs = paginatedWorkExperiences.Result.Select(w => WorkExperienceOutputDTO.FromWorkExperience(w)).ToList();
             PaginatedResult<WorkExperienceOutputDTO> paginatedWorkExperienceOutputDTO = new PaginatedResult<WorkExperienceOutputDTO>(paginatedWorkExperiences.Total, workExperienceOutDTOs);

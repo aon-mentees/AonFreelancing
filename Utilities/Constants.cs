@@ -52,7 +52,7 @@
         public const int SKILLS_DEFAULT_PAGE_SIZE = 4;
         public const int BIDS_DEFAULT_PAGE_SIZE = 10;
         public const int WORK_EXPERIENCES_DEFAULT_PAGE_SIZE = 4;
-        public const int CERTFICATION_DEFAULT_PAGE_SIZE = 4;
+        public const int CERTIFICATION_DEFAULT_PAGE_SIZE = 4;
         public const int EDUCATION_DEFAULT_PAGE_SIZE = 4;
         public const int COMMENTS_DEFAULT_PAGE_SIZE = 10;
         public const int MAX_FILE_SIZE = 1024 * 1024 * 5;
