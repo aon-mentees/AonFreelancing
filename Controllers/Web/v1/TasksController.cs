@@ -17,7 +17,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/tasks")]
     [ApiController]
-    public class TasksController(AuthService authService, TaskService taskService, UserService userService, NotificationService notificationService, PushNotificationService pushNotificationService) : BaseController
+    public class TasksController(AuthService authService, TaskService taskService, UserService userService,NotificationService notificationService,PushNotificationService pushNotificationService) : BaseController
     {
         // Start task (Freelacner can) To Do -> in progress (Update started at)
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
@@ -26,18 +26,18 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
 
-            if (storedUser is null)
+            if(storedUser is null)
                 return Unauthorized();
-            if (storedTask is null)
+            if(storedTask is null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
-            if (authenticatedUserId != storedTask.Project.FreelancerId)
+            if(authenticatedUserId != storedTask.Project.FreelancerId)
                 return Forbid();
-            if (storedTask.Status != Constants.TASK_STATUS_TO_DO)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be {Constants.TASK_STATUS_TO_DO} to start."));
+            if(storedTask.Status != Constants.TASK_STATUS_TO_DO)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_TO_DO } to submit."));
             await taskService.StartTaskAsync(storedTask);
             return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
         }
@@ -49,17 +49,17 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
-            if (storedUser is null)
+            if(storedUser is null)
                 return Unauthorized();
-            if (storedTask is null)
+            if(storedTask is null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
-            if (authenticatedUserId != storedTask.Project.FreelancerId)
+            if(authenticatedUserId != storedTask.Project.FreelancerId)
                 return Forbid();
-            if (storedTask.Status != Constants.TASK_STATUS_IN_PROGRESS)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be {Constants.TASK_STATUS_IN_PROGRESS} to submit."));
+            if(storedTask.Status != Constants.TASK_STATUS_IN_PROGRESS)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_PROGRESS } to submit."));
             await taskService.SubmitTaskAsync(storedTask);
             return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
         }
@@ -71,17 +71,17 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
-            if (storedUser is null)
+            if(storedUser is null)
                 return Unauthorized();
-            if (storedTask is null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Task not found."));
-            if (authenticatedUserId != storedTask.Project.ClientId)
+            if(storedTask is null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
+            if(authenticatedUserId != storedTask.Project.ClientId)
                 return Forbid();
-            if (storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"Task status must be {Constants.TASK_STATUS_IN_REVIEW} to approve."));
+            if(storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to approve."));
             await taskService.ApproveTaskAsync(storedTask);
 
 
@@ -107,17 +107,17 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
-            if (storedUser is null)
+            if(storedUser is null)
                 return Unauthorized();
-            if (storedTask is null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Task not found."));
-            if (authenticatedUserId != storedTask.Project.ClientId)
+            if(storedTask is null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "task not found"));
+            if(authenticatedUserId != storedTask.Project.ClientId)
                 return Forbid();
-            if (storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"Task status must be {Constants.TASK_STATUS_IN_REVIEW} to reject."));
+            if(storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to reject."));
             await taskService.RejectTaskAsync(storedTask);
 
             // Notification
@@ -132,5 +132,5 @@ namespace AonFreelancing.Controllers.Web.v1
 
             return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
         }
-    }
+    }   
 }

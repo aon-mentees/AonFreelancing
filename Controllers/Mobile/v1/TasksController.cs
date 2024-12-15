@@ -35,7 +35,7 @@ public class TasksController(AuthService authService, TaskService taskService, U
         if(authenticatedUserId != storedTask.Project.FreelancerId)
             return Forbid();
         if(storedTask.Status != Constants.TASK_STATUS_TO_DO)
-            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_TO_DO } to start."));
+            return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_TO_DO } to submit."));
         await taskService.StartTaskAsync(storedTask);
         return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
     }

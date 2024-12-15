@@ -23,6 +23,7 @@ namespace AonFreelancing.Contexts
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<Certification> Certifications { get; set; }
         public DbSet<Education> Educations { get; set; }
+        public DbSet<Comment> Comments { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
@@ -31,7 +32,7 @@ namespace AonFreelancing.Contexts
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
             builder.Entity<TempUser>().ToTable("TempUser")
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
-            
+            builder.Entity<User>().Property(u => u.ProfilePicture).HasDefaultValue(Constants.DEFAULT_USER_PROFILE_PICTURE);
             builder.Entity<Bid>().ToTable("Bids");
             builder.Entity<Freelancer>().ToTable("Freelancers");
             builder.Entity<Client>().ToTable("Clients");
@@ -72,8 +73,9 @@ namespace AonFreelancing.Contexts
 
             builder.Entity<Bid>()
                 .HasOne(b => b.Freelancer)
-                .WithMany(f => f.Bids)
+                .WithMany()
                 .HasForeignKey(b => b.FreelancerId)
+                .HasPrincipalKey(f => f.Id)
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<TaskEntity>()
@@ -84,10 +86,10 @@ namespace AonFreelancing.Contexts
                 
             builder.Entity<Skill>().HasOne<Freelancer>()
                                     .WithMany(f=>f.Skills)
-                                    .HasForeignKey(s=>s.UserId)
+                                    .HasForeignKey(s=>s.FreelancerId)
                                     .HasPrincipalKey(f=>f.Id);
 
-            builder.Entity<ProjectLike>().HasOne<User>()
+            builder.Entity<ProjectLike>().HasOne(pl => pl.LikerUser)
                                           .WithMany()
                                           .HasForeignKey(pl => pl.LikerId)
                                           .HasPrincipalKey(u => u.Id);
@@ -163,6 +165,17 @@ namespace AonFreelancing.Contexts
                                                         .HasPrincipalKey(u => u.Id)
                                                         .OnDelete(DeleteBehavior.NoAction);
             ///
+            builder.Entity<Comment>()
+            .HasOne(c => c.Project)
+            .WithMany(p => p.Comments)
+            .HasForeignKey(c => c.ProjectId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Certification>().HasOne(c => c.Freelancer)
                                            .WithMany(f => f.Certifications)

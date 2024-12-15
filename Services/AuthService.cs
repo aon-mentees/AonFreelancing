@@ -42,6 +42,7 @@ namespace AonFreelancing.Services
         // TempUser Methods
         public async Task<TempUser?> FindTempUserByPhoneNumberAsync(string phoneNumber) => await _tempUserService.FindByPhoneNumberAsync(phoneNumber);        
         public string GetNameOfUser(ClaimsIdentity identity) => identity.FindFirst(ClaimTypes.GivenName).Value;
+        public string GetUserRole(ClaimsIdentity identity) => identity.FindFirst(ClaimTypes.Role).Value;
         public async Task<string> CreateTempUserAndOtp(PhoneNumberReq phoneNumberReq)
         {
             TempUser newTempUser = _tempUserService.Create(phoneNumberReq.PhoneNumber);

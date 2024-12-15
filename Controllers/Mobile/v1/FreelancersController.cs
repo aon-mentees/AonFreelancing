@@ -1,6 +1,7 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +16,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/freelancers")]
     [ApiController]
-    public class FreelancersController(FreelancerService freelancerService, AuthService authService)
+    public class FreelancersController(FreelancerService freelancerService,
+                                        AuthService authService,
+                                        ActivitiesService activitiesService,
+                                        UserService userService)
         : BaseController
     {
         [HttpGet("{id}/certifications")]
@@ -101,6 +105,20 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             return NoContent();
         }
+    
+        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+        [HttpGet("{id}/activities")]
+        public async Task<IActionResult> GetActivitiesAsync(long id)
+        {
+            var storedUser = await userService.FindByIdAsync(id);
+            if(storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
+            var isFreelancer = await userService.IsFreelancer(storedUser);
+            if(!isFreelancer)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a freelancer"));
+            var responseDTO = activitiesService.FreelancerActivities(id);
+            return Ok(CreateSuccessResponse(responseDTO));
+        }
 
         [HttpGet("{Id}/education")]
         public async Task<IActionResult> GetAllEducationAsync([FromRoute] long Id)
@@ -118,13 +136,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("education")]
-        public async Task<IActionResult> SAddEducationAsync([FromForm] EducationInputDTO educationInputDTO)
+        public async Task<IActionResult> AddEducationAsync([FromForm] EducationInputDTO educationInputDTO)
         {
 
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            if (educationInputDTO.startDate <= DateTime.Now)
+            if (educationInputDTO.StartDate > DateTime.Now)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Start date should be less than today's date."));
 
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
@@ -162,8 +180,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             storedEducation.Institution = educationInputDTO.Institution;
             storedEducation.Degree = educationInputDTO.Degree;
-            storedEducation.startDate = educationInputDTO.startDate;
-            storedEducation.endDate = educationInputDTO.endDate;
+            storedEducation.startDate = educationInputDTO.StartDate;
+            storedEducation.endDate = educationInputDTO.EndDate;
 
             await freelancerService.SaveChangesAsync();
 

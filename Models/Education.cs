@@ -22,8 +22,8 @@ namespace AonFreelancing.Models
         {
             Institution = inputDTO.Institution;
             Degree = inputDTO.Degree;
-            startDate = inputDTO.startDate;
-            endDate = inputDTO.endDate;
+            startDate = inputDTO.StartDate;
+            endDate = inputDTO.EndDate;
             freelancerId = id;
         }
         public static Education FromEducationInputDTO(EducationInputDTO inputDTO, long freelancerId) => new Education(inputDTO, freelancerId);

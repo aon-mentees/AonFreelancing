@@ -14,19 +14,19 @@
         public DateTime SubmittedAt { get; set; } = DateTime.Now;
         public DateTime? ApprovedAt { get; set; }
 
-        BidOutputDTO(Bid bid)
+        BidOutputDTO(Bid bid, string imageBaseUrl)
         {
             Id = bid.Id;
             //FreelancerId = bid.FreelancerId;
             ProjectId = bid.ProjectId;
-            Freelancer = FreelancerShortOutDTO.FromFreelancer(bid.Freelancer);
+            Freelancer = FreelancerShortOutDTO.FromFreelancer(bid.Freelancer,imageBaseUrl);
             ProposedPrice = bid.ProposedPrice;
             Notes = bid.Notes;
             Status = bid.Status;
             SubmittedAt = bid.SubmittedAt;
             ApprovedAt = bid.ApprovedAt;
         }
-        public static BidOutputDTO FromBid(Bid bid) => new BidOutputDTO(bid);
+        public static BidOutputDTO FromBid(Bid bid, string imageBaseUrl) => new BidOutputDTO(bid, imageBaseUrl);
 
     }
 }

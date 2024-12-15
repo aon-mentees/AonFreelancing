@@ -5,22 +5,23 @@ namespace AonFreelancing.Models.DTOs
    
     public class FreelancerResponseDTO : UserResponseDTO
     {
-        public List<SkillOutDTO> Skills { get; set; }
-        FreelancerResponseDTO(Freelancer freelancer)
+        public List<SkillOutputDTO>Skills { get; set; }
+        FreelancerResponseDTO(Freelancer freelancer, string imageBaseUrl)
         {
             Id = freelancer.Id;
             Name = freelancer.Name;
             Username = freelancer.UserName;
-            PhoneNumber = freelancer.PhoneNumber ?? string.Empty;
             Email = freelancer.Email;
             About = freelancer.About;
             PhoneNumber = freelancer.PhoneNumber;
             UserType = Constants.USER_TYPE_FREELANCER;
             IsPhoneNumberVerified = freelancer.PhoneNumberConfirmed;
-            Skills = freelancer.Skills.Select(s => SkillOutDTO.FromSkill(s)).ToList();
-            Role = new RoleResponseDTO { Name = Constants.USER_TYPE_FREELANCER };
+            Skills = freelancer.Skills.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
+            //Role = new RoleResponseDTO { Name = Constants.USER_TYPE_FREELANCER };
+            if(freelancer.ProfilePicture != null )
+                ProfilePicture = $"{imageBaseUrl}/{freelancer.ProfilePicture}";
         }
-        public static FreelancerResponseDTO FromFreelancer(Freelancer freelancer)=> new FreelancerResponseDTO(freelancer);
+        public static FreelancerResponseDTO FromFreelancer(Freelancer freelancer, string imageBaseUrl)=> new FreelancerResponseDTO(freelancer, imageBaseUrl);
     }
 
     public class FreelancerShortOutDTO
@@ -28,12 +29,15 @@ namespace AonFreelancing.Models.DTOs
         public long Id { get; set; }
         public string Name { get; set; }
         public string QualificationName { get; set; }
-
-        FreelancerShortOutDTO(Freelancer freelancer)
+        public string ProfilePicture { get; set; }
+        FreelancerShortOutDTO(Freelancer freelancer, string imageBaseUrl)
         {
             Id = freelancer.Id;
             Name = freelancer.Name;
+            if(freelancer.ProfilePicture != null)
+            ProfilePicture = $"{imageBaseUrl}/{freelancer.ProfilePicture}";
+            
         }
-        public static FreelancerShortOutDTO FromFreelancer(Freelancer freelancer) => new FreelancerShortOutDTO(freelancer);
+        public static FreelancerShortOutDTO FromFreelancer(Freelancer freelancer, string imageBaseUrl) => new FreelancerShortOutDTO(freelancer, imageBaseUrl);
     }
 }
