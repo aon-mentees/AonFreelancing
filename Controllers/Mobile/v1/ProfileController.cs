@@ -1,4 +1,5 @@
-﻿using AonFreelancing.Contexts;
+﻿using AonFreelancing.Attributes;
+using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.DTOs.NoftificationDTOs;
@@ -156,8 +157,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return notificationOutputDTOs;
         }
         [HttpPatch("profile-picture")]
-        public async  Task<IActionResult> CreateProfilePictureAsync(IFormFile imageFile)
+        public async Task<IActionResult> CreateProfilePictureAsync([AllowedFileExtensions([JPEG, JPG, PNG]), MaxFileSize(MAX_FILE_SIZE)] IFormFile imageFile)
         {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (authenticatedUser == null)
