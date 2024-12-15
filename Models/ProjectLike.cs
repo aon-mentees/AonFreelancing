@@ -10,7 +10,7 @@ namespace AonFreelancing.Models
         public long LikerId {  get; set; }
         public string LikerName { get; set; }
         public DateTime CreatedAt {  get; set; }
-
+        public User LikerUser{ get; set; }
         public ProjectLike(long likerId, long projectId,string likerName)
         {
             LikerId = likerId;

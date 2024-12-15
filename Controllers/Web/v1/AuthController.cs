@@ -70,23 +70,25 @@ namespace AonFreelancing.Controllers.Web.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             string normalizedReceivedEmail = userRegistrationRequest.Email.ToUpper();
-            User? storedUser = await _authService.FindUserByNormalizedEmailAsync(normalizedReceivedEmail);
+            bool isUserExistsByNormalizedEmail = await _authService.IsUserExistsByNormalizedEmailAsync(normalizedReceivedEmail);
+            bool isUserExistsByPhoneNumber = await _authService.IsUserExistsByPhoneNumberAsync(userRegistrationRequest.PhoneNumber);
             TempUser? storedTempUser = await _authService.FindTempUserByPhoneNumberAsync(userRegistrationRequest.PhoneNumber);
 
-            if (storedUser != null)
-            {
-                if (storedUser.NormalizedEmail == normalizedReceivedEmail)
-                    return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This email address is already used"));
-                if (storedUser.PhoneNumber == userRegistrationRequest.PhoneNumber)
-                    return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This phone number is already used"));
-                if (storedTempUser == null)
-                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Submit and verify your phone number before registering your details"));
-            }
+            if (isUserExistsByNormalizedEmail)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This email address is already used"));
+            if (isUserExistsByPhoneNumber)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "This phone number is already used"));
+            if (storedTempUser == null)
+                return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Submit and verify your phone number before registering your details"));
             User? newUser = null;
             if (userRegistrationRequest.UserType == Constants.USER_TYPE_FREELANCER)
                 newUser = new Freelancer(userRegistrationRequest);
             else if (userRegistrationRequest.UserType == Constants.USER_TYPE_CLIENT)
+            {
+                if (userRegistrationRequest.CompanyName == null)
+                    return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "company name is required for clients"));
                 newUser = new Client(userRegistrationRequest);
+            }
             if (newUser == null)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "No such user type exists."));
 
@@ -107,7 +109,7 @@ namespace AonFreelancing.Controllers.Web.v1
             await _authService.AssignRoleToUserAsync(newUser, userRegistrationRequest.UserType);
             await _authService.RemoveTempUser(storedTempUser);
 
-            return CreatedAtAction(nameof(ProfileController.GetProfileByIdAsync), "users", new { id = newUser.Id }, null);
+            return CreatedAtAction(nameof(ProfileController.GetProfileByIdAsync), "Profile", new { id = newUser.Id }, null);
         }
 
         [HttpPost("login")]

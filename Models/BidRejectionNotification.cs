@@ -8,8 +8,8 @@
         public long BidId { get; set; } // spare
 
         public BidRejectionNotification() { }
-        public BidRejectionNotification(string title, string message, long receiverId, long projectId, long rejectorId, string rejectorName, long bidId)
-            : base(title, message, receiverId)
+        public BidRejectionNotification(string title, string message, long receiverId, string? image, long projectId, long rejectorId, string rejectorName, long bidId)
+            : base(title, message, receiverId, image)
         {
             ProjectId = projectId;
             RejectorId = rejectorId;

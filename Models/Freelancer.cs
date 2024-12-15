@@ -13,7 +13,8 @@ namespace AonFreelancing.Models
     {
         public List<Skill> Skills { get; set; }
         public List<Certification> Certifications { get; set; }
-        public string? qualificationName {  get; set; }
+        public string? qualificationName { get; set; }
+        public List<Education> Education { get; set; }
         public Freelancer() { }
         public Freelancer(UserRegistrationRequest registrationRequest)
         : base(registrationRequest)

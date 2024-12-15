@@ -1,6 +1,8 @@
 ﻿using AonFreelancing.Contexts;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
+using AonFreelancing.Models.Responses;
+using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +15,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/skills")]
     [ApiController]
-    public class SkillsController (MainAppContext mainAppContext): BaseController
+    public class SkillsController (MainAppContext mainAppContext,SkillsService skillsService): BaseController
     {
         [Authorize(Roles =Constants.USER_TYPE_FREELANCER)]
         [HttpPost]
@@ -22,7 +24,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             long authenticatedUserId = Convert.ToInt64(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
            
-            bool isSkillExistsForFreelancer =await mainAppContext.Skills.AsNoTracking().AnyAsync(s => s.UserId == authenticatedUserId && s.Name == skillInputDTO.Name);
+            bool isSkillExistsForFreelancer =await mainAppContext.Skills.AsNoTracking().AnyAsync(s => s.FreelancerId == authenticatedUserId && s.Name == skillInputDTO.Name);
 
             if (isSkillExistsForFreelancer)
                 return Conflict(CreateErrorResponse("409", "you already have this skill in your profile"));
@@ -43,13 +45,22 @@ namespace AonFreelancing.Controllers.Mobile.v1
             Skill? storedSkill= mainAppContext.Skills.Where(s=>s.Id == id).FirstOrDefault();
             if (storedSkill == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Skill not found"));
-            if (authenticatedUserId != storedSkill.UserId)
+            if (authenticatedUserId != storedSkill.FreelancerId)
                 return Forbid();
 
             mainAppContext.Skills.Remove(storedSkill);
             await mainAppContext.SaveChangesAsync();
 
             return NoContent();
+        }
+        [HttpGet("{freelancerId}/skills")]
+        public async Task<IActionResult> GetSkillsByFreelancerIdAsync(long freelancerId, int page = 0, int pageSize = Constants.SKILLS_DEFAULT_PAGE_SIZE)
+        {
+            PaginatedResult<Skill> paginatedSkills = await skillsService.FindSkillsByFreelancerIdAsync(freelancerId, page, pageSize);
+            List<SkillOutputDTO> skillOutputDTOs = paginatedSkills.Result.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
+            PaginatedResult<SkillOutputDTO> paginatedSkillsOutputDTO = new PaginatedResult<SkillOutputDTO>(paginatedSkills.Total, skillOutputDTOs);
+
+            return Ok(CreateSuccessResponse(paginatedSkillsOutputDTO));
         }
     }
 }

@@ -13,7 +13,7 @@
 
         public const string PROJECT_STATUS_AVAILABLE = "available";
         public const string PROJECT_STATUS_CLOSED = "closed";
-
+        public const string PROJECT_STATUS_COMPLETED = "completed";
 
         public const string BIDS_STATUS_PENDING = "pending";
         public const string BIDS_STATUS_APPROVED = "approved";
@@ -42,5 +42,21 @@
         public const string BID_REJECTION_NOTIFICATION_TITLE = "You’ve Got a bid rejected";
         public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
 
+        public const int LIKES_DEFAULT_PAGE_SIZE = 10;
+        public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
+        public const int SKILLS_DEFAULT_PAGE_SIZE = 4;
+        public const int BIDS_DEFAULT_PAGE_SIZE = 10;
+
+        public const int COMMENTS_DEFAULT_PAGE_SIZE = 10;
+        public const int MAX_FILE_SIZE = 1024 * 1024 * 5;
+        public const string JPG = ".jpg";
+        public const string JPEG = ".jpeg";
+        public const string PNG = ".png";
+        public const string GIF = ".gif";
+
+        public const string SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT = "{0} Applied a bid on your project {1}";
+        public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
+
+        public const string DEFAULT_USER_PROFILE_PICTURE = "default-user-profile-picture.jpg";
     }
 }

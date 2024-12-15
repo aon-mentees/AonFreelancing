@@ -1,6 +1,6 @@
 namespace AonFreelancing.Models.DTOs;
 
-public class ProjectDetailsDTO
+public class ProjectHistoryDTO
 {
     public long Id { get; set; }
     public string Title { get; set; }
@@ -8,7 +8,7 @@ public class ProjectDetailsDTO
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
 
-    ProjectDetailsDTO(Project project)
+    ProjectHistoryDTO(Project project)
     {
         Id = project.Id;
         Title = project.Title;
@@ -16,5 +16,5 @@ public class ProjectDetailsDTO
         StartDate = project.StartDate;
         EndDate = project.EndDate;
     }
-    public static ProjectDetailsDTO FromProject(Project project) => new ProjectDetailsDTO(project);
+    public static ProjectHistoryDTO FromProject(Project project) => new ProjectHistoryDTO(project);
 }
