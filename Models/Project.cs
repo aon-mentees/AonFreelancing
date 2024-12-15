@@ -39,6 +39,7 @@ namespace AonFreelancing.Models
         public bool IsDeleted { get; set; }  
         public DateTime? DeletedAt { get; set; } 
 
+        public List<Comment>? Comments { get; set; }
 
         public Project() { }
         Project(ProjectInputDTO inputDto,long clientId)

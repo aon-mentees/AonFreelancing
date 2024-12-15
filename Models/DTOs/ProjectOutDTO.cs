@@ -25,6 +25,7 @@ namespace AonFreelancing.Models.DTOs
         public long ClientId { get; set; }
         public bool IsLiked { get; set; }
         public PaginatedResult<ProjectLikeOutputDTO> PaginatedLikes { get; set; }
+        public PaginatedResult<CommentOutputDTO> paginatedComments    { get; set; }
         public string ImageUrl { get; set; }
 
         ProjectOutDTO(Project project, string imageBaseUrl)

@@ -2,7 +2,9 @@
 using AonFreelancing.Utilities;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.NetworkInformation;
 using System.Reflection.Metadata;
+using static AonFreelancing.Utilities.Constants;
 
 namespace AonFreelancing.Models.DTOs
 {
@@ -30,8 +32,8 @@ namespace AonFreelancing.Models.DTOs
         [Range(0, int.MaxValue)]
         public decimal Budget { get; set; }
 
-        [MaxFileSize(1024 * 1024 * 5)]
-        [AllowedFileExtensions([".jpg", ".jpeg", ".png"])]
+        [MaxFileSize(Constants.MAX_FILE_SIZE)]
+        [AllowedFileExtensions([JPG, JPEG, PNG, GIF])]
         public IFormFile? ImageFile { get; set; }
     }
 }

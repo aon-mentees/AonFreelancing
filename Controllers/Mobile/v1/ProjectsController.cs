@@ -22,7 +22,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [ApiController]
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
         UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, 
-        ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService, BidService bidService) 
+        ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService, 
+        BidService bidService, CommentService commentService) 
         : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
@@ -137,6 +138,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
                 PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
                 p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+
+                PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(p.Id, 0, Constants.COMMENTS_DEFAULT_PAGE_SIZE, imagesBaseUrl);
+                p.paginatedComments = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
             }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
@@ -168,6 +172,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
                 PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
                 p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+
+                PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(p.Id, 0, Constants.COMMENTS_DEFAULT_PAGE_SIZE, imagesBaseUrl);
+                p.paginatedComments = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
             }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
@@ -440,6 +447,40 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await notificationService.CreateAsync(newSubmitBidNotification);
             await pushNotificationService.SendSubmitBidNotification(BidSubmissionNotificationOutputDTO.FromSubmitBidNotification(newSubmitBidNotification), newSubmitBidNotification.ReceiverId);
 
+        }
+
+        [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT},{Constants.USER_TYPE_FREELANCER}")]
+        [HttpPost("{projectId}/comments")]
+        public async Task<IActionResult> CreateCommentAsync([FromRoute] long projectId, [FromForm] CommentInputDTO commentInputDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            User? authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
+            Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+
+            Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
+            if (commentInputDTO.ImageFile != null)
+                comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
+
+            await commentService.SaveCommentAsync(comment);
+            return Ok(CreateSuccessResponse("Commented"));
+        }
+
+        [HttpGet("{projectId}/comments")]
+        public async Task<IActionResult> GetProjectCommentsAsync([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE)
+        {
+            string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+            var projectExists = await mainAppContext.Projects.AnyAsync(p => p.Id == projectId);
+
+            if (!projectExists)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found !"));
+
+            PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(projectId, page, pageSize, imagesBaseUrl);
+            PaginatedResult<CommentOutputDTO> paginatedCommentOutDTOs = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
+            return Ok(CreateSuccessResponse(paginatedCommentOutDTOs));
         }
 
     }

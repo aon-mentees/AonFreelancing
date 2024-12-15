@@ -45,6 +45,8 @@ namespace AonFreelancing
             builder.Services.AddScoped<SkillsService>();
             builder.Services.AddScoped<BidService>();
             builder.Services.AddScoped<FreelancerService>();
+            builder.Services.AddScoped<ActivitiesService>();
+            builder.Services.AddScoped<CommentService>();
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()
                 .AddEntityFrameworkStores<MainAppContext>()
