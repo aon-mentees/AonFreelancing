@@ -84,7 +84,11 @@ namespace AonFreelancing.Controllers.Web.v1
             if (userRegistrationRequest.UserType == Constants.USER_TYPE_FREELANCER)
                 newUser = new Freelancer(userRegistrationRequest);
             else if (userRegistrationRequest.UserType == Constants.USER_TYPE_CLIENT)
+            {
+                if (userRegistrationRequest.CompanyName == null)
+                    return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "company name is required for clients"));
                 newUser = new Client(userRegistrationRequest);
+            }
             if (newUser == null)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "No such user type exists."));
 
