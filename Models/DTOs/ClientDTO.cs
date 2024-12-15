@@ -20,8 +20,8 @@ namespace AonFreelancing.Models.DTOs
     {
         public string CompanyName { get; set; }
         public IEnumerable<ProjectHistoryDTO>? Projects { get; set; }
-
-        ClientResponseDTO(Client client)
+        public string ProfilePicture { get; set; }
+        ClientResponseDTO(Client client, string imageBaseUrl)
         {
             Id = client.Id;
             Name = client.Name;
@@ -33,9 +33,11 @@ namespace AonFreelancing.Models.DTOs
             IsPhoneNumberVerified = client.PhoneNumberConfirmed;
             CompanyName = client.CompanyName;
             Projects = client.Projects.Select(p => ProjectHistoryDTO.FromProject(p));
+            if (client.ProfilePicture != null)
+                ProfilePicture = $"{imageBaseUrl}/{client.ProfilePicture}";
             //Role = new RoleResponseDTO { Name = Constants.USER_TYPE_CLIENT };
         }
-        public static ClientResponseDTO FromClient(Client client) => new ClientResponseDTO(client);
+        public static ClientResponseDTO FromClient(Client client, string imageBaseUrl) => new ClientResponseDTO(client, imageBaseUrl);
     }
 
     public class ClientUpdateDTO

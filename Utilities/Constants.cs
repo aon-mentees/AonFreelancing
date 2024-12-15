@@ -13,7 +13,7 @@
 
         public const string PROJECT_STATUS_AVAILABLE = "available";
         public const string PROJECT_STATUS_CLOSED = "closed";
-
+        public const string PROJECT_STATUS_COMPLETED = "completed";
 
         public const string BIDS_STATUS_PENDING = "pending";
         public const string BIDS_STATUS_APPROVED = "approved";
@@ -57,5 +57,10 @@
         public const string JPEG = ".jpeg";
         public const string PNG = ".png";
         public const string GIF = ".gif";
+
+        public const string SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT = "{0} Applied a bid on your project {1}";
+        public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
+
+        public const string DEFAULT_USER_PROFILE_PICTURE = "default-user-profile-picture.jpg";
     }
 }

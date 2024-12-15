@@ -32,9 +32,10 @@ namespace AonFreelancing.Services
         {
             return await mainAppContext.ProjectLikes.CountAsync(pl => pl.ProjectId == projectId);
         }
-        public async Task<PaginatedResult<ProjectLike>> FindLikesForProjectAsync(long projectId, int pageNumber, int pageSize)
+        public async Task<PaginatedResult<ProjectLike>> FindLikesForProjectWithLikerUserAsync(long projectId, int pageNumber, int pageSize)
         {
-            List<ProjectLike> storedLikes =await mainAppContext.ProjectLikes.Where(pl => pl.ProjectId == projectId)
+            List<ProjectLike> storedLikes =await mainAppContext.ProjectLikes.Include(pl=>pl.LikerUser)
+                                                                            .Where(pl => pl.ProjectId == projectId)
                                                                             .Skip(pageNumber * pageSize)
                                                                             .Take(pageSize)
                                                                             .ToListAsync();

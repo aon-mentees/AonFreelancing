@@ -9,7 +9,7 @@
      
 
         BidSubmissionNotificationOutputDTO(SubmitBidNotification submitBidNotification)
-        : base(submitBidNotification.Id, submitBidNotification.Title, submitBidNotification.Message, submitBidNotification.IsRead, submitBidNotification.CreatedAt)
+        : base(submitBidNotification.Id, submitBidNotification.Title, submitBidNotification.Message, submitBidNotification.IsRead, submitBidNotification.CreatedAt, submitBidNotification.Image)
         {
             ProjectId = submitBidNotification.ProjectId;
             FreelnacerId = submitBidNotification.FreelancerId;

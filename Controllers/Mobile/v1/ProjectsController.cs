@@ -136,8 +136,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
             foreach (var p in projectOutDTOs)
             {
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
-                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
-                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectWithLikerUserAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
+                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(pl => ProjectLikeOutputDTO.FromProjectLike(pl, imagesBaseUrl)).ToList());
 
                 PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(p.Id, 0, Constants.COMMENTS_DEFAULT_PAGE_SIZE, imagesBaseUrl);
                 p.paginatedComments = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
@@ -170,8 +170,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
             foreach (var p in projectOutDTOs)
             {
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
-                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
-                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
+                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectWithLikerUserAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
+                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(pl => ProjectLikeOutputDTO.FromProjectLike(pl, imagesBaseUrl)).ToList());
 
                 PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(p.Id, 0, Constants.COMMENTS_DEFAULT_PAGE_SIZE, imagesBaseUrl);
                 p.paginatedComments = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
@@ -189,7 +189,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             long authenticatedFreelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string authenticatedFreelancerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
-
+            User? authenticatedFreelancer = await userManager.FindByIdAsync(authenticatedFreelancerId.ToString());
+            if (authenticatedFreelancer == null)
+                return Unauthorized();
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
             if (storedProject.IsDeleted)
@@ -208,14 +210,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             Bid? newBid = Bid.FromInputDTO(bidInputDTO, authenticatedFreelancerId, projectId);
             await projectService.ApplyBidAsync(newBid);
-            await SubmitBidNotification(storedProject, authenticatedFreelancerId, authenticatedFreelancerName);
+            await SubmitBidNotification(storedProject, authenticatedFreelancerId, authenticatedFreelancerName, authenticatedFreelancer.ProfilePicture);
             return StatusCode(StatusCodes.Status201Created);
         }
         [HttpGet("{projectId}/bids")]
         public async Task<IActionResult> GetBidsByProjectId(long projectId, int page = 0, int pageSize = Constants.BIDS_DEFAULT_PAGE_SIZE)
         {
+            string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+
             PaginatedResult<Bid> paginatedBids = await bidService.FindByProjectIdWithFreelancer(projectId, page, pageSize);
-            List<BidOutputDTO> bidOutputDTOs = paginatedBids.Result.Select(b => BidOutputDTO.FromBid(b)).ToList();
+            List<BidOutputDTO> bidOutputDTOs = paginatedBids.Result.Select(b => BidOutputDTO.FromBid(b, imagesBaseUrl)).ToList();
             PaginatedResult<BidOutputDTO> paginatedBidOutputDTOs = new PaginatedResult<BidOutputDTO>(paginatedBids.Total, bidOutputDTOs);
 
             return Ok(paginatedBidOutputDTOs);
@@ -228,6 +232,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+            User? authenticatedUser = await userManager.FindByIdAsync(authenticatedClientId.ToString());
+            if (authenticatedUser == null)
+                return Unauthorized();
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
@@ -253,7 +260,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
             // Notification 
             string notificationMessage = string.Format(Constants.BID_APPROVAL_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
             string notificationTitle = Constants.BID_APPROVAL_NOTIFICATION_TITLE;
-            var approvalNotification = new BidApprovalNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
+
+            var approvalNotification = new BidApprovalNotification(notificationTitle, notificationMessage, storedBid.FreelancerId,imageUrl, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
 
             await notificationService.CreateAsync(approvalNotification);
             await pushNotificationService.SendApprovalNotification(
@@ -269,6 +278,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+            User? authenticatedUser = await userManager.FindByIdAsync(authenticatedClientId.ToString());
+            if (authenticatedUser == null)
+                return Unauthorized();
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
@@ -294,7 +306,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
             // Notification
             string notificationMessage = string.Format(Constants.BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
             string notificationTitle = Constants.BID_REJECTION_NOTIFICATION_TITLE;
-            var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
+
+            var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId,imageUrl, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
 
             await notificationService.CreateAsync(rejectionNotification);
             await pushNotificationService.SendRejectionNotification(
@@ -361,6 +375,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
             var claimsIdentity = (ClaimsIdentity)HttpContext.User.Identity;
             long authenticatedUserId = authService.GetUserId(claimsIdentity);
             string authenticatedLikerName = authService.GetNameOfUser(claimsIdentity);
+            User? likerUser = await userManager.FindByIdAsync(authenticatedUserId.ToString());
+            if (likerUser == null)
+                return Unauthorized();
+
             Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
 
             if (storedProject == null)
@@ -372,7 +390,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (storedLike != null && action == Constants.PROJECT_UNLIKE_ACTION)
                 return await UnLikeProjectAsync(storedLike);
             if (storedLike == null && action == Constants.PROJECT_LIKE_ACTION)
-                return  await LikeProjectAsync(storedProject,authenticatedUserId, authenticatedLikerName);
+                return  await LikeProjectAsync(storedProject,authenticatedUserId, authenticatedLikerName, likerUser.ProfilePicture);
 
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),"no like found to be deleted"));
         }
@@ -389,11 +407,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             if(!await projectService.IsProjectExistsAsync(projectId))
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),"Project not found"));
-           
-            var paginatedLikes = await projectLikeService.FindLikesForProjectAsync(projectId, page, pageSize);
-            var paginatedLikesDTO = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(ProjectLikeOutputDTO.FromProjectLike).ToList());
-        return Ok(CreateSuccessResponse(paginatedLikesDTO));
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+            
+            string imageBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+
+            var paginatedLikes = await projectLikeService.FindLikesForProjectWithLikerUserAsync(projectId, page, pageSize);
+            var paginatedLikesDTO = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(pl => ProjectLikeOutputDTO.FromProjectLike(pl, imageBaseUrl)).ToList());
+
+            return Ok(CreateSuccessResponse(paginatedLikesDTO));
         }
 
 
@@ -419,13 +440,15 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                             .ToListAsync();
             return Ok(CreateSuccessResponse(storedTasksDTOs));
         }
-        private async Task<IActionResult> LikeProjectAsync(Project storedProject, long likerId, string likerName)
+        private async Task<IActionResult> LikeProjectAsync(Project storedProject, long likerId, string likerName, string? likerProfilePicture)
         {
             await projectLikeService.LikeProjectAsync(likerId, storedProject.Id, likerName);
 
             string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
             string notificationTitle = Constants.LIKE_NOTIFICATION_TITLE;
-            LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, storedProject.Id, likerId, likerName);
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{likerProfilePicture}";
+
+            LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, storedProject.Id, likerId, likerName);
 
             await notificationService.CreateAsync(newLikeNotification);
             await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification),newLikeNotification.ReceiverId);
@@ -437,12 +460,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await notificationService.DeleteForLikeAsync(storedProjectLike);
             return Ok("Unliked successfully");
         }
-         private async Task SubmitBidNotification(Project storedProject, long freelancerId, string freelancerName)
+         private async Task SubmitBidNotification(Project storedProject, long freelancerId, string freelancerName, string? freelancerProfilePicture)
         {
 
             string notificationMessage = string.Format(Constants.SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT, freelancerName, storedProject.Title);
             string notificationTitle = Constants.SUBMIT_BID_NOTIFICATION_TITLE;
-            SubmitBidNotification newSubmitBidNotification = new SubmitBidNotification(notificationTitle, notificationMessage, storedProject.ClientId, storedProject.Id, freelancerId, freelancerName);
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{freelancerProfilePicture}";
+
+            SubmitBidNotification newSubmitBidNotification = new SubmitBidNotification(notificationTitle, notificationMessage, storedProject.ClientId,imageUrl, storedProject.Id, freelancerId, freelancerName);
 
             await notificationService.CreateAsync(newSubmitBidNotification);
             await pushNotificationService.SendSubmitBidNotification(BidSubmissionNotificationOutputDTO.FromSubmitBidNotification(newSubmitBidNotification), newSubmitBidNotification.ReceiverId);

@@ -7,7 +7,7 @@
         public string ApproverName { get; set; }
         public long BidId { get; set; } // spare
 
-        BidApprovalNotificationOutputDTO(BidApprovalNotification bidApprovalNotification) : base(bidApprovalNotification.Id, bidApprovalNotification.Title, bidApprovalNotification.Message, bidApprovalNotification.IsRead, bidApprovalNotification.CreatedAt)
+        BidApprovalNotificationOutputDTO(BidApprovalNotification bidApprovalNotification) : base(bidApprovalNotification.Id, bidApprovalNotification.Title, bidApprovalNotification.Message, bidApprovalNotification.IsRead, bidApprovalNotification.CreatedAt, bidApprovalNotification.Image)
         {
             ProjectId = bidApprovalNotification.ProjectId;
             ApproverId = bidApprovalNotification.ApproverId;
