@@ -13,14 +13,16 @@ namespace AonFreelancing.Models.DTOs.NoftificationDTOs
         public string Message { get; set; }
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? Image {  get; set; }
 
-        public NotificationOutputDTO(long id, string title, string message, bool isRead, DateTime createdAt)
+        public NotificationOutputDTO(long id, string title, string message, bool isRead, DateTime createdAt, string? image)
         {
             Id = id;
             Title = title;
             Message = message;
             IsRead = isRead;
             CreatedAt = createdAt;
+            Image = image;
         }
 
     }
