@@ -37,10 +37,14 @@
         public const string LIKE_NOTIFICATION_MESSAGE_FORMAT = "{0} liked your project {1}";
         public const string BID_APPROVAL_NOTIFICATION_MESSAGE_FORMAT = "{0} approved your bid on project {1}";
         public const string BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT = "{0} rejected your bid on project {1}";
+        public const string SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT = "{0} Applied a bid on your project {1}";
+        public const string PROFILE_VISIT_NOTIFICATION_MESSAGE_FORMAT = "{0} visited your profile.";
 
         public const string BID_APPROVAL_NOTIFICATION_TITLE = "You’ve Got a bid approved";
         public const string BID_REJECTION_NOTIFICATION_TITLE = "You’ve Got a bid rejected";
         public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
+        public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
+        public const string PROFILE_VISIT_NOTIFICATION_TITLE = "Profile Visit Notification";
 
         public const int LIKES_DEFAULT_PAGE_SIZE = 10;
         public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
@@ -53,8 +57,5 @@
         public const string JPEG = ".jpeg";
         public const string PNG = ".png";
         public const string GIF = ".gif";
-
-        public const string SUBMIT_BID_NOTIFICATION_MESSAGE_FORMAT = "{0} Applied a bid on your project {1}";
-        public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
     }
 }

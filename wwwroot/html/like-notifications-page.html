@@ -42,7 +42,6 @@
             alert(`Your bid approved from ${BidApprovalNotificaationOutputDTO.approverName}`);
             console.log("Received approve notification:", BidApprovalNotificaationOutputDTO);
         });
-
         connection.on("GetBidRejectionNotification", (BidRejectionNotificationOutputDTO) => {
             alert(`Your bid rejected from ${BidRejectionNotificationOutputDTO.rejectorName}`);
             console.log("Received reject notification:", BidRejectionNotificationOutputDTO);
@@ -50,6 +49,10 @@
         connection.on("GetBidSubmissionNotification", (submitBidNotificationDTO) => {
             alert(`New Bid apply from ${submitBidNotificationDTO.freelancerId}`);
             console.log("Received Bid apply notification:", submitBidNotificationDTO);
+        });
+        connection.on('GetProfileVisitNotification', (profileVisitNotification) => {
+            alert(`Your profile visited by ${profileVisitNotificationOutputDTO.visitorName}`);
+            console.log('New Profile Visit Notification: ', notification);
         });
 
         start();
