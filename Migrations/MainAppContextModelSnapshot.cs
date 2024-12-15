@@ -130,7 +130,6 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("FreelancerId");
 
                     b.ToTable("Certifications");
-                    b.ToTable("Certifications", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Comment", b =>
@@ -163,39 +162,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments", (string)null);
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.Education", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Degree")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Institution")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("endDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("freelancerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("startDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("freelancerId");
-
-                    b.ToTable("Education", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Education", b =>
@@ -391,7 +358,7 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("ProjectId", "LikerId")
                         .IsUnique();
 
-                    b.ToTable("ProjectLikes", (string)null);
+                    b.ToTable("ProjectLikes");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Rating", b =>
@@ -423,7 +390,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("RaterUserId");
 
-                    b.ToTable("Ratings", (string)null);
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Skill", b =>
@@ -445,7 +412,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("FreelancerId");
 
-                    b.ToTable("Skills", (string)null);
+                    b.ToTable("Skills");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.TaskEntity", b =>
@@ -840,7 +807,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("SubmitBidNotification", (string)null);
+                    b.ToTable("SubmitBidNotification");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
@@ -970,7 +937,7 @@ namespace AonFreelancing.Migrations
 
             modelBuilder.Entity("AonFreelancing.Models.ProjectLike", b =>
                 {
-                    b.HasOne("AonFreelancing.Models.User", null)
+                    b.HasOne("AonFreelancing.Models.User", "LikerUser")
                         .WithMany()
                         .HasForeignKey("LikerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -981,6 +948,8 @@ namespace AonFreelancing.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("LikerUser");
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Rating", b =>

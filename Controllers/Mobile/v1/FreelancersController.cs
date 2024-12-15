@@ -12,10 +12,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/freelancers")]
     [ApiController]
-    public class FreelancersController(FreelancerService freelancerService,
-                                        AuthService authService,
-                                        ActivitiesService activitiesService,
-                                        UserService userService)
+    public class FreelancersController(FreelancerService freelancerService, AuthService authService, UserService userService, ActivitiesService activitiesService)
         : BaseController
     {
         [HttpGet("{id}/certifications")]
@@ -23,14 +20,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             PaginatedResult<Certification> paginatedCertifications = await freelancerService.FindCertificationByFreelancerIdAsync(id, page, pageSize);
             List<CertificationOutDTO> certificationOutDTOs = paginatedCertifications.Result.Select(c => CertificationOutDTO.FromCertification(c)).ToList();
-            PaginatedResult<CertificationOutDTO> paginatedSkillsOutputDTO = new PaginatedResult<CertificationOutDTO>(paginatedCertifications.Total, certificationOutDTOs);
+            PaginatedResult<CertificationOutDTO> paginatedCertifiactionOutputDTO = new PaginatedResult<CertificationOutDTO>(paginatedCertifications.Total, certificationOutDTOs);
 
-            return Ok(CreateSuccessResponse(certificationOutDTOs));
+            return Ok(CreateSuccessResponse(paginatedCertifiactionOutputDTO));
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("certifications")]
-        public async Task<IActionResult> AddCertificationAsync([FromForm] CertificationInputDTO certificationInputDTO)
+        public async Task<IActionResult> AddCertificationAsync([FromBody] CertificationInputDTO certificationInputDTO)
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
@@ -43,6 +40,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "You already have this certification in your profile."));
             Certification? certification = Certification.FromCertificationInputDTO(certificationInputDTO, freelancerId);
 
+
             await freelancerService.AddAsync(certification);
             await freelancerService.SaveChangesAsync();
 
@@ -52,7 +50,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("certifications/{certificationId}")]
         public async Task<IActionResult> UpdateCertificationAsync([FromRoute] long certificationId,
-            [FromForm] CertificationInputDTO certificationInputDTO)
+            [FromBody] CertificationInputDTO certificationInputDTO)
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
@@ -98,34 +96,21 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return NoContent();
         }
 
-        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpGet("{id}/activities")]
-        public async Task<IActionResult> GetActivitiesAsync(long id)
-        {
-            var storedUser = await userService.FindByIdAsync(id);
-            if (storedUser == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
-            var isFreelancer = await userService.IsFreelancer(storedUser);
-            if (!isFreelancer)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a freelancer"));
-            var responseDTO = activitiesService.FreelancerActivities(id);
-            return Ok(CreateSuccessResponse(responseDTO));
-        }
-
-        [HttpGet("{Id}/education")]
+        [HttpGet("{id}/education")]
         public async Task<IActionResult> GetAllEducationAsync([FromRoute] long id, int page = 0, int pageSize = Constants.EDUCATION_DEFAULT_PAGE_SIZE)
         {
             PaginatedResult<Education> paginatedEducation = await freelancerService.FindEducationByFreelancerIdAsync(id, page, pageSize);
             List<EducationOutputDTO> educationOutputDTOs = paginatedEducation.Result.Select(e => EducationOutputDTO.FromEducation(e)).ToList();
-            PaginatedResult<EducationOutputDTO> paginatedSkillsOutputDTO = new PaginatedResult<EducationOutputDTO>(paginatedEducation.Total, educationOutputDTOs);
+            PaginatedResult<EducationOutputDTO> paginatedEducationOutputDTO = new PaginatedResult<EducationOutputDTO>(paginatedEducation.Total, educationOutputDTOs);
 
-            return Ok(CreateSuccessResponse(educationOutputDTOs));
+            return Ok(CreateSuccessResponse(paginatedEducationOutputDTO));
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("education")]
         public async Task<IActionResult> AddEducationAsync([FromForm] EducationInputDTO educationInputDTO)
         {
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
@@ -138,18 +123,19 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             if (isFreelancerEducationExists)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "You already have this education in your profile."));
-
             Education? education = Education.FromEducationInputDTO(educationInputDTO, freelancerId);
             await freelancerService.AddAsync(education);
             await freelancerService.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetAllEducationAsync), new { id = education.Id }, null);
+
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("education/{educationId}")]
         public async Task<IActionResult> UpdateEducationAsync([FromForm] EducationInputDTO educationInputDTO, [FromRoute] long educationId)
         {
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
@@ -178,6 +164,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpDelete("education/{educationId}")]
         public async Task<IActionResult> DeleteEducationAsync([FromRoute] long educationId)
         {
+
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             Education? storedEducation = await freelancerService.FindFreelancerEducationAsync(educationId);
 
@@ -191,17 +178,31 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+        [HttpGet("{id}/activities")]
+        public async Task<IActionResult> GetActivitiesAsync(long id)
+        {
+            var storedUser = await userService.FindByIdAsync(id);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
+            var isFreelancer = await userService.IsFreelancer(storedUser);
+            if (!isFreelancer)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a freelancer"));
+            var responseDTO = activitiesService.FreelancerActivities(id);
+            return Ok(CreateSuccessResponse(responseDTO));
+        }
+
+        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpGet("{id}/work-experinces")]
         public async Task<IActionResult> GetWorkExperiencesAsync([FromRoute] long id, int page = 0, int pageSize = Constants.WORK_EXPERIENCES_DEFAULT_PAGE_SIZE)
         {
             PaginatedResult<WorkExperience> paginatedWorkExperiences = await freelancerService.FindWorkExperienceByFreelancerIdAsync(id, page, pageSize);
             List<WorkExperienceOutputDTO> workExperienceOutDTOs = paginatedWorkExperiences.Result.Select(w => WorkExperienceOutputDTO.FromWorkExperience(w)).ToList();
-            PaginatedResult<WorkExperienceOutputDTO> paginatedSkillsOutputDTO = new PaginatedResult<WorkExperienceOutputDTO>(paginatedWorkExperiences.Total, workExperienceOutDTOs);
+            PaginatedResult<WorkExperienceOutputDTO> paginatedWorkExperienceOutputDTO = new PaginatedResult<WorkExperienceOutputDTO>(paginatedWorkExperiences.Total, workExperienceOutDTOs);
 
-            return Ok(CreateSuccessResponse(workExperienceOutDTOs));
+            return Ok(CreateSuccessResponse(paginatedWorkExperienceOutputDTO));
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpPost("work-experinces")]
+        [HttpPost("work-experince")]
         public async Task<IActionResult> AddWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO)
         {
             if (!ModelState.IsValid)
@@ -222,7 +223,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return CreatedAtAction(nameof(GetWorkExperiencesAsync), new { id = workExperience.Id }, null);
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpPut("work-experinces/{workExperienceId}")]
+        [HttpPut("work-experince/{workExperienceId}")]
         public async Task<IActionResult> UpdateWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
         {
             if (!ModelState.IsValid)
@@ -251,7 +252,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return Ok(CreateSuccessResponse(workExpericeDTO));
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
-        [HttpDelete("work-experinces/{workExperienceId}")]
+        [HttpDelete("work-experince/{workExperienceId}")]
         public async Task<IActionResult> DeleteWorkExperienceAsync([FromRoute] long workExperienceId)
         {
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);

@@ -20,9 +20,9 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             PaginatedResult<Certification> paginatedCertifications = await freelancerService.FindCertificationByFreelancerIdAsync(id, page, pageSize);
             List<CertificationOutDTO> certificationOutDTOs = paginatedCertifications.Result.Select(c => CertificationOutDTO.FromCertification(c)).ToList();
-            PaginatedResult<CertificationOutDTO> paginatedSkillsOutputDTO = new PaginatedResult<CertificationOutDTO>(paginatedCertifications.Total, certificationOutDTOs);
+            PaginatedResult<CertificationOutDTO> paginatedCertifiactionOutputDTO = new PaginatedResult<CertificationOutDTO>(paginatedCertifications.Total, certificationOutDTOs);
 
-            return Ok(CreateSuccessResponse(certificationOutDTOs));
+            return Ok(CreateSuccessResponse(paginatedCertifiactionOutputDTO));
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
@@ -96,14 +96,14 @@ namespace AonFreelancing.Controllers.Web.v1
             return NoContent();
         }
 
-        [HttpGet("{Id}/education")]
+        [HttpGet("{id}/education")]
         public async Task<IActionResult> GetAllEducationAsync([FromRoute] long id, int page = 0, int pageSize = Constants.EDUCATION_DEFAULT_PAGE_SIZE)
         {
             PaginatedResult<Education> paginatedEducation = await freelancerService.FindEducationByFreelancerIdAsync(id, page, pageSize);
             List<EducationOutputDTO> educationOutputDTOs = paginatedEducation.Result.Select(e => EducationOutputDTO.FromEducation(e)).ToList();
-            PaginatedResult<EducationOutputDTO> paginatedSkillsOutputDTO = new PaginatedResult<EducationOutputDTO>(paginatedEducation.Total, educationOutputDTOs);
+            PaginatedResult<EducationOutputDTO> paginatedEducationOutputDTO = new PaginatedResult<EducationOutputDTO>(paginatedEducation.Total, educationOutputDTOs);
 
-            return Ok(CreateSuccessResponse(educationOutputDTOs));
+            return Ok(CreateSuccessResponse(paginatedEducationOutputDTO));
         }
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
@@ -197,13 +197,13 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             PaginatedResult<WorkExperience> paginatedWorkExperiences = await freelancerService.FindWorkExperienceByFreelancerIdAsync(id, page, pageSize);
             List<WorkExperienceOutputDTO> workExperienceOutDTOs = paginatedWorkExperiences.Result.Select(w => WorkExperienceOutputDTO.FromWorkExperience(w)).ToList();
-            PaginatedResult<WorkExperienceOutputDTO> paginatedSkillsOutputDTO = new PaginatedResult<WorkExperienceOutputDTO>(paginatedWorkExperiences.Total, workExperienceOutDTOs);
+            PaginatedResult<WorkExperienceOutputDTO> paginatedWorkExperienceOutputDTO = new PaginatedResult<WorkExperienceOutputDTO>(paginatedWorkExperiences.Total, workExperienceOutDTOs);
 
-            return Ok(CreateSuccessResponse(workExperienceOutDTOs));
+            return Ok(CreateSuccessResponse(paginatedWorkExperienceOutputDTO));
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("work-experince")]
-        public async Task<IActionResult> AddWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO)
+        public async Task<IActionResult> AddWorkExperinceAsync([FromBody] WorkExperienceInputDTO workExperienceInputDTO)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
@@ -224,7 +224,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("work-experince/{workExperienceId}")]
-        public async Task<IActionResult> UpdateWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
+        public async Task<IActionResult> UpdateWorkExperinceAsync([FromBody] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
