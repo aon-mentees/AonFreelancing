@@ -20,19 +20,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                     UserService userService,
                                     UserManager<User> userManager, AuthService authService, RoleManager<ApplicationRole> roleManager) : BaseController
     {
-        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
-        [HttpGet("{id}/activities")]
-        public async Task<IActionResult> GetActivitiesAsync(long id)
-        {
-            var storedUser = await userService.FindByIdAsync(id);
-            if(storedUser == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
-            var isClient = await userService.IsClient(storedUser);
-            if(!isClient)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a client"));
-            var responseDTO = activitiesService.ClientActivities(id);
-            return Ok(CreateSuccessResponse(responseDTO));
-        }
+ 
 
 
         // before your review, you should i have skill issue here cuz the time is now 11:56 PM :)
@@ -60,7 +48,20 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             return Ok(CreateSuccessResponse("Client updated successfully"));
         }
-
+  
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpGet("{id}/activities")]
+        public async Task<IActionResult> GetActivitiesAsync(long id)
+        {
+            var storedUser = await userService.FindByIdAsync(id);
+            if(storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
+            var isClient = await userService.IsClient(storedUser);
+            if(!isClient)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a client"));
+            var responseDTO = activitiesService.ClientActivities(id);
+            return Ok(CreateSuccessResponse(responseDTO));
+        }
         //private readonly MainAppContext _mainAppContext;
         //private readonly UserManager<User> _userManager;
         //public ClientsController(
