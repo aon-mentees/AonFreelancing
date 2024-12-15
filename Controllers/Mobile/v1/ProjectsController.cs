@@ -23,7 +23,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
         UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService, 
         ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService, 
-        BidService bidService, CommentService commentService) 
+        BidService bidService, CommentService commentService, UserService userService) 
         : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
@@ -53,12 +53,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            User? authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
-            if (authenticatedUser == null)
+            var storedUser = await userService.FindByIdAsync(id);
+            if (storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
                     "Unable to load user."));
 
-            Project? storedProject = await projectService.FindProjectWithBidsAsync(id);
+            Project? storedProject = await projectService.FindProjectAsync(id);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
                     "Project not found or not owned by the authenticated client."));
@@ -71,21 +71,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
                     "Cannot update a project that is closed."));
 
-            if (!string.IsNullOrEmpty(projectInputDto.Title))
-                storedProject.Title = projectInputDto.Title;
-
-            if (!string.IsNullOrEmpty(projectInputDto.Description))
-                storedProject.Description = projectInputDto.Description;
-
-            if (!string.IsNullOrEmpty(projectInputDto.QualificationName))
-                storedProject.QualificationName = projectInputDto.QualificationName;
-
-            if (projectInputDto.Duration > 0)
-                storedProject.Duration = projectInputDto.Duration;
-
-            if (!string.IsNullOrEmpty(projectInputDto.PriceType))
-                storedProject.PriceType = projectInputDto.PriceType;
-
+            storedProject.Title = projectInputDto.Title;
+            storedProject.Description = projectInputDto.Description;
+            storedProject.QualificationName = projectInputDto.QualificationName;
+            storedProject.Duration = projectInputDto.Duration;
+            storedProject.PriceType = projectInputDto.PriceType;
             storedProject.Budget = projectInputDto.Budget;
 
             await mainAppContext.SaveChangesAsync();
@@ -97,19 +87,26 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProjectAsync(long id)
         {
-            var authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
-            if (authenticatedUser == null)
+            var storedUser = await userService.FindByIdAsync(id);
+            if (storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
                     "Unable to load user."));
 
-            var project = await projectService.FindProjectAsync(id);
-            if (project == null || project.ClientId != authenticatedUser.Id)
+            var storedProject = await projectService.FindProjectAsync(id);
+            if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
                     "Project not found or not owned by the authenticated client."));
 
+            if (storedProject.ClientId != storedUser.Id)
+                return Forbid();
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             // Soft delete the project
-            project.IsDeleted = true;
-            project.DeletedAt = DateTime.UtcNow;
+            storedProject.IsDeleted = true;
+            storedProject.DeletedAt = DateTime.Now;
 
             await mainAppContext.SaveChangesAsync();
             return Ok(CreateSuccessResponse("Project deleted successfully"));

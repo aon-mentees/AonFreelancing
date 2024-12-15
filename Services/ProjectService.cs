@@ -125,8 +125,7 @@ namespace AonFreelancing.Services
         public async Task<Project?> FindProjectAsync(long projectId)
         {
             return await _mainAppContext.Projects
-                .Where(p => p.Id == projectId && !p.IsDeleted) 
-                .FirstOrDefaultAsync();
+                .Where(p => p.Id == projectId && !p.IsDeleted).FirstOrDefaultAsync();
         }
 
         public async Task<PaginatedResult<Project>> FindProjectsByClientIdWithTasksAndClient(long clientId, int pageNumber, int pageSize, string status)
