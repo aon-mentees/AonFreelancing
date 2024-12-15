@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using AonFreelancing.Utilities;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -24,10 +25,10 @@ namespace AonFreelancing.Services
                 claims:
                 [
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim("Role", role),
-                new Claim("GivenName", user.Name),
-                new Claim("Email", user.Email),
-                new Claim("PhoneNumber", user.PhoneNumber)
+                new Claim(Constants.JWT_ROLE, role),
+                new Claim(Constants.JWT_GIVEN_NAME, user.Name),
+                new Claim(Constants.JWT_EMAIL, user.Email),
+                new Claim(Constants.JWT_PHONE_NUMBER, user.PhoneNumber)
                 ],
                 expires: DateTime.Now.AddMinutes(Convert.ToDouble(_config["Jwt:ExpireInMinutes"])),
                 signingCredentials: creds);

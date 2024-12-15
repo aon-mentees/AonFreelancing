@@ -59,5 +59,10 @@
         public const string GIF = ".gif";
 
         public const string DEFAULT_USER_PROFILE_PICTURE = "default-user-profile-picture.jpg";
+
+        public const string JWT_ROLE = "Role";
+        public const string JWT_GIVEN_NAME = "GivenName";
+        public const string JWT_EMAIL = "Email";
+        public const string JWT_PHONE_NUMBER = "PhoneNumber";
     }
 }
