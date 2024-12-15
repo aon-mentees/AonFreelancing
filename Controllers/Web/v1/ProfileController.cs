@@ -34,8 +34,8 @@ namespace AonFreelancing.Controllers.Web.v1
                 .FirstOrDefaultAsync();
 
             if (storedFreelancerDTO != null)
-                return Ok(CreateSuccessResponse(storedFreelancerDTO));
-
+               return Ok(CreateSuccessResponse(storedFreelancerDTO));
+ 
             ClientResponseDTO? storedClientDTO = await mainAppContext.Users
                 .OfType<Client>()
                 .Where(c => c.Id == id)

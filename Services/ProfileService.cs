@@ -2,6 +2,7 @@
 using AonFreelancing.Models;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
+using static System.Net.Mime.MediaTypeNames;
 
 public class ProfileService
 {
@@ -21,8 +22,10 @@ public class ProfileService
             Constants.PROFILE_VISIT_NOTIFICATION_TITLE,
             string.Format(Constants.PROFILE_VISIT_NOTIFICATION_MESSAGE_FORMAT, visitorName),
             receiverId,
+            string.Empty, // low level code --> for lilo 
             visitorId,
             visitorName.Name
+
         );
 
         var notificationDTO = new ProfileVisitNotificationOutputDTO(profileVisitNotification);
