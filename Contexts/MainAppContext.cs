@@ -24,6 +24,7 @@ namespace AonFreelancing.Contexts
         public DbSet<Certification> Certifications { get; set; }
         public DbSet<Education> Educations { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<WorkExperience> WorkExperiences { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
@@ -58,6 +59,8 @@ namespace AonFreelancing.Contexts
 
             builder.Entity<Rating>().HasIndex(r => r.RaterUserId).IsUnique(false);
             builder.Entity<Rating>().HasIndex(r => r.RatedUserId).IsUnique(false);
+
+            builder.Entity<WorkExperience>().ToTable("WorkExperiences", tb => tb.HasCheckConstraint("CK_EMPLOYMENTTYPE", $"[EmploymentType] IN ('{Constants.EMPLOYMENTTYPE_FULLTIME}', '{Constants.EMPLOYMENTTYPE_PARTTIME}', '{Constants.EMPLOYMENTTYPE_CONTRACT}', '{Constants.EMPLOYMENTTYPE_INTERNSHIP}')"));
 
             //set up relationships
             builder.Entity<TempUser>().HasOne<Otp>()
@@ -166,7 +169,12 @@ namespace AonFreelancing.Contexts
                                           .HasForeignKey(c => c.freelancerId)
                                           .HasPrincipalKey(f => f.Id)
                                           .OnDelete(DeleteBehavior.NoAction);
-
+            
+            builder.Entity<WorkExperience>().HasOne(w => w.Freelancer)
+                                          .WithMany(f => f.WorkExperiences)
+                                          .HasForeignKey(c => c.FreelancerId)
+                                          .HasPrincipalKey(f => f.Id)
+                                          .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<Rating>()
                   .HasOne<User>()
                   .WithMany()

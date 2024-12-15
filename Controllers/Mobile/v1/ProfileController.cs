@@ -13,7 +13,7 @@ using System.Security.Claims;
 namespace AonFreelancing.Controllers.Mobile.v1
 {
     [Authorize]
-    [Route("api/mobile/v1/profiles")]
+    [Route("api/mobile/v1/profile")]
     [ApiController]
     public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService)
         : BaseController

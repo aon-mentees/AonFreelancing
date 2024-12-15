@@ -34,6 +34,11 @@
         public const string PROJECT_QUALIFICATION_MOBILE = "mobile";
         public const string PROJECT_QUALIFICATION_UIUX = "uiux";
 
+        public const string EMPLOYMENTTYPE_FULLTIME = "full-time";
+        public const string EMPLOYMENTTYPE_PARTTIME = "part-time";
+        public const string EMPLOYMENTTYPE_CONTRACT = "contract";
+        public const string EMPLOYMENTTYPE_INTERNSHIP = "internship";
+        
         public const string LIKE_NOTIFICATION_MESSAGE_FORMAT = "{0} liked your project {1}";
         public const string BID_APPROVAL_NOTIFICATION_MESSAGE_FORMAT = "{0} approved your bid on project {1}";
         public const string BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT = "{0} rejected your bid on project {1}";
@@ -46,7 +51,9 @@
         public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
         public const int SKILLS_DEFAULT_PAGE_SIZE = 4;
         public const int BIDS_DEFAULT_PAGE_SIZE = 10;
-
+        public const int WORK_EXPERIENCES_DEFAULT_PAGE_SIZE = 4;
+        public const int CERTFICATION_DEFAULT_PAGE_SIZE = 4;
+        public const int EDUCATION_DEFAULT_PAGE_SIZE = 4;
         public const int COMMENTS_DEFAULT_PAGE_SIZE = 10;
         public const int MAX_FILE_SIZE = 1024 * 1024 * 5;
         public const string JPG = ".jpg";
