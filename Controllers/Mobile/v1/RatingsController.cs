@@ -71,14 +71,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
 
         [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
-        [HttpGet("rating-card")]
+        [HttpGet("rating-summary")]
         public async Task<IActionResult> GetUserRating([FromQuery] long userId)
         {
             var storedUser = await _userService.FindByIdAsync(userId);
             if (storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User Not Found !"));
 
-            UserRatingDTO userRating = await _ratingService.GetRatingCalculationForUserAsync(userId);
+            RatingSummaryDTO userRating = await _ratingService.GetRatingCalculationForUserAsync(userId);
             return Ok(CreateSuccessResponse(userRating));
         }
     }

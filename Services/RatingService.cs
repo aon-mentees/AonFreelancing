@@ -58,7 +58,7 @@ namespace AonFreelancing.Services
                 .AnyAsync(r => r.RaterUserId == raterUserId && r.RatedUserId == ratedUserId);
         }
 
-        public async Task<UserRatingDTO> GetRatingCalculationForUserAsync(long userId)
+        public async Task<RatingSummaryDTO> GetRatingCalculationForUserAsync(long userId)
         {
             var ratings = await _mainAppContext.Ratings
                 .Where(r => r.RatedUserId == userId)
@@ -77,10 +77,10 @@ namespace AonFreelancing.Services
                 string midPercentage = $"{(double)midCount / totalRating * 100:0.##}%";
                 string lowPercentage = $"{(double)lowCount / totalRating * 100:0.##}%";
 
-                return new UserRatingDTO(avgRating, highPercentage, midPercentage, lowPercentage, totalRating);
+                return new RatingSummaryDTO(avgRating, highPercentage, midPercentage, lowPercentage, totalRating);
             }
 
-            return new UserRatingDTO(double.NaN, "0%", "0%", "0%", 0);
+            return new RatingSummaryDTO(double.NaN, "0%", "0%", "0%", 0);
         }
     }
 }
