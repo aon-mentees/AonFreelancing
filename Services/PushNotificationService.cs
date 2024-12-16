@@ -42,6 +42,7 @@ namespace AonFreelancing.Services
             if (!connections.IsNullOrEmpty())
                 await _iNotificationsHubContext.Clients.Clients(connections).GetBidSubmissionNotification(submitBidNotificationOutDTO);
         }
+
         public async Task SendTaskApprovalNotification(TaskApprovalNotificationOutputDTO taskApprovalNotification, long receiverId)
         {
             var connections = _inMemorySignalRUserConnectionService.GetConnections(receiverId);
@@ -54,5 +55,15 @@ namespace AonFreelancing.Services
             if (!connections.IsNullOrEmpty())
                 await _iNotificationsHubContext.Clients.Clients(connections).GetTaskRejectionNotification(taskRejectionNotification);
         }
+
+
+        public async Task SendCommentNotification(CommentNotificationOutputDTO commentNotificationOutputDTO, long receiverId)
+        {
+            var connections = _inMemorySignalRUserConnectionService.GetConnections(receiverId);
+            if (!connections.IsNullOrEmpty())
+                await _iNotificationsHubContext.Clients.Clients(connections).GetCommentNotification(commentNotificationOutputDTO);
+        }
+
+
     }
 }

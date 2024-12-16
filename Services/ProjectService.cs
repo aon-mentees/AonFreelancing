@@ -30,7 +30,19 @@ namespace AonFreelancing.Services
             _jwtService = jwtService;
             _roleManager = roleManager;
         }
-        //public async Task<PaginatedResult<Project>> ()
+        public async Task<PaginatedResult<Project>> FindProjectsByClientId(long clientId, int pageNumber, int pageSize)
+        {
+            List<Project> storedProjects = await _mainAppContext.Projects.Where(p => p.ClientId == clientId)
+                                                                        .OrderByDescending(p => p.CreatedAt)
+                                                                        .Skip(pageNumber * pageSize)
+                                                                        .Take(pageSize)
+                                                                        .ToListAsync();
+            return new PaginatedResult<Project>(await CountProjectsByClientIdAsync(clientId), storedProjects);
+        }
+        public async Task<int> CountProjectsByClientIdAsync(long clientId)
+        {
+            return await _mainAppContext.Projects.CountAsync(p => p.ClientId == clientId);
+        }
         public async Task<Project?> FindProjectWithBidsAsync(long projectId)
         {
             return await _mainAppContext.Projects.Where(p => p.Id == projectId)
