@@ -19,7 +19,6 @@ namespace AonFreelancing.Controllers.Web.v1
                                     ActivitiesService activitiesService,
                                     UserService userService) : BaseController
     {
-        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpGet("{id}/activities")]
         public async Task<IActionResult> GetActivitiesAsync(long id)
         {
