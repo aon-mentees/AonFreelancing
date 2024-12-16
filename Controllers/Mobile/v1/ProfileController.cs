@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using static AonFreelancing.Utilities.Constants;
@@ -25,7 +26,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
-
             FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users
                 .OfType<Freelancer>()
                 .Include(f => f.Skills)
@@ -110,7 +110,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             long authonticatedUser = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            
+
             User? storedUser = await mainAppContext.Users.FindAsync(authonticatedUser);
 
             if (storedUser == null)
@@ -189,17 +189,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await userService.SaveChangesAsync();
             return NoContent();
         }
-        //[HttpGet("profile-picture/{userId}")]
-        //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
-        //{
-        //    User? storedUser = await userService.FindByIdAsync(userId);
-        //    if (storedUser== null)
-        //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
-                
-        //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
-        //    string imageUrl = $"{imagesBaseUrl}/{storedUser.ProfilePicture}";
-        //    return Ok(CreateSuccessResponse(imageUrl));
-        //}
     }
 
 }
