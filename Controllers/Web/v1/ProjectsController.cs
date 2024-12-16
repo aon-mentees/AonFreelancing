@@ -74,7 +74,7 @@ namespace AonFreelancing.Controllers.Web.v1
             storedProject.Description = projectInputDto.Description;
             storedProject.QualificationName = projectInputDto.QualificationName;
             storedProject.Duration = projectInputDto.Duration;
-            storedProject.PriceType = projectInputDto.PriceType;
+            //storedProject.PriceType = projectInputDto.PriceType;
             storedProject.Budget = projectInputDto.Budget;
 
             await mainAppContext.SaveChangesAsync();

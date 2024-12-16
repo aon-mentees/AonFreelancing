@@ -50,7 +50,7 @@ namespace AonFreelancing.Models
             QualificationName = inputDto.QualificationName;
             Duration = inputDto.Duration;
             Budget = inputDto.Budget;
-            PriceType = inputDto.PriceType;
+            //PriceType = inputDto.PriceType;
             CreatedAt = DateTime.Now;
             IsDeleted = false;
         }
