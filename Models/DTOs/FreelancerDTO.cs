@@ -47,6 +47,7 @@ namespace AonFreelancing.Models.DTOs
         [StringLength(64, ErrorMessage = "The Name cannot exceed 64 characters")]
         public string Name { get; set; }
 
+        [AllowedValues(["uiux", "mobile", "frontend", "backend", "fullstack"])]// I hard coded it because I did it in code review on github at 2:50:am. so shut up nigga.
         [StringLength(128, ErrorMessage = "The SpecializationName cannot exceed 128 characters")]
         public string QualificationName { get; set; }
     }
