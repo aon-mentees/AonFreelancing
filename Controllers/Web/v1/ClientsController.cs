@@ -17,17 +17,44 @@ namespace AonFreelancing.Controllers.Web.v1
     [ApiController]
     public class ClientsController(MainAppContext mainAppContext,
                                     ActivitiesService activitiesService,
-                                    UserService userService) : BaseController
+                                    UserService userService,
+                                    UserManager<User> userManager, AuthService authService, RoleManager<ApplicationRole> roleManager) : BaseController
     {
+
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPatch]
+        public async Task<IActionResult> UpdateClientAsync([FromBody] ClientUpdateDTO clientUpdateDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            var storedUser = await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
+
+            if (storedUser is not Client client)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Authenticated user is not a client"));
+
+            if (!string.IsNullOrEmpty(clientUpdateDTO.Name))
+                client.Name = clientUpdateDTO.Name;
+
+            if (!string.IsNullOrEmpty(clientUpdateDTO.CompanyName))
+                client.CompanyName = clientUpdateDTO.CompanyName;
+
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Client updated successfully"));
+        }
+
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpGet("{id}/activities")]
         public async Task<IActionResult> GetActivitiesAsync(long id)
         {
             var storedUser = await userService.FindByIdAsync(id);
-            if(storedUser == null)
+            if (storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
             var isClient = await userService.IsClient(storedUser);
-            if(!isClient)
+            if (!isClient)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a client"));
             var responseDTO = activitiesService.ClientActivities(id);
             return Ok(CreateSuccessResponse(responseDTO));
