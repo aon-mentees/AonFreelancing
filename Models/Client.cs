@@ -20,6 +20,5 @@ namespace AonFreelancing.Models
         {
             CompanyName = registrationRequest.CompanyName;
         }
-
     }
 }

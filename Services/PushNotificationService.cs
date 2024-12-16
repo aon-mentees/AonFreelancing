@@ -49,5 +49,12 @@ namespace AonFreelancing.Services
                 await _iNotificationsHubContext.Clients.Clients(connections).GetProfileVisitNotification(profileVisitNotificationDTO);
         }
 
+        public async Task SendCommentNotification(CommentNotificationOutputDTO commentNotificationOutputDTO, long receiverId)
+        {
+            var connections = _inMemorySignalRUserConnectionService.GetConnections(receiverId);
+            if (!connections.IsNullOrEmpty())
+                await _iNotificationsHubContext.Clients.Clients(connections).GetCommentNotification(commentNotificationOutputDTO);
+        }
+
     }
 }

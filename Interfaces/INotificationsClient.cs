@@ -13,5 +13,6 @@ namespace AonFreelancing.Interfaces
         Task GetBidSubmissionNotification(BidSubmissionNotificationOutputDTO submitBidNotification);
         Task GetProfileVisitNotification(ProfileVisitNotificationOutputDTO profileVisitNotification);
 
+        Task GetCommentNotification(CommentNotificationOutputDTO commentNotification);
     }
 }

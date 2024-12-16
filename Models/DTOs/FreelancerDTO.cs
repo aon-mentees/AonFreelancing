@@ -1,4 +1,5 @@
 ﻿using AonFreelancing.Utilities;
+using System.ComponentModel.DataAnnotations;
 
 namespace AonFreelancing.Models.DTOs
 {
@@ -39,5 +40,14 @@ namespace AonFreelancing.Models.DTOs
             
         }
         public static FreelancerShortOutDTO FromFreelancer(Freelancer freelancer, string imageBaseUrl) => new FreelancerShortOutDTO(freelancer, imageBaseUrl);
+    }
+
+    public class FreelancerUpdateDTO
+    {
+        [StringLength(64, ErrorMessage = "The Name cannot exceed 64 characters")]
+        public string Name { get; set; }
+
+        [StringLength(128, ErrorMessage = "The SpecializationName cannot exceed 128 characters")]
+        public string QualificationName { get; set; }
     }
 }

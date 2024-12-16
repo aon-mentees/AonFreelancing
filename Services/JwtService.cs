@@ -25,10 +25,9 @@ namespace AonFreelancing.Services
                 claims:
                 [
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(Constants.JWT_ROLE, role),
-                new Claim(Constants.JWT_GIVEN_NAME, user.Name),
-                new Claim(Constants.JWT_EMAIL, user.Email),
-                new Claim(Constants.JWT_PHONE_NUMBER, user.PhoneNumber)
+                new Claim(ClaimTypes.Role, role),
+                new Claim(ClaimTypes.GivenName, user.Name),
+                new Claim(ClaimTypes.Email, user.Email)
                 ],
                 expires: DateTime.Now.AddMinutes(Convert.ToDouble(_config["Jwt:ExpireInMinutes"])),
                 signingCredentials: creds);

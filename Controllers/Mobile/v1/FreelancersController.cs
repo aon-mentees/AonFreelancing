@@ -1,9 +1,11 @@
-﻿using AonFreelancing.Models;
+﻿using AonFreelancing.Contexts;
+using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -12,9 +14,31 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/freelancers")]
     [ApiController]
-    public class FreelancersController(FreelancerService freelancerService, AuthService authService, UserService userService, ActivitiesService activitiesService)
+    public class FreelancersController(
+        FreelancerService freelancerService, AuthService authService,
+        UserService userService, ActivitiesService activitiesService,
+        UserManager<User> userManager, MainAppContext mainAppContext)
         : BaseController
     {
+        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+        [HttpPatch]
+        public async Task<IActionResult> UpdateFreelancerAsync([FromBody] FreelancerUpdateDTO freelancerUpdateDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            var storedUser = (Freelancer?)await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
+
+            storedUser.Name = freelancerUpdateDTO.Name;
+            storedUser.QualificationName = freelancerUpdateDTO.QualificationName;
+
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Freelancer updated successfully"));
+        }
+
         [HttpGet("{id}/certifications")]
         public async Task<IActionResult> GetAllCertificationsAsync([FromRoute] long id, int page = 0, int pageSize = Constants.CERTIFICATION_DEFAULT_PAGE_SIZE)
         {
