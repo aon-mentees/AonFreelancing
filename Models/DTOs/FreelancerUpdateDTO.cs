@@ -1,11 +1,11 @@
 ﻿namespace AonFreelancing.Models.DTOs
 {
-    public class UpdateFreelancerQualificationAndName
+    public class FreelancerUpdateDTO
     {
 
         public string Name { get; set; }    
 
 
-        public  List<string>? qualificationName { get; set; }
+        public  List<string>? Specializtion { get; set; }
     }
 }

@@ -16,7 +16,8 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/freelancers")]
     [ApiController]
-    public class FreelancersController(FreelancerService freelancerService, AuthService authService, UserService userService, ActivitiesService activitiesService)
+    public class FreelancersController(FreelancerService freelancerService, AuthService authService, UserService userService, ActivitiesService activitiesService, 
+        UserManager<User> userManager)
         : BaseController
     {
         [HttpGet("{id}/certifications")]
@@ -201,25 +202,32 @@ namespace AonFreelancing.Controllers.Web.v1
             var responseDTO = activitiesService.FreelancerActivities(id);
             return Ok(CreateSuccessResponse(responseDTO));
         }
+
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+        [HttpPatch]
 
-        [HttpPatch("Update/{id}")]
-
-        public async Task<IActionResult> UpdateQualificationAndName(long id, [FromBody] UpdateFreelancerQualificationAndName freelancerUpdateDTO)
+        public async Task<IActionResult> UpdateFreelancerAsync([FromBody] FreelancerUpdateDTO freelancerUpdate)
         {
-            var storedFreelancer = await freelancerService.FindFreelancerByIdAsync(id);
 
-            if (storedFreelancer == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "The Freelancer Not Found"));
+            var storedUser = userManager.GetUserAsync(HttpContext.User);
 
-            storedFreelancer.Name = freelancerUpdateDTO.Name;
-            storedFreelancer.qualificationName = freelancerUpdateDTO.qualificationName;
+            if (storedUser == null)
+
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
+
+            var stordFreelancer = await freelancerService.FindFreelancerByIdAsync(storedUser.Id);
 
 
-            userService.UpdateAsync(storedFreelancer);
+            stordFreelancer.Name = freelancerUpdate.Name;
+            stordFreelancer.Specializtion = freelancerUpdate.Specializtion;
+
+
+            userService.UpdateAsync(stordFreelancer);
 
             return Ok("Update Success");
         }
+
+
 
     }
 }

@@ -44,7 +44,7 @@ namespace AonFreelancing.Services
                 .AnyAsync(e => e.Id == id && e.Name == name && e.Issuer == issure && expiryDate > DateTime.Now);
 
         }
-        public async Task<Freelancer>? FindFreelancerByIdAsync(long id)
+        public async Task<Freelancer?> FindFreelancerByIdAsync(long id)
         {
             return await _mainAppContext.Users.OfType<Freelancer>()
                 .FirstOrDefaultAsync(f=>f.Id==id);
