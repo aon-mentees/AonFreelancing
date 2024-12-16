@@ -45,7 +45,7 @@ namespace AonFreelancing.Models
             QualificationName = inputDto.QualificationName;
             Duration = inputDto.Duration;
             Budget = inputDto.Budget;
-            PriceType = inputDto.PriceType;
+            //PriceType = inputDto.PriceType;
             CreatedAt = DateTime.Now;
         }
         public static Project FromInputDTO(ProjectInputDTO inputDto, long clientId) => new Project(inputDto, clientId);
