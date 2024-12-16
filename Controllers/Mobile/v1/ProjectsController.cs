@@ -1,5 +1,4 @@
-﻿
-using AonFreelancing.Contexts;
+﻿using AonFreelancing.Contexts;
 using AonFreelancing.Hubs;
 using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
@@ -401,6 +400,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return CustomBadRequest();
 
             User? authenticatedUser = await userManager.GetUserAsync(HttpContext.User);
+
+            if (authenticatedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+
             Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
@@ -410,6 +413,17 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
 
             await commentService.SaveCommentAsync(comment);
+
+            //Notification
+            string notificationMessage = string.Format(Constants.COMMENT_NOTIFICATION_MESSAGE_FORMAT, authenticatedUser.Name, storedProject.Title);
+            string notificationTitle = Constants.COMMENT_NOTIFICATION_TITLE;
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
+
+            var newCommentNotification = 
+                new CommentNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, authenticatedUser.Name, storedProject.Id, authenticatedUser.Id);
+            await notificationService.CreateAsync(newCommentNotification);
+            await pushNotificationService.SendCommentNotification(CommentNotificationOutputDTO.FromCommentNotification(newCommentNotification), newCommentNotification.ReceiverId);
+
             return Ok(CreateSuccessResponse("Commented"));
         }
 

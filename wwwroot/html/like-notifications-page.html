@@ -38,6 +38,11 @@
             console.log("Received like notification:", likeNotificationDTO);
         });
 
+        connection.on("GetLikeNotification", (commentNotificationDTO) => {
+            alert(`New Like from ${commentNotificationDTO.CommenterName}`);
+            console.log("Received comment notification:", commentNotificationDTO);
+        });
+
         connection.on("GetBidApprovalNotification", (BidApprovalNotificaationOutputDTO) => {
             alert(`Your bid approved from ${BidApprovalNotificaationOutputDTO.approverName}`);
             console.log("Received approve notification:", BidApprovalNotificaationOutputDTO);
