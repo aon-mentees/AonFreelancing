@@ -124,8 +124,8 @@ namespace AonFreelancing.Controllers.Web.v1
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
-            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Cannot submit a bid for project that is not available for bids."));
+            if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Cannot submit a bid for project that is not Pending for bids."));
             if (storedProject.Budget <= bidInputDTO.ProposedPrice)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Proposed price must be less than the project budget."));
             if (storedProject.Bids.Any() && storedProject.Bids.OrderBy(b => b.ProposedPrice).First().ProposedPrice <= bidInputDTO.ProposedPrice)
@@ -166,8 +166,8 @@ namespace AonFreelancing.Controllers.Web.v1
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
-            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
+            if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Pending."));
 
             Bid? storedBid = storedProject.Bids.FirstOrDefault(b => b.Id == bidId);
             if (storedBid == null)
@@ -210,8 +210,8 @@ namespace AonFreelancing.Controllers.Web.v1
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
 
-            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
+            if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Pending."));
 
             Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
             if (storedBid == null)
@@ -270,8 +270,8 @@ namespace AonFreelancing.Controllers.Web.v1
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
-            if (storedProject.Status != Constants.PROJECT_STATUS_CLOSED)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "project is not status closed yet"));
+            if (storedProject.Status != Constants.PROJECT_STATUS_IN_PROGRESS)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "project is not status in progress yet"));
 
 
             TaskEntity? newTask = TaskEntity.FromInputDTO(taskInputDTO, projectId);
@@ -420,6 +420,30 @@ namespace AonFreelancing.Controllers.Web.v1
             PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(projectId, page, pageSize, imagesBaseUrl);
             PaginatedResult<CommentOutputDTO> paginatedCommentOutDTOs = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
             return Ok(CreateSuccessResponse(paginatedCommentOutDTOs));
+        }
+
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPatch("{projectId}/completed")]
+        public async Task<IActionResult> MarkProjectAsCompletedAsync([FromRoute] long projectId)
+        {
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+            User? authenticatedUser = await userManager.FindByIdAsync(authenticatedClientId.ToString());
+
+            Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId);
+
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+            if (authenticatedClientId != storedProject.ClientId)
+                return Forbid();
+            if (storedProject.Status == Constants.PROJECT_STATUS_COMPLETED)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Project is already Completed"));
+            if (storedProject.Status != Constants.PROJECT_STATUS_IN_PROGRESS)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "project is not status in progress yet"));
+
+            await projectService.CompleteProjectAsync(storedProject);
+
+            return Ok(CreateSuccessResponse("Project completed"));
         }
     }
 }

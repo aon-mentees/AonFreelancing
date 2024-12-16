@@ -11,8 +11,8 @@ namespace AonFreelancing.Models.DTOs
         ProjectsStatisticsDTO(List<Project>projects)
         {
             Total = projects.Count; ;
-            Available = projects.Where(p => p.Status == Constants.PROJECT_STATUS_AVAILABLE).Count();
-            Closed = projects.Where(p => p.Status == Constants.PROJECT_STATUS_CLOSED).Count();
+            Available = projects.Where(p => p.Status == Constants.PROJECT_STATUS_PENDING).Count();
+            Closed = projects.Where(p => p.Status == Constants.PROJECT_STATUS_IN_PROGRESS).Count();
         }
 
         public static ProjectsStatisticsDTO FromProjects(List<Project> projects) => new ProjectsStatisticsDTO(projects);

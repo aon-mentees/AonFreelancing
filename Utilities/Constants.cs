@@ -11,8 +11,8 @@
         public const string PROJECT_PRICETYPE_FIXED = "fixed";
         public const string PROJECT_PRICETYPE_PERHOUR = "per-hour";
 
-        public const string PROJECT_STATUS_AVAILABLE = "available";
-        public const string PROJECT_STATUS_CLOSED = "closed";
+        public const string PROJECT_STATUS_PENDING = "pending";
+        public const string PROJECT_STATUS_IN_PROGRESS = "in-progress";
         public const string PROJECT_STATUS_COMPLETED = "completed";
 
         public const string BIDS_STATUS_PENDING = "pending";
