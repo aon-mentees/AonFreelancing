@@ -47,7 +47,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
         [Authorize(Roles = USER_TYPE_CLIENT)]
         [HttpGet("freelancers-worked-with")]
-        public async Task<IActionResult> GetFreelancersWorkedWith()
+        public async Task<IActionResult> GetFreelancersWorkedWith(int page = 0, int pageSize = FREELANCERS_WORKED_WITH_DEFAULT_PAGE_SIZE)
         {
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
@@ -68,7 +68,9 @@ namespace AonFreelancing.Controllers.Web.v1
                 paginatedFreelancerWorkedWithDTO.Result.Add(new FreelancerWorkedWithOutDTO(project.Freelancer, rating, project.EndDate, imagesBaseUrl));
                 freelancerIds.Add(project.FreelancerId.Value);
             }
-
+            paginatedFreelancerWorkedWithDTO.Result = paginatedFreelancerWorkedWithDTO.Result.Skip(page * pageSize)
+                                                                                 .Take(pageSize)
+                                                                                 .ToList();
             return Ok(CreateSuccessResponse(paginatedFreelancerWorkedWithDTO));
         }
 
