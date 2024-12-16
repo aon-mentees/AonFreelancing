@@ -24,7 +24,7 @@ namespace AonFreelancing.Models.DTOs
 
         public static TasksStatisticsDTO FromTasks(List<TaskEntity>tasks)=>new TasksStatisticsDTO(tasks);
 
-        string GetPercentString(decimal count) => $"{(count / Total) * 100}%";
+        string GetPercentString(decimal count) => $"{(count / Total) * 100:F2}%";
 
 
     }
