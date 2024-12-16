@@ -325,6 +325,10 @@ namespace AonFreelancing.Controllers.Web.v1
             if (storedProject == null)
                 return NotFound(CreateErrorResponse("404", "Project not found."));
 
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             int numberOfCompletedTasks = storedProject.Tasks.Where(t => t.Status == Constants.TASK_STATUS_DONE).ToList().Count;
             decimal totalNumberOFTasks = storedProject.Tasks.Count;
             decimal percentage = 0;
@@ -351,6 +355,11 @@ namespace AonFreelancing.Controllers.Web.v1
             Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
             if (storedProject.Status != Constants.PROJECT_STATUS_CLOSED)
@@ -380,6 +389,11 @@ namespace AonFreelancing.Controllers.Web.v1
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             ProjectLike? storedLike = await projectLikeService.Find(authenticatedUserId, projectId);
             if (storedLike != null && action == Constants.PROJECT_LIKE_ACTION)
                 return Conflict(CreateErrorResponse("409", "you cannot like the same project twice"));
@@ -428,6 +442,11 @@ namespace AonFreelancing.Controllers.Web.v1
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             if (authenticatedUserId != storedProject.ClientId && authenticatedUserId != storedProject.FreelancerId)
                 return Forbid();
 
@@ -482,6 +501,10 @@ namespace AonFreelancing.Controllers.Web.v1
             Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
 
             Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
             if (commentInputDTO.ImageFile != null)
