@@ -201,8 +201,6 @@ namespace AonFreelancing.Controllers.Web.v1
             if (StoredId == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
             PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
-            if (paginatedProjects == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client haven't any projects."));
             List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromClientActivity(p)).ToList();
             PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
 

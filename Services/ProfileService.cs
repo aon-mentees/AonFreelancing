@@ -14,7 +14,7 @@ namespace AonFreelancing.Services
         }
         public async Task<PaginatedResult<Project>> FindClientActivitiesAsync(long clientId, int pageNumber, int pageSize)
         {
-            var query = mainAppContext.Projects.AsNoTracking().Where(p => p.ClientId == clientId)
+            var query = mainAppContext.Projects.AsNoTracking().Where(p => p.ClientId == clientId)       
                                                               .Include(p => p.ProjectLikes)
                                                               .Include(p=>p.Comments)
                                                               .AsQueryable();
@@ -23,7 +23,7 @@ namespace AonFreelancing.Services
                                                        .Skip(pageNumber * pageSize)
                                                        .Take(pageSize)
                                                        .ToListAsync();
-            return new PaginatedResult<Project>(-1, storedProjects);
+            return new PaginatedResult<Project>(storedProjects.Count, storedProjects);
         }
     }
 }

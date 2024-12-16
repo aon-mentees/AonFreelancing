@@ -11,7 +11,8 @@ namespace AonFreelancing.Models.DTOs
         public long? TotalLikes { get; set; }
         public long? TotalComment { get; set; }
         public string CreationTime { get; set; }
-        public string Duration { get; set; }
+        public int Duration { get; set; }
+        public string DurationString { get; set; }
         public decimal Budget { get; set; }
 
         ClientActivityOutputDTO(Project project)
@@ -22,7 +23,8 @@ namespace AonFreelancing.Models.DTOs
             CreationTime= StringOperations.GetTimeAgo( project.CreatedAt);
             TotalLikes = project.ProjectLikes.Count;
             TotalComment = project.Comments.Count;
-            Duration = StringOperations.ConvertDaysToMonthsAndYears(project.Duration);
+            Duration = project.Duration;
+            DurationString = StringOperations.ConvertDaysToMonthsAndYears(project.Duration);
             Budget = project.Budget;
         }
         public static ClientActivityOutputDTO FromClientActivity(Project project) => new ClientActivityOutputDTO(project);
