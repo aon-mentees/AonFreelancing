@@ -419,7 +419,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             string notificationTitle = Constants.COMMENT_NOTIFICATION_TITLE;
             string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
 
-            var newCommentNotification = 
+            var newCommentNotification =
                 new CommentNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, authenticatedUser.Name, storedProject.Id, authenticatedUser.Id);
             await notificationService.CreateAsync(newCommentNotification);
             await pushNotificationService.SendCommentNotification(CommentNotificationOutputDTO.FromCommentNotification(newCommentNotification), newCommentNotification.ReceiverId);

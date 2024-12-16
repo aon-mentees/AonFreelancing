@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
         // Replace this token with a valid token
-        const jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiZnJlZWxhbmNlciIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2dpdmVubmFtZSI6Im5pZ2dlciB0aGUgZnJlZWxhbmNlciIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Im1vaGFtbWVkMkBleGFtcGxlLmNvbSIsImV4cCI6NzczNDE5NzY2OCwiaXNzIjoiQW9uUGxhdGZvcm0iLCJhdWQiOiJUcmFpbmVycy5UcmFpbmVlcyJ9.BFMIw837pszQJ3Af0mvlBJBVWLc1rWzHkYchVgvYr5o";
+        const jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiY2xpZW50IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZ2l2ZW5uYW1lIjoiYWxpIGh1c3NlaW4iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJjbGllbnQxQGV4YW1wbGUuY29tIiwiZXhwIjoxNzM0MzY2Mzk2LCJpc3MiOiJBb24iLCJhdWQiOiJBb24gRGV2In0.CGgc2cySnD7HlkjqaWzJkVBMeIwOgFwMGOlk1U5vOk8";
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/Hubs/Notifications", {
@@ -38,8 +38,8 @@
             console.log("Received like notification:", likeNotificationDTO);
         });
 
-        connection.on("GetLikeNotification", (commentNotificationDTO) => {
-            alert(`New Like from ${commentNotificationDTO.CommenterName}`);
+        connection.on("GetCommentNotification", (commentNotificationDTO) => {
+            alert(`New comment from ${commentNotificationDTO.CommenterName}`);
             console.log("Received comment notification:", commentNotificationDTO);
         });
 
