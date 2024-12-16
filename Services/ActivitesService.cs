@@ -11,7 +11,7 @@ public class ActivitiesService(MainAppContext mainAppContext) : MainDbService(ma
 {
     public ClientActivitiesResponseDTO ClientActivities(long id)
     {
-        var clientProjects = mainAppContext.Projects.Where(p=> p.ClientId == id);
+        var clientProjects = mainAppContext.Projects.Where(p=> p.ClientId == id && !p.IsDeleted);
 
         int projectPosted = clientProjects.Count();
         var freelancersWorkedWith = clientProjects.Where(p=> p.FreelancerId != null).Select(p=> p.FreelancerId).Distinct().Count();
@@ -24,7 +24,7 @@ public class ActivitiesService(MainAppContext mainAppContext) : MainDbService(ma
     
     public FreelancerActivitiesResponseDTO FreelancerActivities(long id)
     {
-        var freelancerProjects = mainAppContext.Projects.Where(p=> p.FreelancerId == id);
+        var freelancerProjects = mainAppContext.Projects.Where(p=> p.FreelancerId == id && !p.IsDeleted);
         var freelancerTasks = mainAppContext.Tasks.Include(t=> t.Project).Where(t=> t.Project.FreelancerId == id);
 
         // Project info

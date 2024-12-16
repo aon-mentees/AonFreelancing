@@ -11,6 +11,7 @@ using AonFreelancing.Services;
 using AonFreelancing.Models.Responses;
 using System.Security.Claims;
 using static AonFreelancing.Utilities.Constants;
+using Microsoft.AspNetCore.Identity;
 namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
@@ -18,20 +19,41 @@ namespace AonFreelancing.Controllers.Web.v1
     [ApiController]
     public class ClientsController(
         MainAppContext mainAppContext, ActivitiesService activitiesService, UserService userService,
-        ProjectService projectService, AuthService authService, RatingService ratingService) : BaseController
+        UserManager<User> userManager, ProjectService projectService, RatingService ratingService,
+        AuthService authService, RoleManager<ApplicationRole> roleManager) : BaseController
     {
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPatch]
+        public async Task<IActionResult> UpdateClientAsync([FromBody] ClientUpdateDTO clientUpdateDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            var storedUser = (Client?)await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
+
+            storedUser.Name = clientUpdateDTO.Name;
+            storedUser.CompanyName = clientUpdateDTO.CompanyName;
+
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Client updated successfully"));
+        }
+
         [HttpGet("{id}/activities")]
         public async Task<IActionResult> GetActivitiesAsync(long id)
         {
             var storedUser = await userService.FindByIdAsync(id);
-            if(storedUser == null)
+            if (storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Not Found"));
             var isClient = await userService.IsClient(storedUser);
-            if(!isClient)
+            if (!isClient)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Not a client"));
             var responseDTO = activitiesService.ClientActivities(id);
             return Ok(CreateSuccessResponse(responseDTO));
         }
+
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpGet("recent-projects")]
         public async Task<IActionResult> GetRecentProjectsAsync(int page = 0, int pageSize = Constants.RECENT_PROJECTS_DEFAULT_PAGE_SIZE)
@@ -55,6 +77,7 @@ namespace AonFreelancing.Controllers.Web.v1
                                                                .OrderByDescending(p => p.EndDate)
                                                                .Where(p => p.ClientId == authenticatedClientId)
                                                                .Where(p => p.FreelancerId != null)
+                                                               .Where(p => !p.IsDeleted)
                                                                .ToListAsync();
 
             PaginatedResult<FreelancerWorkedWithOutDTO> paginatedFreelancerWorkedWithDTO = new PaginatedResult<FreelancerWorkedWithOutDTO>();
@@ -69,11 +92,10 @@ namespace AonFreelancing.Controllers.Web.v1
                 freelancerIds.Add(project.FreelancerId.Value);
             }
             paginatedFreelancerWorkedWithDTO.Result = paginatedFreelancerWorkedWithDTO.Result.Skip(page * pageSize)
-                                                                                 .Take(pageSize)
-                                                                                 .ToList();
+                                                                                             .Take(pageSize)
+                                                                                             .ToList();
             return Ok(CreateSuccessResponse(paginatedFreelancerWorkedWithDTO));
         }
-
         //private readonly MainAppContext _mainAppContext;
         //private readonly UserManager<User> _userManager;
         //public ClientsController(

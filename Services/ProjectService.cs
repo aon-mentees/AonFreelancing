@@ -32,7 +32,7 @@ namespace AonFreelancing.Services
         }
         public async Task<PaginatedResult<Project>> FindProjectsByClientId(long clientId, int pageNumber, int pageSize)
         {
-            List<Project> storedProjects = await _mainAppContext.Projects.Where(p => p.ClientId == clientId)
+            List<Project> storedProjects = await _mainAppContext.Projects.Where(p => p.ClientId == clientId && !p.IsDeleted)
                                                                         .OrderByDescending(p => p.CreatedAt)
                                                                         .Skip(pageNumber * pageSize)
                                                                         .Take(pageSize)
@@ -41,11 +41,11 @@ namespace AonFreelancing.Services
         }
         public async Task<int> CountProjectsByClientIdAsync(long clientId)
         {
-            return await _mainAppContext.Projects.CountAsync(p => p.ClientId == clientId);
+            return await _mainAppContext.Projects.CountAsync(p => p.ClientId == clientId && !p.IsDeleted);
         }
         public async Task<Project?> FindProjectWithBidsAsync(long projectId)
         {
-            return await _mainAppContext.Projects.Where(p => p.Id == projectId)
+            return await _mainAppContext.Projects.Where(p => p.Id == projectId && !p.IsDeleted)
                                                  .Include(p => p.Bids)
                                                  .FirstOrDefaultAsync();
         }
@@ -87,7 +87,7 @@ namespace AonFreelancing.Services
 
         public async Task<bool> IsProjectExistsAsync(long id)
         {
-            return await _mainAppContext.Projects.AnyAsync(p => p.Id == id);
+            return await _mainAppContext.Projects.AnyAsync(p => p.Id == id && !p.IsDeleted);
         }
 
         public async Task<PaginatedResult<Project>> FindClientFeedAsync(string queryString, List<string> qualificationNames, int pageNumber, int pageSize)
@@ -99,7 +99,8 @@ namespace AonFreelancing.Services
             if (!qualificationNames.IsNullOrEmpty())
                 query = query.Where(p => qualificationNames.Contains(p.QualificationName));
 
-            List<Project> storedProjects = await query.OrderByDescending(p => p.CreatedAt)
+            List<Project> storedProjects = await query.Where(p => !p.IsDeleted)
+                                                        .OrderByDescending(p => p.CreatedAt)
                                                         .Skip(pageNumber * pageSize)
                                                         .Take(pageSize)
                                                         .ToListAsync();
@@ -121,7 +122,8 @@ namespace AonFreelancing.Services
             if (priceRange.MinPrice != null && priceRange.MaxPrice != null)
                 query = query.Where(p => p.Budget >= priceRange.MinPrice && p.Budget <= priceRange.MaxPrice);
 
-            List<Project>? storedProjects = await query.OrderByDescending(p => p.CreatedAt)
+            List<Project>? storedProjects = await query.Where(p => !p.IsDeleted)
+                                                       .OrderByDescending(p => p.CreatedAt)
                                                        .Skip(pageNumber * pageSize)
                                                        .Take(pageSize)
                                                        .ToListAsync();
@@ -135,6 +137,13 @@ namespace AonFreelancing.Services
             return await _mainAppContext.Projects.AnyAsync(p => (p.ClientId == userId1 && p.FreelancerId == userId2) ||
                                                                 (p.ClientId == userId2 && p.FreelancerId == userId1));
         }
+
+        public async Task<Project?> FindProjectAsync(long projectId)
+        {
+            return await _mainAppContext.Projects
+                .Where(p => p.Id == projectId && !p.IsDeleted).FirstOrDefaultAsync();
+        }
+
         public async Task<PaginatedResult<Project>> FindProjectsByClientIdWithTasksAndClient(long clientId, int pageNumber, int pageSize, string status)
         {
             List<Project> storedProjects = await _mainAppContext.Projects.AsNoTracking()
@@ -142,10 +151,11 @@ namespace AonFreelancing.Services
                                                                            .Include(p => p.Client)
                                                                            .Where(p => p.ClientId == clientId)
                                                                            .Where(p => p.Status.Contains(status))
+                                                                           .Where(p => !p.IsDeleted)
                                                                            .Skip(pageNumber * pageSize)
                                                                            .Take(pageSize)
                                                                            .ToListAsync();
-            int totalCount = await _mainAppContext.Projects.CountAsync(p => p.ClientId == clientId);
+            int totalCount = await _mainAppContext.Projects.CountAsync(p => p.ClientId == clientId && !p.IsDeleted);
             return new PaginatedResult<Project>(totalCount, storedProjects);
         }
         public async Task<PaginatedResult<Project>> FindProjectsByFreelancerIdWithTasksAndClient(long freelancerId, int pageNumber, int pageSize, string status)
@@ -155,10 +165,11 @@ namespace AonFreelancing.Services
                                                                            .Include(p=>p.Client)
                                                                            .Where(p => p.FreelancerId == freelancerId)
                                                                            .Where(p => p.Status.Contains(status))
+                                                                           .Where(p => !p.IsDeleted)
                                                                            .Skip(pageNumber * pageSize)
                                                                            .Take(pageSize)
                                                                            .ToListAsync();
-            int totalCount = await _mainAppContext.Projects.CountAsync(p => p.FreelancerId == freelancerId);
+            int totalCount = await _mainAppContext.Projects.CountAsync(p => p.FreelancerId == freelancerId && !p.IsDeleted);
             return new PaginatedResult<Project>(totalCount, storedProjects);
         }
     }

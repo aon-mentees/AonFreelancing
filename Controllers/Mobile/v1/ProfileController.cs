@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using static AonFreelancing.Utilities.Constants;
@@ -26,7 +27,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
-
             FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users
                 .OfType<Freelancer>()
                 .Include(f => f.Skills)
@@ -37,15 +37,18 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (storedFreelancerDTO != null)
                 return Ok(CreateSuccessResponse(storedFreelancerDTO));
 
-            ClientResponseDTO? storedClientDTO = await mainAppContext.Users
+            Client? storedClient = await mainAppContext.Users
                 .OfType<Client>()
                 .Where(c => c.Id == id)
                 .Include(c => c.Projects)
-                .Select(c => ClientResponseDTO.FromClient(c, imagesBaseUrl))
                 .FirstOrDefaultAsync();
 
-            if (storedClientDTO != null)
+            if (storedClient != null)
+            {
+                storedClient.Projects = storedClient.Projects.Where(p => !p.IsDeleted).ToList();
+                var storedClientDTO = ClientResponseDTO.FromClient(storedClient, imagesBaseUrl);
                 return Ok(CreateSuccessResponse(storedClientDTO));
+            }
 
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "NotFound"));
         }
@@ -60,6 +63,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 .Include(p => p.Freelancer)
                 .Include(p => p.Tasks)
                 .Where(p => p.ClientId == authenticatedUserId || p.FreelancerId == authenticatedUserId)
+                .Where(p => !p.IsDeleted)
                 .ToListAsync();
 
             var storedTasks = storedProjects.SelectMany(p => p.Tasks).ToList();
@@ -111,7 +115,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             long authonticatedUser = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            
+
             User? storedUser = await mainAppContext.Users.FindAsync(authonticatedUser);
 
             if (storedUser == null)

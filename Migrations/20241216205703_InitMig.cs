@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class InitMig : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -198,11 +198,13 @@ namespace AonFreelancing.Migrations
                 name: "Freelancers",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    QualificationName = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Freelancers", x => x.Id);
+                    table.CheckConstraint("CK_FREELANCER_QUALIFICATION_NAME", "[QualificationName] IN ('uiux', 'frontend', 'mobile', 'backend', 'fullstack')");
                     table.ForeignKey(
                         name: "FK_Freelancers_AspNetUsers_Id",
                         column: x => x.Id,
@@ -366,7 +368,9 @@ namespace AonFreelancing.Migrations
                     QualificationName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "available"),
                     FreelancerId = table.Column<long>(type: "bigint", nullable: true),
-                    ImageFileName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    ImageFileName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {

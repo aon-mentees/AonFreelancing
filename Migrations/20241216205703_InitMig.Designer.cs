@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241216203208_init")]
-    partial class init
+    [Migration("20241216205703_InitMig")]
+    partial class InitMig
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -280,6 +280,9 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -294,6 +297,9 @@ namespace AonFreelancing.Migrations
 
                     b.Property<string>("ImageFileName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("PriceType")
                         .ValueGeneratedOnAdd()
@@ -897,7 +903,13 @@ namespace AonFreelancing.Migrations
                 {
                     b.HasBaseType("AonFreelancing.Models.User");
 
-                    b.ToTable("Freelancers", (string)null);
+                    b.Property<string>("QualificationName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Freelancers", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_FREELANCER_QUALIFICATION_NAME", "[QualificationName] IN ('uiux', 'frontend', 'mobile', 'backend', 'fullstack')");
+                        });
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.SystemUser", b =>
