@@ -20,9 +20,11 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/projects")]
     [ApiController]
-    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService, UserManager<User> userManager,
-                                    ProjectLikeService projectLikeService, AuthService authService, PushNotificationService pushNotificationService,
-                                    NotificationService notificationService, ProjectService projectService, BidService bidService, CommentService commentService) : BaseController
+    public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
+        UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService,
+        ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService,
+        BidService bidService, CommentService commentService, UserService userService)
+        : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
@@ -31,9 +33,9 @@ namespace AonFreelancing.Controllers.Web.v1
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            Project? newProject = Project.FromInputDTO(projectInputDto, authenticatedUserId);
+            Project? newProject = Project.FromInputDTO(projectInputDto, authenticatedClientId);
 
             if (projectInputDto.ImageFile != null)
                 newProject.ImageFileName = await fileStorageService.SaveAsync(projectInputDto.ImageFile);
@@ -42,6 +44,72 @@ namespace AonFreelancing.Controllers.Web.v1
             await mainAppContext.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetProjectDetailsAsync), new { id = newProject.Id }, null);
+        }
+
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProjectAsync(long id, [FromForm] ProjectInputDTO projectInputDto)
+        {
+            if (!ModelState.IsValid)
+                return base.CustomBadRequest();
+
+            var storedUser = await userService.FindByIdAsync(id);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
+                    "Unable to load user."));
+
+            Project? storedProject = await projectService.FindProjectAsync(id);
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
+                    "Project not found or not owned by the authenticated client."));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
+            if (storedProject.Status == Constants.PROJECT_STATUS_CLOSED)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a project that is closed."));
+
+            storedProject.Title = projectInputDto.Title;
+            storedProject.Description = projectInputDto.Description;
+            storedProject.QualificationName = projectInputDto.QualificationName;
+            storedProject.Duration = projectInputDto.Duration;
+            storedProject.PriceType = projectInputDto.PriceType;
+            storedProject.Budget = projectInputDto.Budget;
+
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Project updated successfully"));
+        }
+
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProjectAsync(long id)
+        {
+            var storedUser = await userService.FindByIdAsync(id);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
+                    "Unable to load user."));
+
+            var storedProject = await projectService.FindProjectAsync(id);
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
+                    "Project not found or not owned by the authenticated client."));
+
+            if (storedProject.ClientId != storedUser.Id)
+                return Forbid();
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
+            // Soft delete the project
+            storedProject.IsDeleted = true;
+            storedProject.DeletedAt = DateTime.Now;
+
+            await mainAppContext.SaveChangesAsync();
+            return Ok(CreateSuccessResponse("Project deleted successfully"));
         }
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
@@ -61,6 +129,7 @@ namespace AonFreelancing.Controllers.Web.v1
             List<ProjectOutDTO> projectOutDTOs = paginatedProjects.Result.Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl)).ToList();
             PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
 
+
             foreach (var p in projectOutDTOs)
             {
                 p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
@@ -75,7 +144,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpGet("freelancer-feed")]
-        public async Task<IActionResult> GetProjectFeedAsync(
+        public async Task<IActionResult> GetFreelancerFeedAsync(
             [FromQuery(Name = "specializations")] List<string>? qualificationNames,
             [FromQuery(Name = "timeline")] int? duration,
             [FromQuery] PriceRange priceRange,
@@ -90,6 +159,7 @@ namespace AonFreelancing.Controllers.Web.v1
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             string normalizedQuery = qur.ToLower().Replace(" ", "").Trim();
+
             PaginatedResult<Project> paginatedProjects = await projectService.FindFreelancerFeedAsync(normalizedQuery, qualificationNames ?? [], priceRange, duration, page, pageSize);
             List<ProjectOutDTO> projectOutDTOs = paginatedProjects.Result.Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl)).ToList();
             PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
@@ -116,11 +186,14 @@ namespace AonFreelancing.Controllers.Web.v1
 
             long authenticatedFreelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string authenticatedFreelancerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
-            User? authenticatedUser = await userManager.FindByIdAsync(authenticatedFreelancerId.ToString());
-            if (authenticatedUser == null)
+            User? authenticatedFreelancer = await userManager.FindByIdAsync(authenticatedFreelancerId.ToString());
+            if (authenticatedFreelancer == null)
                 return Unauthorized();
-
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "cannot submit a bid for project that is deleted"));
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
@@ -134,7 +207,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
             Bid? newBid = Bid.FromInputDTO(bidInputDTO, authenticatedFreelancerId, projectId);
             await projectService.ApplyBidAsync(newBid);
-            await SubmitBidNotification(storedProject, authenticatedFreelancerId, authenticatedFreelancerName, authenticatedUser.ProfilePicture);
+            await SubmitBidNotification(storedProject, authenticatedFreelancerId, authenticatedFreelancerName, authenticatedFreelancer.ProfilePicture);
             return StatusCode(StatusCodes.Status201Created);
         }
         [HttpGet("{projectId}/bids")]
@@ -161,6 +234,10 @@ namespace AonFreelancing.Controllers.Web.v1
                 return Unauthorized();
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "cannot approve a bid for project that is deleted"));
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
@@ -204,6 +281,10 @@ namespace AonFreelancing.Controllers.Web.v1
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "cannot reject a bid for project that is deleted"));
+
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
 
@@ -217,11 +298,14 @@ namespace AonFreelancing.Controllers.Web.v1
             if (storedBid == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found."));
 
+            await projectService.RejectProjectBidAsync(storedBid);
+
             // Notification
             string notificationMessage = string.Format(Constants.BID_REJECTION_NOTIFICATION_MESSAGE_FORMAT, nameOfAuthenticatedClient, storedProject.Title);
             string notificationTitle = Constants.BID_REJECTION_NOTIFICATION_TITLE;
-            var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, authenticatedUser.ProfilePicture, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
-            await projectService.RejectProjectBidAsync(storedBid);
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
+
+            var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, imageUrl, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
 
             await notificationService.CreateAsync(rejectionNotification);
             await pushNotificationService.SendRejectionNotification(
@@ -229,7 +313,6 @@ namespace AonFreelancing.Controllers.Web.v1
                 rejectionNotification.ReceiverId);
             return Ok(CreateSuccessResponse("Bid rejected."));
         }
-
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpGet("{id}")]
@@ -241,6 +324,10 @@ namespace AonFreelancing.Controllers.Web.v1
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse("404", "Project not found."));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
 
             int numberOfCompletedTasks = storedProject.Tasks.Where(t => t.Status == Constants.TASK_STATUS_DONE).ToList().Count;
             decimal totalNumberOFTasks = storedProject.Tasks.Count;
@@ -268,6 +355,11 @@ namespace AonFreelancing.Controllers.Web.v1
             Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
             if (storedProject.Status != Constants.PROJECT_STATUS_CLOSED)
@@ -297,6 +389,11 @@ namespace AonFreelancing.Controllers.Web.v1
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             ProjectLike? storedLike = await projectLikeService.Find(authenticatedUserId, projectId);
             if (storedLike != null && action == Constants.PROJECT_LIKE_ACTION)
                 return Conflict(CreateErrorResponse("409", "you cannot like the same project twice"));
@@ -308,15 +405,13 @@ namespace AonFreelancing.Controllers.Web.v1
 
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "no like found to be deleted"));
         }
-
         [HttpGet("{projectId}/likes/count")]
         public async Task<IActionResult> GetProjectLikesCount([FromRoute] long projectId)
         {
             if (!await projectService.IsProjectExistsAsync(projectId))
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
-            return Ok(CreateSuccessResponse(new {likesCount = await projectLikeService.CountLikesForProjectAsync(projectId) }));
+            return Ok(CreateSuccessResponse(new { likesCount = await projectLikeService.CountLikesForProjectAsync(projectId) }));
         }
-
         [HttpGet("{projectId}/likes")]
         public async Task<IActionResult> GetLikesForProject([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = 15)
         {
@@ -329,8 +424,10 @@ namespace AonFreelancing.Controllers.Web.v1
 
             var paginatedLikes = await projectLikeService.FindLikesForProjectWithLikerUserAsync(projectId, page, pageSize);
             var paginatedLikesDTO = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(pl => ProjectLikeOutputDTO.FromProjectLike(pl, imageBaseUrl)).ToList());
+
             return Ok(CreateSuccessResponse(paginatedLikesDTO));
         }
+
 
         [HttpGet("{projectId}/tasks")]
         public async Task<IActionResult> GetTasksByProjectIdAsync([FromRoute] long projectId,
@@ -345,6 +442,11 @@ namespace AonFreelancing.Controllers.Web.v1
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
+
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             if (authenticatedUserId != storedProject.ClientId && authenticatedUserId != storedProject.FreelancerId)
                 return Forbid();
 
@@ -400,6 +502,10 @@ namespace AonFreelancing.Controllers.Web.v1
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
 
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "Cannot update a deleted project."));
+
             Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
             if (commentInputDTO.ImageFile != null)
                 comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
@@ -421,5 +527,6 @@ namespace AonFreelancing.Controllers.Web.v1
             PaginatedResult<CommentOutputDTO> paginatedCommentOutDTOs = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
             return Ok(CreateSuccessResponse(paginatedCommentOutDTOs));
         }
+
     }
 }
