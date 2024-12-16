@@ -8,8 +8,9 @@
         public long TaskId { get; set; } // spare
 
         public TaskRejectionNotification() { }
-        public TaskRejectionNotification(string title, string message, long receiverId, long projectId, long rejectorId, string rejectorName, long taskId)
-            : base(title, message, receiverId)
+
+        public TaskRejectionNotification(string title, string message, long receiverId, long projectId, long rejectorId, string rejectorName, long taskId, string? image = null)
+            : base(title, message, receiverId, image)
         {
             ProjectId = projectId;
             RejectorId = rejectorId;

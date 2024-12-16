@@ -8,8 +8,9 @@
         public long TaskId { get; set; } // spare
 
         public TaskApprovalNotification() { }
-        public TaskApprovalNotification(string title, string message, long receiverId, long projectId, long approverId, string approverName, long taskId)
-            : base(title, message, receiverId)
+
+        public TaskApprovalNotification(string title, string message, long receiverId, long projectId, long approverId, string approverName, long taskId, string? image = null)
+            : base(title, message, receiverId, image)
         {
             ProjectId = projectId;
             ApproverId = approverId;

@@ -19,7 +19,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/profiles")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService,ProfileService profileService)
         : BaseController
     {
         [HttpGet("{id}")]
@@ -188,6 +188,25 @@ namespace AonFreelancing.Controllers.Web.v1
             authenticatedUser.ProfilePicture = DEFAULT_USER_PROFILE_PICTURE;
             await userService.SaveChangesAsync();
             return NoContent();
+        }
+        [HttpGet("client-activity/{clientId}")]
+        public async Task<IActionResult> GetClientActivityByIdAsync([FromRoute] long clientId,
+           [FromQuery] int page = 0,
+           [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
+        {
+            if (!ModelState.IsValid)
+                return base.CustomBadRequest();
+
+            Client? StoredId = await profileService.FindClientAsync(clientId);
+            if (StoredId == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
+            PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
+            if (paginatedProjects == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client haven't any projects."));
+            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromClientActivity(p)).ToList();
+            PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
+
+            return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
     }
 

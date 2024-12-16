@@ -75,6 +75,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
+        
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpGet("freelancer-feed")]

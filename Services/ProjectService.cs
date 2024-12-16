@@ -7,6 +7,7 @@ using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Linq;
 using System.Security.Claims;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -115,6 +116,7 @@ namespace AonFreelancing.Services
             //total count is - 1 instead of the actual value it intended; to keep it non disclosed.
             return new PaginatedResult<Project>(-1, storedProjects);
         }
+      
         // Check if User 1 Worked With User 2 
         public async Task<bool> IsUser1WorkedWithUser2Async(long userId1, long userId2)
         {

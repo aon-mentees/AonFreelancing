@@ -52,8 +52,9 @@
         public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
         public const int SKILLS_DEFAULT_PAGE_SIZE = 4;
         public const int BIDS_DEFAULT_PAGE_SIZE = 10;
-
+        public const int CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE = 2;
         public const int COMMENTS_DEFAULT_PAGE_SIZE = 10;
+
         public const int MAX_FILE_SIZE = 1024 * 1024 * 5;
         public const string JPG = ".jpg";
         public const string JPEG = ".jpeg";
