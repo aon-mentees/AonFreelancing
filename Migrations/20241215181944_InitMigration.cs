@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class InitMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,6 +34,7 @@ namespace AonFreelancing.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     About = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProfilePicture = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "default-user-profile-picture.jpg"),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -220,7 +221,8 @@ namespace AonFreelancing.Migrations
                     Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsRead = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ReceiverId = table.Column<long>(type: "bigint", nullable: false)
+                    ReceiverId = table.Column<long>(type: "bigint", nullable: false),
+                    Image = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -403,6 +405,31 @@ namespace AonFreelancing.Migrations
                         principalTable: "Freelancers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WorkExperiences",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FreelancerId = table.Column<long>(type: "bigint", nullable: false),
+                    JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EmployerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EmploymentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsCurrent = table.Column<bool>(type: "bit", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkExperiences", x => x.Id);
+                    table.CheckConstraint("CK_EMPLOYMENTTYPE", "[EmploymentType] IN ('full-time', 'part-time', 'contract', 'internship')");
+                    table.ForeignKey(
+                        name: "FK_WorkExperiences_Freelancers_FreelancerId",
+                        column: x => x.FreelancerId,
+                        principalTable: "Freelancers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -807,6 +834,11 @@ namespace AonFreelancing.Migrations
                 table: "TempUser",
                 column: "PhoneNumber",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkExperiences_FreelancerId",
+                table: "WorkExperiences",
+                column: "FreelancerId");
         }
 
         /// <inheritdoc />
@@ -865,6 +897,9 @@ namespace AonFreelancing.Migrations
 
             migrationBuilder.DropTable(
                 name: "Tasks");
+
+            migrationBuilder.DropTable(
+                name: "WorkExperiences");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

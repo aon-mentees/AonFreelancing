@@ -15,6 +15,7 @@ namespace AonFreelancing.Models
         public List<Certification> Certifications { get; set; }
         public List <string>? Specializtion { get; set; }
         public List<Education> Education { get; set; }
+        public List<WorkExperience> WorkExperiences { get; set; }
         public Freelancer() { }
         public Freelancer(UserRegistrationRequest registrationRequest)
         : base(registrationRequest)
