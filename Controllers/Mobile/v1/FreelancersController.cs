@@ -118,7 +118,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("education")]
-        public async Task<IActionResult> AddEducationAsync([FromForm] EducationInputDTO educationInputDTO)
+        public async Task<IActionResult> AddEducationAsync([FromBody] EducationInputDTO educationInputDTO)
         {
 
             if (!ModelState.IsValid)
@@ -143,7 +143,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("education/{educationId}")]
-        public async Task<IActionResult> UpdateEducationAsync([FromForm] EducationInputDTO educationInputDTO, [FromRoute] long educationId)
+        public async Task<IActionResult> UpdateEducationAsync([FromBody] EducationInputDTO educationInputDTO, [FromRoute] long educationId)
         {
 
             if (!ModelState.IsValid)
@@ -216,7 +216,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("work-experience")]
-        public async Task<IActionResult> AddWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO)
+        public async Task<IActionResult> AddWorkExperinceAsync([FromBody] WorkExperienceInputDTO workExperienceInputDTO)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
@@ -237,7 +237,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("work-experience/{workExperienceId}")]
-        public async Task<IActionResult> UpdateWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
+        public async Task<IActionResult> UpdateWorkExperinceAsync([FromBody] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();

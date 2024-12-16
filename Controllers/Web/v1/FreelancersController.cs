@@ -32,7 +32,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("certifications")]
-        public async Task<IActionResult> AddCertificationAsync([FromForm] CertificationInputDTO certificationInputDTO)
+        public async Task<IActionResult> AddCertificationAsync([FromBody] CertificationInputDTO certificationInputDTO)
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
@@ -55,7 +55,7 @@ namespace AonFreelancing.Controllers.Web.v1
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("certifications/{certificationId}")]
         public async Task<IActionResult> UpdateCertificationAsync([FromRoute] long certificationId,
-            [FromForm] CertificationInputDTO certificationInputDTO)
+            [FromBody] CertificationInputDTO certificationInputDTO)
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
@@ -118,7 +118,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("education")]
-        public async Task<IActionResult> AddEducationAsync([FromForm] EducationInputDTO educationInputDTO)
+        public async Task<IActionResult> AddEducationAsync([FromBody] EducationInputDTO educationInputDTO)
         {
 
             if (!ModelState.IsValid)
@@ -143,7 +143,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("education/{educationId}")]
-        public async Task<IActionResult> UpdateEducationAsync([FromForm] EducationInputDTO educationInputDTO, [FromRoute] long educationId)
+        public async Task<IActionResult> UpdateEducationAsync([FromBody] EducationInputDTO educationInputDTO, [FromRoute] long educationId)
         {
 
             if (!ModelState.IsValid)
