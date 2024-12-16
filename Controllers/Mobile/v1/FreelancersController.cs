@@ -220,7 +220,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),"The Freelancer Not Found"));
 
             storedFreelancer.Name = updateFreelancerQualificationAndName.Name;
-            storedFreelancer.qualificationName= updateFreelancerQualificationAndName.qualificationName;
+            storedFreelancer.s;
 
 
             userService.UpdateAsync(storedFreelancer);

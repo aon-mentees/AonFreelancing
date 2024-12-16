@@ -6,6 +6,6 @@
         public string Name { get; set; }    
 
 
-        public string? qualificationName { get; set; }
+        public  List<string>? qualificationName { get; set; }
     }
 }
