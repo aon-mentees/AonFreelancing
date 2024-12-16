@@ -322,6 +322,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                         .Where(p => p.Id == id)
                                                         .FirstOrDefaultAsync();
 
+            if (storedProject.IsDeleted)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+                    "cannot reject a bid for project that is deleted"));
+
             if (storedProject == null)
                 return NotFound(CreateErrorResponse("404", "Project not found."));
 
