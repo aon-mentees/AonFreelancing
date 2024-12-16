@@ -19,8 +19,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                     ActivitiesService activitiesService,
                                     UserService userService,
                                     UserManager<User> userManager, AuthService authService, RoleManager<ApplicationRole> roleManager) : BaseController
-    {
- 
+    { 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPatch]
         public async Task<IActionResult> UpdateClientAsync([FromBody] ClientUpdateDTO clientUpdateDTO)
