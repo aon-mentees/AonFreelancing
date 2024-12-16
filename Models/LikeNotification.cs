@@ -9,8 +9,6 @@ namespace AonFreelancing.Models
         public long ProjectId { get; set; }
         public long LikerId {  get; set; }
         public string LikerName { get; set; }
-        //TODO: Add profile image (nigga diyar shall do it)
-
 
         public LikeNotification() { }
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241215181944_InitMigration")]
-    partial class InitMigration
+    [Migration("20241216141924_CommentNotificationMigration")]
+    partial class CommentNotificationMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -771,6 +771,27 @@ namespace AonFreelancing.Migrations
                     b.ToTable("BidRejectionNotification", (string)null);
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.CommentNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("CommenterId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CommenterName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.HasIndex("CommenterId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("CommentNotifications", (string)null);
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.LikeNotification", b =>
                 {
                     b.HasBaseType("AonFreelancing.Models.Notification");
@@ -1090,6 +1111,27 @@ namespace AonFreelancing.Migrations
                     b.HasOne("AonFreelancing.Models.User", null)
                         .WithMany()
                         .HasForeignKey("RejectorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.CommentNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("CommenterId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.CommentNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });

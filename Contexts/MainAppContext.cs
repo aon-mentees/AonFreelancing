@@ -47,6 +47,8 @@ namespace AonFreelancing.Contexts
             builder.Entity<BidApprovalNotification>().ToTable("BidApprovalNotification");
             builder.Entity<BidRejectionNotification>().ToTable("BidRejectionNotification");
 
+            builder.Entity<CommentNotification>().ToTable("CommentNotifications");
+
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PRICE_TYPE", $"[PriceType] IN ('{Constants.PROJECT_PRICETYPE_FIXED}', '{Constants.PROJECT_PRICETYPE_PERHOUR}')"));
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_QUALIFICATION_NAME", $"[QualificationName] IN ('{Constants.PROJECT_QUALIFICATION_UIUX}', '{Constants.PROJECT_QUALIFICATION_FRONTEND}', '{Constants.PROJECT_QUALIFICATION_MOBILE}', '{Constants.PROJECT_QUALIFICATION_BACKEND}', '{Constants.PROJECT_QUALIFICATION_FULLSTACK}')"));
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PROJECT_STATUS", $"[Status] IN ('{Constants.PROJECT_STATUS_AVAILABLE}', '{Constants.PROJECT_STATUS_CLOSED}')"))
@@ -115,6 +117,16 @@ namespace AonFreelancing.Contexts
                                                        .HasForeignKey(ln => ln.LikerId)
                                                        .HasPrincipalKey(u => u.Id)
                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<CommentNotification>().HasOne<Project>()
+                                              .WithMany()
+                                              .HasForeignKey(cn => cn.ProjectId)
+                                              .HasPrincipalKey(p => p.Id)
+                                              .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<CommentNotification>().HasOne<User>()
+                                              .WithMany()
+                                              .HasForeignKey(cn => cn.CommenterId)
+                                              .HasPrincipalKey(u => u.Id)
+                                              .OnDelete(DeleteBehavior.NoAction);
             builder.Entity<BidApprovalNotification>().HasOne<Bid>()
                                                         .WithMany()
                                                         .HasForeignKey(ban => ban.BidId)

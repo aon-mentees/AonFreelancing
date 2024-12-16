@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class InitMigration : Migration
+    public partial class CommentNotificationMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -463,6 +463,36 @@ namespace AonFreelancing.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CommentNotifications",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    CommenterName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    CommenterId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CommentNotifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CommentNotifications_AspNetUsers_CommenterId",
+                        column: x => x.CommenterId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_CommentNotifications_Notifications_Id",
+                        column: x => x.Id,
+                        principalTable: "Notifications",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CommentNotifications_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Comments",
                 columns: table => new
                 {
@@ -749,6 +779,16 @@ namespace AonFreelancing.Migrations
                 column: "FreelancerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CommentNotifications_CommenterId",
+                table: "CommentNotifications",
+                column: "CommenterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CommentNotifications_ProjectId",
+                table: "CommentNotifications",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Comments_ProjectId",
                 table: "Comments",
                 column: "ProjectId");
@@ -867,6 +907,9 @@ namespace AonFreelancing.Migrations
 
             migrationBuilder.DropTable(
                 name: "Certifications");
+
+            migrationBuilder.DropTable(
+                name: "CommentNotifications");
 
             migrationBuilder.DropTable(
                 name: "Comments");
