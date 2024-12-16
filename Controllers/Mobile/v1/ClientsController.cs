@@ -9,17 +9,22 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AonFreelancing.Services;
+using AonFreelancing.Models.Responses;
+using System.Security.Claims;
 
 namespace AonFreelancing.Controllers.Mobile.v1
 {
     [Authorize]
     [Route("api/mobile/v1/clients")]
     [ApiController]
-    public class ClientsController(MainAppContext mainAppContext,
-                                    ActivitiesService activitiesService,
-                                    UserService userService) : BaseController
+    public class ClientsController(
+        MainAppContext mainAppContext,
+        ActivitiesService activitiesService,
+        UserService userService,
+        ProjectService projectService,
+        AuthService authService) : BaseController
     {
-        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+     
         [HttpGet("{id}/activities")]
         public async Task<IActionResult> GetActivitiesAsync(long id)
         {
@@ -32,6 +37,21 @@ namespace AonFreelancing.Controllers.Mobile.v1
             var responseDTO = activitiesService.ClientActivities(id);
             return Ok(CreateSuccessResponse(responseDTO));
         }
+
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpGet("recent-projects")]
+        public async Task<IActionResult> GetRecentProjectsAsync(int page = 0, int pageSize = Constants.RECENT_PROJECTS_DEFAULT_PAGE_SIZE)
+        {
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+
+            PaginatedResult<Project> paginatedProjects = await projectService.FindProjectsByClientId(authenticatedClientId, page, pageSize);
+            List<RecentProjectOutputDTO> recentProjectOutputDTOs = paginatedProjects.Result.Select(p=>RecentProjectOutputDTO.FromProject(p, imagesBaseUrl)).ToList();
+
+            return Ok(CreateSuccessResponse(new PaginatedResult<RecentProjectOutputDTO>(paginatedProjects.Total, recentProjectOutputDTOs)));
+        }
+
+
         //private readonly MainAppContext _mainAppContext;
         //private readonly UserManager<User> _userManager;
         //public ClientsController(

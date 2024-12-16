@@ -49,6 +49,7 @@
 
         public const int LIKES_DEFAULT_PAGE_SIZE = 10;
         public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
+        public const int RECENT_PROJECTS_DEFAULT_PAGE_SIZE = 6;
         public const int SKILLS_DEFAULT_PAGE_SIZE = 4;
         public const int BIDS_DEFAULT_PAGE_SIZE = 10;
         public const int WORK_EXPERIENCES_DEFAULT_PAGE_SIZE = 4;
