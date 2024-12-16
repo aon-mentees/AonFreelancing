@@ -56,7 +56,8 @@ namespace AonFreelancing.Contexts
 
             builder.Entity<TaskEntity>().ToTable("Tasks", t => t.HasCheckConstraint("CK_TASK_STATUS", $"[Status] IN ('{Constants.TASK_STATUS_DONE}', '{Constants.TASK_STATUS_IN_REVIEW}', '{Constants.TASK_STATUS_IN_PROGRESS}', '{Constants.TASK_STATUS_TO_DO}')"))
               .Property(t => t.Status).HasDefaultValue(Constants.TASK_STATUS_TO_DO);
-
+            builder.Entity<TaskRejectionNotification>().ToTable("TaskRejectionNotifications");
+            builder.Entity<TaskApprovalNotification>().ToTable("TaskApprovalNotifications");
             builder.Entity<ProjectLike>().HasIndex(pl => new { pl.ProjectId, pl.LikerId }).IsUnique();
 
             builder.Entity<Rating>().HasIndex(r => r.RaterUserId).IsUnique(false);
@@ -158,6 +159,29 @@ namespace AonFreelancing.Contexts
                                                        .HasForeignKey(sn => sn.FreelancerId)
                                                        .HasPrincipalKey(u => u.Id)
                                                        .OnDelete(DeleteBehavior.NoAction);
+            /////
+            builder.Entity<TaskApprovalNotification>().HasOne<TaskEntity>()
+                                                        .WithMany()
+                                                        .HasForeignKey(tan => tan.TaskId)
+                                                        .HasPrincipalKey(b => b.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+           
+            builder.Entity<TaskApprovalNotification>().HasOne<User>()
+                                                        .WithMany()
+                                                        .HasForeignKey(tan => tan.ApproverId)
+                                                        .HasPrincipalKey(u => u.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<TaskRejectionNotification>().HasOne<TaskEntity>()
+                                                        .WithMany()
+                                                        .HasForeignKey(tan => tan.TaskId)
+                                                        .HasPrincipalKey(b => b.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<TaskRejectionNotification>().HasOne<User>()
+                                                        .WithMany()
+                                                        .HasForeignKey(tan => tan.RejectorId)
+                                                        .HasPrincipalKey(u => u.Id)
+                                                        .OnDelete(DeleteBehavior.NoAction);
+            ///
             builder.Entity<Comment>()
             .HasOne(c => c.Project)
             .WithMany(p => p.Comments)
