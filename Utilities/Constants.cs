@@ -71,5 +71,8 @@
         public const string JWT_GIVEN_NAME = "GivenName";
         public const string JWT_EMAIL = "Email";
         public const string JWT_PHONE_NUMBER = "PhoneNumber";
+      
+        public const int RATING_DEFAULT_PAGE_SIZE = 5;
+
     }
 }
