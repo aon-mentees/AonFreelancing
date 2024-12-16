@@ -56,8 +56,8 @@
             console.log("Received Bid apply notification:", submitBidNotificationDTO);
         });
         connection.on('GetProfileVisitNotification', (profileVisitNotification) => {
-            alert(`Your profile visited by ${profileVisitNotificationOutputDTO.visitorName}`);
-            console.log('New Profile Visit Notification: ', notification);
+            alert(`Your profile visited by ${profileVisitNotification.visitorName}`);
+            console.log('New Profile Visit Notification: ', profileVisitNotification);
         });
         connection.on("GetTaskApprovalNotification", (TaskApprovalNotificaationOutputDTO) => {
             alert(`Your task approved from ${TaskApprovalNotificaationOutputDTO.approverName}`);
