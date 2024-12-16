@@ -51,8 +51,6 @@
         public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
         public const string TASK_APPROVAL_NOTIFICATION_TITLE = "You’ve Got a task approved";
         public const string TASK_REJECTION_NOTIFICATION_TITLE = "You’ve Got a task rejected";
-        public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
-        public const string SUBMIT_BID_NOTIFICATION_TITLE = "You’ve Got a New bid apply";
         public const string COMMENT_NOTIFICATION_TITLE = "You’ve Got a New Comment";
 
         public const int LIKES_DEFAULT_PAGE_SIZE = 10;

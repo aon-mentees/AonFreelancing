@@ -829,7 +829,6 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("SubmitBidNotification");
-
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.TaskApprovalNotification", b =>
@@ -878,7 +877,6 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("TaskId");
 
                     b.ToTable("TaskRejectionNotifications", (string)null);
-
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
