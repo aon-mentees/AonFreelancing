@@ -51,6 +51,7 @@
 
         public const int LIKES_DEFAULT_PAGE_SIZE = 10;
         public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
+        public const int RECENT_PROJECTS_DEFAULT_PAGE_SIZE = 6;
         public const int SKILLS_DEFAULT_PAGE_SIZE = 4;
         public const int BIDS_DEFAULT_PAGE_SIZE = 10;
         public const int WORK_EXPERIENCES_DEFAULT_PAGE_SIZE = 4;
@@ -67,5 +68,6 @@
         public const string DEFAULT_USER_PROFILE_PICTURE = "default-user-profile-picture.jpg";
 
         public const int RATING_DEFAULT_PAGE_SIZE = 5;
+        public const int FREELANCERS_WORKED_WITH_DEFAULT_PAGE_SIZE = 5;
     }
 }
