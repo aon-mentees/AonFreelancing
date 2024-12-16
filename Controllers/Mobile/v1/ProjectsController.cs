@@ -52,19 +52,15 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            var storedUser = await userService.FindByIdAsync(id);
-            if (storedUser == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
-                    "Unable to load user."));
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             Project? storedProject = await projectService.FindProjectAsync(id);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
-                    "Project not found or not owned by the authenticated client."));
+                    "Project not found"));
 
-            if (storedProject.IsDeleted)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-                    "Cannot update a deleted project."));
+            if (authenticatedClientId != storedProject.ClientId)
+                return Forbid();
 
             if (storedProject.Status == Constants.PROJECT_STATUS_CLOSED)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
@@ -86,17 +82,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProjectAsync(long id)
         {
-            var storedUser = await userService.FindByIdAsync(id);
-            if (storedUser == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
-                    "Unable to load user."));
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             var storedProject = await projectService.FindProjectAsync(id);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
                     "Project not found"));
 
-            if (storedProject.ClientId != storedUser.Id)
+            if (storedProject.ClientId != authenticatedClientId)
                 return Forbid();
 
             //if (storedProject.IsDeleted)
@@ -315,14 +308,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             var storedProject = await mainAppContext.Projects.Include(p => p.Tasks)
                                                         .Where(p => p.Id == id)
+                                                        .Where(p => !p.IsDeleted)
                                                         .FirstOrDefaultAsync();
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse("404", "Project not found."));
-
-            if (storedProject.IsDeleted)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-                    "Cannot update a deleted project."));
 
             int numberOfCompletedTasks = storedProject.Tasks.Where(t => t.Status == Constants.TASK_STATUS_DONE).ToList().Count;
             decimal totalNumberOFTasks = storedProject.Tasks.Count;
