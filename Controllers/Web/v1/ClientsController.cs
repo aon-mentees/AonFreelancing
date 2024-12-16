@@ -41,7 +41,6 @@ namespace AonFreelancing.Controllers.Web.v1
             return Ok(CreateSuccessResponse("Client updated successfully"));
         }
 
-        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpGet("{id}/activities")]
         public async Task<IActionResult> GetActivitiesAsync(long id)
         {
@@ -54,6 +53,7 @@ namespace AonFreelancing.Controllers.Web.v1
             var responseDTO = activitiesService.ClientActivities(id);
             return Ok(CreateSuccessResponse(responseDTO));
         }
+
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpGet("recent-projects")]
         public async Task<IActionResult> GetRecentProjectsAsync(int page = 0, int pageSize = Constants.RECENT_PROJECTS_DEFAULT_PAGE_SIZE)
@@ -74,10 +74,11 @@ namespace AonFreelancing.Controllers.Web.v1
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             var storedProjects = await mainAppContext.Projects.Include(p => p.Freelancer)
-                                                                .OrderByDescending(p => p.EndDate)
-                                                                .Where(p => p.ClientId == authenticatedClientId)
-                                                                .Where(p => p.FreelancerId != null)
-                                                                .ToListAsync();
+                                                               .OrderByDescending(p => p.EndDate)
+                                                               .Where(p => p.ClientId == authenticatedClientId)
+                                                               .Where(p => p.FreelancerId != null)
+                                                               .Where(p => !p.IsDeleted)
+                                                               .ToListAsync();
 
             PaginatedResult<FreelancerWorkedWithOutDTO> paginatedFreelancerWorkedWithDTO = new PaginatedResult<FreelancerWorkedWithOutDTO>();
             HashSet<long> freelancerIds = [];
@@ -91,11 +92,10 @@ namespace AonFreelancing.Controllers.Web.v1
                 freelancerIds.Add(project.FreelancerId.Value);
             }
             paginatedFreelancerWorkedWithDTO.Result = paginatedFreelancerWorkedWithDTO.Result.Skip(page * pageSize)
-                                                                                    .Take(pageSize)
-                                                                                    .ToList();
+                                                                                             .Take(pageSize)
+                                                                                             .ToList();
             return Ok(CreateSuccessResponse(paginatedFreelancerWorkedWithDTO));
         }
-
         //private readonly MainAppContext _mainAppContext;
         //private readonly UserManager<User> _userManager;
         //public ClientsController(

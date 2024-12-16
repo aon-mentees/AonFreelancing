@@ -77,6 +77,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                                .OrderByDescending(p => p.EndDate)
                                                                .Where(p => p.ClientId == authenticatedClientId)
                                                                .Where(p => p.FreelancerId != null)
+                                                               .Where(p => !p.IsDeleted)
                                                                .ToListAsync();
 
             PaginatedResult<FreelancerWorkedWithOutDTO> paginatedFreelancerWorkedWithDTO = new PaginatedResult<FreelancerWorkedWithOutDTO>();

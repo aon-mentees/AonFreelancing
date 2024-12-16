@@ -19,9 +19,10 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/profiles")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService,ProfileService profileService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService, ProfileService profileService)
         : BaseController
     {
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
@@ -30,21 +31,24 @@ namespace AonFreelancing.Controllers.Web.v1
                 .OfType<Freelancer>()
                 .Include(f => f.Skills)
                 .Where(f => f.Id == id)
-                .Select(f => FreelancerResponseDTO.FromFreelancer(f,imagesBaseUrl))
+                .Select(f => FreelancerResponseDTO.FromFreelancer(f, imagesBaseUrl))
                 .FirstOrDefaultAsync();
 
             if (storedFreelancerDTO != null)
-               return Ok(CreateSuccessResponse(storedFreelancerDTO));
- 
-            ClientResponseDTO? storedClientDTO = await mainAppContext.Users
+                return Ok(CreateSuccessResponse(storedFreelancerDTO));
+
+            Client? storedClient = await mainAppContext.Users
                 .OfType<Client>()
                 .Where(c => c.Id == id)
                 .Include(c => c.Projects)
-                .Select(c => ClientResponseDTO.FromClient(c, imagesBaseUrl))
                 .FirstOrDefaultAsync();
 
-            if (storedClientDTO != null)
+            if (storedClient != null)
+            {
+                storedClient.Projects = storedClient.Projects.Where(p => !p.IsDeleted).ToList();
+                var storedClientDTO = ClientResponseDTO.FromClient(storedClient, imagesBaseUrl);
                 return Ok(CreateSuccessResponse(storedClientDTO));
+            }
 
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "NotFound"));
         }
@@ -59,6 +63,7 @@ namespace AonFreelancing.Controllers.Web.v1
                 .Include(p => p.Freelancer)
                 .Include(p => p.Tasks)
                 .Where(p => p.ClientId == authenticatedUserId || p.FreelancerId == authenticatedUserId)
+                .Where(p => !p.IsDeleted)
                 .ToListAsync();
 
             var storedTasks = storedProjects.SelectMany(p => p.Tasks).ToList();
@@ -189,10 +194,11 @@ namespace AonFreelancing.Controllers.Web.v1
             await userService.SaveChangesAsync();
             return NoContent();
         }
+
         [HttpGet("{clientId}/client-activity")]
         public async Task<IActionResult> GetClientActivityByIdAsync([FromRoute] long clientId,
-           [FromQuery] int page = 0,
-           [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
+            [FromQuery] int page = 0,
+            [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
@@ -206,6 +212,17 @@ namespace AonFreelancing.Controllers.Web.v1
 
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
+        //[HttpGet("profile-picture/{userId}")]
+        //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
+        //{
+        //    User? storedUser = await userService.FindByIdAsync(userId);
+        //    if (storedUser== null)
+        //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+
+        //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+        //    string imageUrl = $"{imagesBaseUrl}/{storedUser.ProfilePicture}";
+        //    return Ok(CreateSuccessResponse(imageUrl));
+        //}
     }
 
 }

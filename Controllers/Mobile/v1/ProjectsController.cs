@@ -47,7 +47,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProjectAsync(long id, [FromForm] ProjectInputDTO projectInputDto)
+        public async Task<IActionResult> UpdateProjectAsync(long id, [FromBody] ProjectUpdateDTO projectUpdateDTO)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
@@ -70,12 +70,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
                     "Cannot update a project that is closed."));
 
-            storedProject.Title = projectInputDto.Title;
-            storedProject.Description = projectInputDto.Description;
-            storedProject.QualificationName = projectInputDto.QualificationName;
-            storedProject.Duration = projectInputDto.Duration;
+            storedProject.Title = projectUpdateDTO.Title;
+            storedProject.Description = projectUpdateDTO.Description;
+            storedProject.QualificationName = projectUpdateDTO.QualificationName;
+            storedProject.Duration = projectUpdateDTO.Duration;
             //storedProject.PriceType = projectInputDto.PriceType;
-            storedProject.Budget = projectInputDto.Budget;
+            storedProject.Budget = projectUpdateDTO.Budget;
 
             await mainAppContext.SaveChangesAsync();
 
@@ -94,14 +94,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
             var storedProject = await projectService.FindProjectAsync(id);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(),
-                    "Project not found or not owned by the authenticated client."));
+                    "Project not found"));
 
             if (storedProject.ClientId != storedUser.Id)
                 return Forbid();
 
-            if (storedProject.IsDeleted)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-                    "Cannot update a deleted project."));
+            //if (storedProject.IsDeleted)
+            //    return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+            //        "Cannot update a deleted project."));
 
             // Soft delete the project
             storedProject.IsDeleted = true;
@@ -140,7 +140,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
             }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
-        
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpGet("freelancer-feed")]
@@ -189,12 +188,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
             User? authenticatedFreelancer = await userManager.FindByIdAsync(authenticatedFreelancerId.ToString());
             if (authenticatedFreelancer == null)
                 return Unauthorized();
+
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
-
-            if (storedProject.IsDeleted)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-                    "cannot submit a bid for project that is deleted"));
-
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
             if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)

@@ -37,15 +37,18 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (storedFreelancerDTO != null)
                 return Ok(CreateSuccessResponse(storedFreelancerDTO));
 
-            ClientResponseDTO? storedClientDTO = await mainAppContext.Users
+            Client? storedClient = await mainAppContext.Users
                 .OfType<Client>()
                 .Where(c => c.Id == id)
                 .Include(c => c.Projects)
-                .Select(c => ClientResponseDTO.FromClient(c, imagesBaseUrl))
                 .FirstOrDefaultAsync();
 
-            if (storedClientDTO != null)
+            if (storedClient != null)
+            {
+                storedClient.Projects = storedClient.Projects.Where(p => !p.IsDeleted).ToList();
+                var storedClientDTO = ClientResponseDTO.FromClient(storedClient, imagesBaseUrl);
                 return Ok(CreateSuccessResponse(storedClientDTO));
+            }
 
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "NotFound"));
         }
@@ -60,6 +63,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 .Include(p => p.Freelancer)
                 .Include(p => p.Tasks)
                 .Where(p => p.ClientId == authenticatedUserId || p.FreelancerId == authenticatedUserId)
+                .Where(p => !p.IsDeleted)
                 .ToListAsync();
 
             var storedTasks = storedProjects.SelectMany(p => p.Tasks).ToList();

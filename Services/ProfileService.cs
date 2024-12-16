@@ -19,6 +19,7 @@ namespace AonFreelancing.Services
             var query = mainAppContext.Projects.AsNoTracking().Where(p => p.ClientId == clientId)
                                                               .Include(p => p.ProjectLikes)
                                                               .Include(p => p.Comments)
+                                                              .Where(p => !p.IsDeleted)
                                                               .AsQueryable();
 
             List<Project>? storedProjects = await query.OrderByDescending(p => p.CreatedAt)
