@@ -15,8 +15,9 @@ namespace AonFreelancing.Controllers.Web.v1
     [Route("api/web/v1/freelancers")]
     [ApiController]
     public class FreelancersController(
-        FreelancerService freelancerService, AuthService authService, UserService userService,
-        ActivitiesService activitiesService, UserManager<User> userManager, MainAppContext mainAppContext)
+        FreelancerService freelancerService, AuthService authService,
+        UserService userService, ActivitiesService activitiesService,
+        UserManager<User> userManager, MainAppContext mainAppContext)
         : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]

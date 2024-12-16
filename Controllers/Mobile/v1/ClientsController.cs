@@ -29,18 +29,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            var storedUser = await userManager.GetUserAsync(HttpContext.User);
+            var storedUser = (Client?)await userManager.GetUserAsync(HttpContext.User);
             if (storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
 
-            if (storedUser is not Client client)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Authenticated user is not a client"));
-
-            if (!string.IsNullOrEmpty(clientUpdateDTO.Name))
-                client.Name = clientUpdateDTO.Name;
-
-            if (!string.IsNullOrEmpty(clientUpdateDTO.CompanyName))
-                client.CompanyName = clientUpdateDTO.CompanyName;
+            storedUser.Name = clientUpdateDTO.Name;
+            storedUser.CompanyName = clientUpdateDTO.CompanyName;
 
             await mainAppContext.SaveChangesAsync();
 
