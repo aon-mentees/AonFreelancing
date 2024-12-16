@@ -261,8 +261,8 @@ namespace AonFreelancing.Controllers.Web.v1
             var approvalNotification = new BidApprovalNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, imageUrl, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
 
             await notificationService.CreateAsync(approvalNotification);
-            await pushNotificationService.SendApprovalNotification(
-                BidApprovalNotificationOutputDTO.FromApprovalNotification(approvalNotification),
+            await pushNotificationService.SendBidApprovalNotification(
+                BidApprovalNotificationOutputDTO.FromBidApprovalNotification(approvalNotification),
                 approvalNotification.ReceiverId);
 
             return Ok(CreateSuccessResponse("Bid approved."));
@@ -307,8 +307,8 @@ namespace AonFreelancing.Controllers.Web.v1
             var rejectionNotification = new BidRejectionNotification(notificationTitle, notificationMessage, storedBid.FreelancerId, imageUrl, projectId, authenticatedClientId, nameOfAuthenticatedClient, bidId);
 
             await notificationService.CreateAsync(rejectionNotification);
-            await pushNotificationService.SendRejectionNotification(
-                BidRejectionNotificationOutputDTO.FromRejectionNotification(rejectionNotification),
+            await pushNotificationService.SendBidRejectionNotification(
+                BidRejectionNotificationOutputDTO.FromBidRejectionNotification(rejectionNotification),
                 rejectionNotification.ReceiverId);
             return Ok(CreateSuccessResponse("Bid rejected."));
         }

@@ -10,13 +10,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Linq;
+using AonFreelancing.Models.DTOs.NoftificationDTOs;
 
 namespace AonFreelancing.Controllers.Web.v1
 {
     [Authorize]
     [Route("api/web/v1/tasks")]
     [ApiController]
-    public class TasksController(AuthService authService, TaskService taskService, UserService userService) : BaseController
+    public class TasksController(AuthService authService, TaskService taskService, UserService userService,NotificationService notificationService,PushNotificationService pushNotificationService) : BaseController
     {
         // Start task (Freelacner can) To Do -> in progress (Update started at)
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
@@ -82,6 +83,20 @@ namespace AonFreelancing.Controllers.Web.v1
             if(storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to approve."));
             await taskService.ApproveTaskAsync(storedTask);
+
+
+            // Notification 
+            string notificationMessage = string.Format(Constants.TASK_APPROVAL_NOTIFICATION_MESSAGE_FORMAT, storedUser.Name, storedTask.Project.Title);
+            string notificationTitle = Constants.TASK_APPROVAL_NOTIFICATION_TITLE;
+            var approvalNotification = new TaskApprovalNotification(notificationTitle, notificationMessage, storedTask.Project.FreelancerId.Value, storedTask.ProjectId, storedUser.Id, storedUser.Name, storedTask.Id);
+
+            await notificationService.CreateAsync(approvalNotification);
+            await pushNotificationService.SendTaskApprovalNotification(
+                TaskApprovalNotificationOutputDTO.FromTaskApprovalNotification(approvalNotification),
+                approvalNotification.ReceiverId);
+
+
+
             return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
         }
 
@@ -104,6 +119,17 @@ namespace AonFreelancing.Controllers.Web.v1
             if(storedTask.Status != Constants.TASK_STATUS_IN_REVIEW)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), $"task status must be { Constants.TASK_STATUS_IN_REVIEW } to reject."));
             await taskService.RejectTaskAsync(storedTask);
+
+            // Notification
+            string notificationMessage = string.Format(Constants.TASK_REJECTION_NOTIFICATION_MESSAGE_FORMAT, storedUser.Name, storedTask.Project.Title);
+            string notificationTitle = Constants.TASK_REJECTION_NOTIFICATION_TITLE;
+            var rejectionNotification = new TaskRejectionNotification(notificationTitle, notificationMessage, storedTask.Project.FreelancerId.Value, storedTask.ProjectId, storedUser.Id, storedUser.Name, storedTask.Id);
+
+            await notificationService.CreateAsync(rejectionNotification);
+            await pushNotificationService.SendTaskRejectionNotification(
+                TaskRejectionNotificationOutputDTO.FromTaskRejectionNotification(rejectionNotification),
+                rejectionNotification.ReceiverId);
+
             return Ok(CreateSuccessResponse(TaskOutputDTO.FromTask(storedTask)));
         }
     }   

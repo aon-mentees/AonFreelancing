@@ -16,4 +16,41 @@ public class StringOperations
             _ => $"{timeSpan.Days / 365} year{(timeSpan.Days / 365 != 1 ? "s" : "")} ago"
         };
     }
+    public static string ConvertDaysToMonthsAndYears(int days)
+    {
+        const int daysInYear = 365;
+        const int daysInMonth = 30; 
+
+        if (days < 0)
+        {
+            return "Invalid number of days";
+        }
+
+        int years = days / daysInYear;
+        int remainingDaysAfterYears = days % daysInYear;
+
+        int months = remainingDaysAfterYears / daysInMonth;
+        int remainingDays = remainingDaysAfterYears % daysInMonth;
+
+        string result = "";
+
+        if (years > 0)
+        {
+            result += $"{years} year{(years != 1 ? "s" : "")}";
+        }
+
+        if (months > 0)
+        {
+            if (!string.IsNullOrEmpty(result)) result += ", ";
+            result += $"{months} month{(months != 1 ? "s" : "")}";
+        }
+
+        if (remainingDays > 0)
+        {
+            if (!string.IsNullOrEmpty(result)) result += ", ";
+            result += $"{remainingDays} day{(remainingDays != 1 ? "s" : "")}";
+        }
+
+        return string.IsNullOrEmpty(result) ? "0 days" : result;
+    }
 }

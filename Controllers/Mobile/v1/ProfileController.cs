@@ -19,9 +19,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/profiles")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService,ProfileService profileService)
         : BaseController
     {
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
@@ -144,10 +145,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
                         notificationOutputDTOs.Add(LikeNotificationOutputDTO.FromLikeNotification(likeNotification));
                         break;
                     case BidRejectionNotification bidRejectionNotification:
-                        notificationOutputDTOs.Add(BidRejectionNotificationOutputDTO.FromRejectionNotification(bidRejectionNotification));
+                        notificationOutputDTOs.Add(BidRejectionNotificationOutputDTO.FromBidRejectionNotification(bidRejectionNotification));
                         break;
                     case BidApprovalNotification bidApprovalNotification:
-                        notificationOutputDTOs.Add(BidApprovalNotificationOutputDTO.FromApprovalNotification(bidApprovalNotification));
+                        notificationOutputDTOs.Add(BidApprovalNotificationOutputDTO.FromBidApprovalNotification(bidApprovalNotification));
                         break;
                     case SubmitBidNotification bidSubmissionNotification:
                         notificationOutputDTOs.Add(BidSubmissionNotificationOutputDTO.FromSubmitBidNotification(bidSubmissionNotification));
@@ -189,6 +190,35 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await userService.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpGet("{clientId}/client-activity")]
+        public async Task<IActionResult> GetClientActivityByIdAsync( [FromRoute] long clientId,
+            [FromQuery] int page = 0,
+            [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
+        {
+            if (!ModelState.IsValid)
+                return base.CustomBadRequest();
+
+            Client? storedClient =await profileService.FindClientAsync(clientId);
+            if (storedClient == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
+            PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
+            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p)).ToList();
+            PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
+
+            return Ok(CreateSuccessResponse(paginatedProjectsDTO));
+        }
+        //[HttpGet("profile-picture/{userId}")]
+        //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
+        //{
+        //    User? storedUser = await userService.FindByIdAsync(userId);
+        //    if (storedUser== null)
+        //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+
+        //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+        //    string imageUrl = $"{imagesBaseUrl}/{storedUser.ProfilePicture}";
+        //    return Ok(CreateSuccessResponse(imageUrl));
+        //}
     }
 
 }

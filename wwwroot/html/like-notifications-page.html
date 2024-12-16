@@ -59,7 +59,15 @@
             alert(`Your profile visited by ${profileVisitNotificationOutputDTO.visitorName}`);
             console.log('New Profile Visit Notification: ', notification);
         });
+        connection.on("GetTaskApprovalNotification", (TaskApprovalNotificaationOutputDTO) => {
+            alert(`Your task approved from ${TaskApprovalNotificaationOutputDTO.approverName}`);
+            console.log("Received approve notification:", TaskApprovalNotificaationOutputDTO);
+        });
 
+        connection.on("GetTaskRejectionNotification", (TaskRejectionNotificationOutputDTO) => {
+            alert(`Your task rejected from ${TaskRejectionNotificationOutputDTO.rejectorName}`);
+            console.log("Received reject notification:", TaskRejectionNotificationOutputDTO);
+        });
         start();
     </script>
 </body>

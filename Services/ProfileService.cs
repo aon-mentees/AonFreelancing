@@ -1,34 +1,49 @@
-﻿using AonFreelancing.Models.DTOs.NoftificationDTOs;
+﻿using AonFreelancing.Contexts;
+using AonFreelancing.Models.Responses;
 using AonFreelancing.Models;
-using AonFreelancing.Services;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
+using AonFreelancing.Models.DTOs.NoftificationDTOs;
 using AonFreelancing.Utilities;
-using static System.Net.Mime.MediaTypeNames;
 
-public class ProfileService
+namespace AonFreelancing.Services
 {
-    private readonly PushNotificationService _pushNotificationService;
-    private readonly UserService _userService;
-
-    public ProfileService(PushNotificationService pushNotificationService)
+    public class ProfileService(MainAppContext mainAppContext, PushNotificationService pushNotificationService, UserService userService)
     {
-        _pushNotificationService = pushNotificationService;
-    }
+        public async Task<Client?> FindClientAsync(long clientId)
+        {
+            return await mainAppContext.Users.OfType<Client>().FirstOrDefaultAsync(c => c.Id == clientId);
+        }
+        public async Task<PaginatedResult<Project>> FindClientActivitiesAsync(long clientId, int pageNumber, int pageSize)
+        {
+            var query = mainAppContext.Projects.AsNoTracking().Where(p => p.ClientId == clientId)
+                                                              .Include(p => p.ProjectLikes)
+                                                              .Include(p => p.Comments)
+                                                              .AsQueryable();
 
-    public async Task VisitProfileAsync(long visitorId, long receiverId)
-    {
-        var visitorName = await _userService.FindByIdAsync(visitorId);
+            List<Project>? storedProjects = await query.OrderByDescending(p => p.CreatedAt)
+                                                       .Skip(pageNumber * pageSize)
+                                                       .Take(pageSize)
+                                                       .ToListAsync();
 
-        var profileVisitNotification = new ProfileVisitNotification(
-            Constants.PROFILE_VISIT_NOTIFICATION_TITLE,
-            string.Format(Constants.PROFILE_VISIT_NOTIFICATION_MESSAGE_FORMAT, visitorName),
-            receiverId,
-            string.Empty, // low level code --> for lilo 
-            visitorId,
-            visitorName.Name
+            return new PaginatedResult<Project>(await query.CountAsync(), storedProjects);
+        }
+        public async Task VisitProfileAsync(long visitorId, long receiverId)
+        {
+            var visitorName = await userService.FindByIdAsync(visitorId);
 
-        );
+            var profileVisitNotification = new ProfileVisitNotification(
+                Constants.PROFILE_VISIT_NOTIFICATION_TITLE,
+                string.Format(Constants.PROFILE_VISIT_NOTIFICATION_MESSAGE_FORMAT, visitorName),
+                receiverId,
+                string.Empty, // low level code --> for lilo 
+                visitorId,
+                visitorName.Name
 
-        var notificationDTO = new ProfileVisitNotificationOutputDTO(profileVisitNotification);
-        await _pushNotificationService.SendProfileVisitNotification(notificationDTO, receiverId);
+            );
+
+            var notificationDTO = new ProfileVisitNotificationOutputDTO(profileVisitNotification);
+            await pushNotificationService.SendProfileVisitNotification(notificationDTO, receiverId);
+        }
     }
 }
