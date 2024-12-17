@@ -16,8 +16,8 @@ public class ActivitiesService(MainAppContext mainAppContext) : MainDbService(ma
         int projectPosted = clientProjects.Count();
         var freelancersWorkedWith = clientProjects.Where(p => p.FreelancerId != null).Select(p => p.FreelancerId).Distinct().Count();
         int givenLikes = mainAppContext.ProjectLikes.Where(p => p.LikerId == id).Count();
-        int projectsInProgress = clientProjects.Count(p => p.Status == Constants.PROJECT_STATUS_CLOSED);
-        int projectsPending = clientProjects.Count(p => p.Status == Constants.PROJECT_STATUS_AVAILABLE);
+        int projectsInProgress = clientProjects.Count(p => p.Status == Constants.PROJECT_STATUS_IN_PROGRESS);
+        int projectsPending = clientProjects.Count(p => p.Status == Constants.PROJECT_STATUS_PENDING);
         int projectsCompleted = clientProjects.Count(p => p.Status == Constants.PROJECT_STATUS_COMPLETED);
 
         return new ClientActivitiesResponseDTO(freelancersWorkedWith, projectPosted, givenLikes, projectsPending,
