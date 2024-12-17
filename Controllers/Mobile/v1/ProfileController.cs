@@ -72,7 +72,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                                   TasksStatisticsDTO.FromTasks(storedTasks))));
         }
         [HttpGet("projects")]
-        public async Task<IActionResult> GetProjectsForUserDashboard([AllowedValues(PROJECT_STATUS_AVAILABLE, PROJECT_STATUS_CLOSED, PROJECT_STATUS_COMPLETED)] string status = "",
+        public async Task<IActionResult> GetProjectsForUserDashboard([AllowedValues(PROJECT_STATUS_PENDING, PROJECT_STATUS_IN_PROGRESS, PROJECT_STATUS_COMPLETED)] string status = "",
                                                                         int page = 0, int pageSize = PROJECTS_DEFAULT_PAGE_SIZE)
         {
             if (!ModelState.IsValid)

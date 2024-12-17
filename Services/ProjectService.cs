@@ -62,7 +62,8 @@ namespace AonFreelancing.Services
         {
             bid.Status = Constants.BIDS_STATUS_APPROVED;
             bid.ApprovedAt = DateTime.Now;
-            project.Status = Constants.PROJECT_STATUS_CLOSED;
+            project.Status = Constants.PROJECT_STATUS_IN_PROGRESS;
+            project.StartDate = DateTime.Now;
             project.FreelancerId = bid.FreelancerId;
             project.Bids.ForEach(b =>
             {
@@ -171,6 +172,15 @@ namespace AonFreelancing.Services
                                                                            .ToListAsync();
             int totalCount = await _mainAppContext.Projects.CountAsync(p => p.FreelancerId == freelancerId && !p.IsDeleted);
             return new PaginatedResult<Project>(totalCount, storedProjects);
+        }
+
+        public async Task CompleteProjectAsync(Project project)
+        {
+            project.Status = Constants.PROJECT_STATUS_COMPLETED;
+            project.EndDate = DateTime.Now;
+
+            _mainAppContext.Projects.Update(project);
+            await _mainAppContext.SaveChangesAsync();
         }
     }
 }
