@@ -536,9 +536,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return CustomBadRequest();
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
-            User? authenticatedUser = await userManager.FindByIdAsync(authenticatedClientId.ToString());
-
             Project? storedProject = await projectService.FindProjectAsync(projectId);
 
             if (storedProject == null)
