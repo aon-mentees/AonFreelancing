@@ -239,8 +239,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
             Client? storedClient =await profileService.FindClientAsync(clientId);
             if (storedClient == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
+
+            string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+
             PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
-            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p)).ToList();
+            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p, imagesBaseUrl)).ToList();
             PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
 
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));

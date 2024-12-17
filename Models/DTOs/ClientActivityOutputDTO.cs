@@ -15,8 +15,8 @@ namespace AonFreelancing.Models.DTOs
         public int Duration { get; set; }
         public string DurationString { get; set; }
         public decimal Budget { get; set; }
-
-        ClientActivityOutputDTO(Project project)
+        public string? ImageUrl {  get; set; }
+        ClientActivityOutputDTO(Project project, string imageBaseUrl)
         {
             Id = project.Id;
             Title = project.Title;
@@ -28,8 +28,10 @@ namespace AonFreelancing.Models.DTOs
             Duration = project.Duration;
             DurationString = StringOperations.ConvertDaysToMonthsAndYears(project.Duration);
             Budget = project.Budget;
+            if (project.ImageFileName != null)
+                ImageUrl = $"{imageBaseUrl}/{project.ImageFileName}";
         }
-        public static ClientActivityOutputDTO FromProject(Project project) => new ClientActivityOutputDTO(project);
+        public static ClientActivityOutputDTO FromProject(Project project, string imageBaseUrl) => new ClientActivityOutputDTO(project, imageBaseUrl);
     }
    
 }
