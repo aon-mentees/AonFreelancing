@@ -42,7 +42,11 @@ public class ActivitiesService(MainAppContext mainAppContext) : MainDbService(ma
         int inReview = freelancerTasks.Where(t=> t.Status == Constants.TASK_STATUS_IN_REVIEW).Count();
         int toDo = freelancerTasks.Where(t=> t.Status == Constants.TASK_STATUS_TO_DO).Count();
         // Bids info
-        int projectYouApplied = mainAppContext.Bids.Where(b=> b.Status == Constants.BIDS_STATUS_PENDING).Count();
+        //int projectYouApplied = mainAppContext.Bids.Where(b=> b.Status == Constants.BIDS_STATUS_PENDING).Count();
+        int projectYouApplied = mainAppContext.Bids.Where(b=> b.FreelancerId == id)
+                                                   .Select(b=>b.ProjectId)
+                                                   .Distinct()
+                                                   .Count();
         
 
         return new FreelancerActivitiesResponseDTO(inProgressProjects, completedProjects, 
