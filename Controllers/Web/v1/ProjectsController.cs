@@ -186,7 +186,7 @@ namespace AonFreelancing.Controllers.Web.v1
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
             if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Cannot submit a bid for project that is not Pending for bids."));
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Cannot submit a bid for project that is not Pending or Completed for bids."));
             if (storedProject.Budget <= bidInputDTO.ProposedPrice)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Proposed price must be less than the project budget."));
             if (storedProject.Bids.Any() && storedProject.Bids.OrderBy(b => b.ProposedPrice).First().ProposedPrice <= bidInputDTO.ProposedPrice)
