@@ -789,7 +789,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("TaskApprovalNotification");
+                    b.ToTable("TaskApprovalNotifications", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.TaskRejectionNotification", b =>
@@ -813,7 +813,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("TaskRejectionNotification");
+                    b.ToTable("TaskRejectionNotifications", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>

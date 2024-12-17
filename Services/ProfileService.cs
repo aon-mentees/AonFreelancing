@@ -23,7 +23,8 @@ namespace AonFreelancing.Services
                                                        .Skip(pageNumber * pageSize)
                                                        .Take(pageSize)
                                                        .ToListAsync();
-            return new PaginatedResult<Project>(storedProjects.Count, storedProjects);
+          
+            return new PaginatedResult<Project>(await query.CountAsync(), storedProjects);
         }
     }
 }

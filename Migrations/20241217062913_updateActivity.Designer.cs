@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241215220203_AddActivity")]
-    partial class AddActivity
+    [Migration("20241217062913_updateActivity")]
+    partial class updateActivity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -792,7 +792,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("TaskApprovalNotification");
+                    b.ToTable("TaskApprovalNotifications", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.TaskRejectionNotification", b =>
@@ -816,7 +816,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("TaskRejectionNotification");
+                    b.ToTable("TaskRejectionNotifications", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>

@@ -191,7 +191,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return NoContent();
         }
 
-        [HttpGet("client-activity/{clientId}")]
+        [HttpGet("{clientId}/client-activity")]
         public async Task<IActionResult> GetClientActivityByIdAsync( [FromRoute] long clientId,
             [FromQuery] int page = 0,
             [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
@@ -199,13 +199,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            Client? StoredId =await profileService.FindClientAsync(clientId);
-            if (StoredId == null)
+            Client? storedClient =await profileService.FindClientAsync(clientId);
+            if (storedClient == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
             PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
-            if (paginatedProjects == null)
-                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client haven't any projects."));
-            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromClientActivity(p)).ToList();
+            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p)).ToList();
             PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
 
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));

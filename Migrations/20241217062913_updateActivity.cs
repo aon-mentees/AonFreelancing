@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class AddActivity : Migration
+    public partial class updateActivity : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -643,7 +643,7 @@ namespace AonFreelancing.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskApprovalNotification",
+                name: "TaskApprovalNotifications",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false),
@@ -654,27 +654,27 @@ namespace AonFreelancing.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskApprovalNotification", x => x.Id);
+                    table.PrimaryKey("PK_TaskApprovalNotifications", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TaskApprovalNotification_AspNetUsers_ApproverId",
+                        name: "FK_TaskApprovalNotifications_AspNetUsers_ApproverId",
                         column: x => x.ApproverId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_TaskApprovalNotification_Notifications_Id",
+                        name: "FK_TaskApprovalNotifications_Notifications_Id",
                         column: x => x.Id,
                         principalTable: "Notifications",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TaskApprovalNotification_Tasks_TaskId",
+                        name: "FK_TaskApprovalNotifications_Tasks_TaskId",
                         column: x => x.TaskId,
                         principalTable: "Tasks",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskRejectionNotification",
+                name: "TaskRejectionNotifications",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false),
@@ -685,20 +685,20 @@ namespace AonFreelancing.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskRejectionNotification", x => x.Id);
+                    table.PrimaryKey("PK_TaskRejectionNotifications", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TaskRejectionNotification_AspNetUsers_RejectorId",
+                        name: "FK_TaskRejectionNotifications_AspNetUsers_RejectorId",
                         column: x => x.RejectorId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_TaskRejectionNotification_Notifications_Id",
+                        name: "FK_TaskRejectionNotifications_Notifications_Id",
                         column: x => x.Id,
                         principalTable: "Notifications",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TaskRejectionNotification_Tasks_TaskId",
+                        name: "FK_TaskRejectionNotifications_Tasks_TaskId",
                         column: x => x.TaskId,
                         principalTable: "Tasks",
                         principalColumn: "Id");
@@ -862,23 +862,23 @@ namespace AonFreelancing.Migrations
                 column: "ProjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskApprovalNotification_ApproverId",
-                table: "TaskApprovalNotification",
+                name: "IX_TaskApprovalNotifications_ApproverId",
+                table: "TaskApprovalNotifications",
                 column: "ApproverId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskApprovalNotification_TaskId",
-                table: "TaskApprovalNotification",
+                name: "IX_TaskApprovalNotifications_TaskId",
+                table: "TaskApprovalNotifications",
                 column: "TaskId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskRejectionNotification_RejectorId",
-                table: "TaskRejectionNotification",
+                name: "IX_TaskRejectionNotifications_RejectorId",
+                table: "TaskRejectionNotifications",
                 column: "RejectorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskRejectionNotification_TaskId",
-                table: "TaskRejectionNotification",
+                name: "IX_TaskRejectionNotifications_TaskId",
+                table: "TaskRejectionNotifications",
                 column: "TaskId");
 
             migrationBuilder.CreateIndex(
@@ -948,10 +948,10 @@ namespace AonFreelancing.Migrations
                 name: "SystemUsers");
 
             migrationBuilder.DropTable(
-                name: "TaskApprovalNotification");
+                name: "TaskApprovalNotifications");
 
             migrationBuilder.DropTable(
-                name: "TaskRejectionNotification");
+                name: "TaskRejectionNotifications");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
