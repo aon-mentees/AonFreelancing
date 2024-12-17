@@ -545,7 +545,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (storedProject.Status == Constants.PROJECT_STATUS_COMPLETED)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Project is already Completed"));
             if (storedProject.Status != Constants.PROJECT_STATUS_IN_PROGRESS)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "project is not status in progress yet"));
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Project is not status in progress yet"));
 
             await projectService.CompleteProjectAsync(storedProject);
 
