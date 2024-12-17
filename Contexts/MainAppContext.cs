@@ -44,9 +44,9 @@ namespace AonFreelancing.Contexts
                 .Property(p => p.PriceType).HasDefaultValue(Constants.PROJECT_PRICETYPE_FIXED);
             builder.Entity<Notification>().ToTable("Notifications");
             builder.Entity<LikeNotification>().ToTable("LikeNotifications");
-            builder.Entity<BidApprovalNotification>().ToTable("BidApprovalNotification");
-            builder.Entity<BidRejectionNotification>().ToTable("BidRejectionNotification");
-
+            builder.Entity<BidApprovalNotification>().ToTable("BidApprovalNotifications");
+            builder.Entity<BidRejectionNotification>().ToTable("BidRejectionNotifications");
+            builder.Entity<ProfileVisitNotification>().ToTable("ProfileVisitNotifications");
             builder.Entity<CommentNotification>().ToTable("CommentNotifications");
 
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PRICE_TYPE", $"[PriceType] IN ('{Constants.PROJECT_PRICETYPE_FIXED}', '{Constants.PROJECT_PRICETYPE_PERHOUR}')"));
@@ -181,6 +181,11 @@ namespace AonFreelancing.Contexts
                                                         .HasForeignKey(tan => tan.RejectorId)
                                                         .HasPrincipalKey(u => u.Id)
                                                         .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<ProfileVisitNotification>().HasOne<User>()
+                                                       .WithMany()
+                                                       .HasForeignKey(pvn => pvn.VisitorId)
+                                                       .HasPrincipalKey(u => u.Id)
+                                                       .OnDelete(DeleteBehavior.NoAction);
             ///
             builder.Entity<Comment>()
             .HasOne(c => c.Project)

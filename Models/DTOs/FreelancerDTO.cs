@@ -17,7 +17,7 @@ namespace AonFreelancing.Models.DTOs
             PhoneNumber = freelancer.PhoneNumber;
             UserType = Constants.USER_TYPE_FREELANCER;
             IsPhoneNumberVerified = freelancer.PhoneNumberConfirmed;
-            Skills = freelancer.Skills.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
+            //Skills = freelancer.Skills.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
             //Role = new RoleResponseDTO { Name = Constants.USER_TYPE_FREELANCER };
             if(freelancer.ProfilePicture != null )
                 ProfilePicture = $"{imageBaseUrl}/{freelancer.ProfilePicture}";
