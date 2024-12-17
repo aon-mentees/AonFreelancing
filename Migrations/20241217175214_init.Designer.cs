@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241217152948_init")]
+    [Migration("20241217175214_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -317,7 +317,7 @@ namespace AonFreelancing.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("available");
+                        .HasDefaultValue("pending");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -333,7 +333,7 @@ namespace AonFreelancing.Migrations
                         {
                             t.HasCheckConstraint("CK_PRICE_TYPE", "[PriceType] IN ('fixed', 'per-hour')");
 
-                            t.HasCheckConstraint("CK_PROJECT_STATUS", "[Status] IN ('available', 'closed')");
+                            t.HasCheckConstraint("CK_PROJECT_STATUS", "[Status] IN ('pending', 'in-progress', 'completed')");
 
                             t.HasCheckConstraint("CK_QUALIFICATION_NAME", "[QualificationName] IN ('uiux', 'frontend', 'mobile', 'backend', 'fullstack')");
                         });

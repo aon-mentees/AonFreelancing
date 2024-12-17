@@ -62,9 +62,9 @@ namespace AonFreelancing.Controllers.Web.v1
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
 
-            if (storedProject.Status == Constants.PROJECT_STATUS_CLOSED)
+            if (storedProject.Status == Constants.PROJECT_STATUS_IN_PROGRESS)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-                    "Cannot update a project that is closed."));
+                    "Cannot update a project that is in-progress."));
 
             storedProject.Title = projectUpdateDTO.Title;
             storedProject.Description = projectUpdateDTO.Description;
@@ -207,8 +207,8 @@ namespace AonFreelancing.Controllers.Web.v1
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
-            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Cannot submit a bid for project that is not available for bids."));
+            if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Cannot submit a bid for project that is not Pending or Completed for bids."));
             if (storedProject.Budget <= bidInputDTO.ProposedPrice)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Proposed price must be less than the project budget."));
             if (storedProject.Bids.Any() && storedProject.Bids.OrderBy(b => b.ProposedPrice).First().ProposedPrice <= bidInputDTO.ProposedPrice)
@@ -253,8 +253,8 @@ namespace AonFreelancing.Controllers.Web.v1
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
-            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
+            if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Pending."));
 
             Bid? storedBid = storedProject.Bids.FirstOrDefault(b => b.Id == bidId);
             if (storedBid == null)
@@ -301,8 +301,8 @@ namespace AonFreelancing.Controllers.Web.v1
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
 
-            if (storedProject.Status != Constants.PROJECT_STATUS_AVAILABLE)
-                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Available."));
+            if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
+                return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Pending."));
 
             Bid? storedBid = await projectService.FindBidsAsync(storedProject, bidId);
             if (storedBid == null)
@@ -369,8 +369,8 @@ namespace AonFreelancing.Controllers.Web.v1
 
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
-            if (storedProject.Status != Constants.PROJECT_STATUS_CLOSED)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "project is not status closed yet"));
+            if (storedProject.Status != Constants.PROJECT_STATUS_IN_PROGRESS)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "project is not status in progress yet"));
 
 
             TaskEntity? newTask = TaskEntity.FromInputDTO(taskInputDTO, projectId);
@@ -397,9 +397,9 @@ namespace AonFreelancing.Controllers.Web.v1
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
 
-            if (storedProject.IsDeleted)
-                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-                    "Cannot update a deleted project."));
+            //if (storedProject.IsDeleted)
+            //    return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
+            //        "Cannot update a deleted project."));
 
             ProjectLike? storedLike = await projectLikeService.Find(authenticatedUserId, projectId);
             if (storedLike != null && action == Constants.PROJECT_LIKE_ACTION)
@@ -562,5 +562,28 @@ namespace AonFreelancing.Controllers.Web.v1
             return Ok(CreateSuccessResponse(paginatedCommentOutDTOs));
         }
 
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPatch("{projectId}/completed")]
+        public async Task<IActionResult> MarkProjectAsCompletedAsync([FromRoute] long projectId)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
+
+            if (storedProject == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
+            if (authenticatedClientId != storedProject.ClientId)
+                return Forbid();
+            if (storedProject.Status == Constants.PROJECT_STATUS_COMPLETED)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Project is already Completed"));
+            if (storedProject.Status != Constants.PROJECT_STATUS_IN_PROGRESS)
+                return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Project is not status in progress yet"));
+
+            await projectService.CompleteProjectAsync(storedProject);
+
+            return Ok(CreateSuccessResponse("Project completed"));
+        }
     }
 }

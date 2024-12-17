@@ -366,7 +366,7 @@ namespace AonFreelancing.Migrations
                     Duration = table.Column<int>(type: "int", nullable: false),
                     Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     QualificationName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "available"),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "pending"),
                     FreelancerId = table.Column<long>(type: "bigint", nullable: true),
                     ImageFileName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -376,7 +376,7 @@ namespace AonFreelancing.Migrations
                 {
                     table.PrimaryKey("PK_Projects", x => x.Id);
                     table.CheckConstraint("CK_PRICE_TYPE", "[PriceType] IN ('fixed', 'per-hour')");
-                    table.CheckConstraint("CK_PROJECT_STATUS", "[Status] IN ('available', 'closed')");
+                    table.CheckConstraint("CK_PROJECT_STATUS", "[Status] IN ('pending', 'in-progress', 'completed')");
                     table.CheckConstraint("CK_QUALIFICATION_NAME", "[QualificationName] IN ('uiux', 'frontend', 'mobile', 'backend', 'fullstack')");
                     table.ForeignKey(
                         name: "FK_Projects_Clients_ClientId",
