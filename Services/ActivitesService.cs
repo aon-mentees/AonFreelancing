@@ -14,14 +14,16 @@ public class ActivitiesService(MainAppContext mainAppContext) : MainDbService(ma
         var clientProjects = mainAppContext.Projects.Where(p=> p.ClientId == id && !p.IsDeleted);
 
         int projectPosted = clientProjects.Count();
-        var freelancersWorkedWith = clientProjects.Where(p=> p.FreelancerId != null).Select(p=> p.FreelancerId).Distinct().Count();
-        int givenLikes = mainAppContext.ProjectLikes.Where(p=> p.LikerId == id).Count();
+        var freelancersWorkedWith = clientProjects.Where(p => p.FreelancerId != null).Select(p => p.FreelancerId).Distinct().Count();
+        int givenLikes = mainAppContext.ProjectLikes.Where(p => p.LikerId == id).Count();
+        int projectsInProgress = clientProjects.Count(p => p.Status == Constants.PROJECT_STATUS_CLOSED);
+        int projectsPending = clientProjects.Count(p => p.Status == Constants.PROJECT_STATUS_AVAILABLE);
+        int projectsCompleted = clientProjects.Count(p => p.Status == Constants.PROJECT_STATUS_COMPLETED);
 
-        return new ClientActivitiesResponseDTO(freelancersWorkedWith,
-                                                projectPosted,
-                                                givenLikes);
+        return new ClientActivitiesResponseDTO(freelancersWorkedWith, projectPosted, givenLikes, projectsPending,
+                                               projectsInProgress, projectsCompleted);
     }
-    
+
     public FreelancerActivitiesResponseDTO FreelancerActivities(long id)
     {
         var freelancerProjects = mainAppContext.Projects.Where(p=> p.FreelancerId == id && !p.IsDeleted);
