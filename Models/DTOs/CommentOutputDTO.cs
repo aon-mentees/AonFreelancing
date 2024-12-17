@@ -9,15 +9,16 @@
         public DateTime CreatedAt { get; set; }
 
         public string? ProfilePicture { get; set; }
-
-        public CommentOutputDTO(Comment comment, string commenterName, string imagesBaseUrl)
+        public string? ImageUrl {  get; set; }
+        public CommentOutputDTO(Comment comment, string commenterName, string imagesBaseUrl, string commenterProfilePicture)
         {
             Id = comment.Id;
             Content = comment.Content;
             CommenterName = commenterName;
             CommenterId = comment.UserId;
             CreatedAt = comment.CreatedAt;
-            ProfilePicture = comment.ImageUrl != null ? $"{imagesBaseUrl}/{comment.ImageUrl}" : null;
+            ImageUrl = comment.ImageUrl != null ? $"{imagesBaseUrl}/{comment.ImageUrl}" : null;
+            ProfilePicture = $"{imagesBaseUrl}/{commenterProfilePicture}";
         }
     }
 }

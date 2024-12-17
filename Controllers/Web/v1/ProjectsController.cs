@@ -129,7 +129,18 @@ namespace AonFreelancing.Controllers.Web.v1
                 p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(pl => ProjectLikeOutputDTO.FromProjectLike(pl, imagesBaseUrl)).ToList());
 
                 PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(p.Id, 0, Constants.COMMENTS_DEFAULT_PAGE_SIZE, imagesBaseUrl);
-                p.paginatedComments = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
+                p.paginatedComments = new PaginatedResult<CommentOutputDTO>();
+                foreach (var c in paginatedComments.Result)
+                {
+                    User? commenterUser = await userService.FindByIdAsync(c.UserId);
+                    if (commenterUser == null)
+                    {
+                        paginatedComments.Total--;
+                        continue;
+                    }
+                    p.paginatedComments.Result.Add(new CommentOutputDTO(c, commenterUser.Name, imagesBaseUrl, commenterUser.ProfilePicture));
+                }
+                p.paginatedComments.Total = paginatedComments.Total;
             }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
@@ -163,7 +174,18 @@ namespace AonFreelancing.Controllers.Web.v1
                 p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(pl => ProjectLikeOutputDTO.FromProjectLike(pl, imagesBaseUrl)).ToList());
 
                 PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(p.Id, 0, Constants.COMMENTS_DEFAULT_PAGE_SIZE, imagesBaseUrl);
-                p.paginatedComments = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
+                p.paginatedComments = new PaginatedResult<CommentOutputDTO>();
+                foreach (var c in paginatedComments.Result)
+                {
+                    User? commenterUser = await userService.FindByIdAsync(c.UserId);
+                    if (commenterUser == null)
+                    {
+                        paginatedComments.Total--;
+                        continue;
+                    }
+                    p.paginatedComments.Result.Add(new CommentOutputDTO(c, commenterUser.Name, imagesBaseUrl, commenterUser.ProfilePicture));
+                }
+                p.paginatedComments.Total = paginatedComments.Total;
             }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
@@ -524,7 +546,19 @@ namespace AonFreelancing.Controllers.Web.v1
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found !"));
 
             PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(projectId, page, pageSize, imagesBaseUrl);
-            PaginatedResult<CommentOutputDTO> paginatedCommentOutDTOs = new PaginatedResult<CommentOutputDTO>(paginatedComments.Total, paginatedComments.Result.Select(c => new CommentOutputDTO(c, c.User.Name, imagesBaseUrl)).ToList());
+            PaginatedResult<CommentOutputDTO> paginatedCommentOutDTOs = new PaginatedResult<CommentOutputDTO>();
+
+            foreach (var c in paginatedComments.Result)
+            {
+                User? commenterUser = await userService.FindByIdAsync(c.UserId);
+                if (commenterUser == null)
+                {
+                    paginatedComments.Total--;
+                    continue;
+                }
+                paginatedCommentOutDTOs.Result.Add(new CommentOutputDTO(c, commenterUser.Name, imagesBaseUrl, commenterUser.ProfilePicture));
+            }
+            paginatedCommentOutDTOs.Total = paginatedComments.Total;
             return Ok(CreateSuccessResponse(paginatedCommentOutDTOs));
         }
 

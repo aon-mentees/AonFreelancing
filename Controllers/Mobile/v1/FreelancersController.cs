@@ -268,24 +268,24 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            WorkExperience? storedworkExperience = await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
+            WorkExperience? storedWorkExperience = await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
 
-            if (storedworkExperience == null)
+            if (storedWorkExperience == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Work experience not found."));
 
-            if (freelancerId != storedworkExperience.FreelancerId)
+            if (freelancerId != storedWorkExperience.FreelancerId)
                 return Forbid();
 
-            storedworkExperience.JobTitle = workExperienceInputDTO.JobTitle;
-            storedworkExperience.EmployerName = workExperienceInputDTO.EmployerName;
-            storedworkExperience.EmploymentType = workExperienceInputDTO.EmploymentType;
-            storedworkExperience.IsCurrent = workExperienceInputDTO.IsCurrent;
-            storedworkExperience.StartDate = workExperienceInputDTO.StartDate;
-            storedworkExperience.EndDate = workExperienceInputDTO.EndDate;
+            storedWorkExperience.JobTitle = workExperienceInputDTO.JobTitle;
+            storedWorkExperience.EmployerName = workExperienceInputDTO.EmployerName;
+            storedWorkExperience.EmploymentType = workExperienceInputDTO.EmploymentType;
+            storedWorkExperience.IsCurrent = workExperienceInputDTO.IsCurrent;
+            storedWorkExperience.StartDate = workExperienceInputDTO.StartDate;
+            storedWorkExperience.EndDate = workExperienceInputDTO.EndDate;
 
             await freelancerService.SaveChangesAsync();
 
-            WorkExperienceOutputDTO? workExperienceDTO = WorkExperienceOutputDTO.FromWorkExperience(storedworkExperience);
+            WorkExperienceOutputDTO? workExperienceDTO = WorkExperienceOutputDTO.FromWorkExperience(storedWorkExperience);
             return Ok(CreateSuccessResponse(workExperienceDTO));
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
