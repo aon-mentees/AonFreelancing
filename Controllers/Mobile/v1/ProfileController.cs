@@ -157,6 +157,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
                     case SubmitBidNotification bidSubmissionNotification:
                         notificationOutputDTOs.Add(BidSubmissionNotificationOutputDTO.FromSubmitBidNotification(bidSubmissionNotification));
                         break;
+                    case TaskApprovalNotification taskApprovalNotification:
+                        notificationOutputDTOs.Add(TaskApprovalNotificationOutputDTO.FromTaskApprovalNotification(taskApprovalNotification));
+                        break;
+                    case TaskRejectionNotification taskRejectionNotification:
+                        notificationOutputDTOs.Add(TaskRejectionNotificationOutputDTO.FromTaskRejectionNotification(taskRejectionNotification));
+                        break;
                 }
             }
             return notificationOutputDTOs;

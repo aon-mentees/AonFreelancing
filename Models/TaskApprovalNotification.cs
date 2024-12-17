@@ -9,7 +9,7 @@
 
         public TaskApprovalNotification() { }
 
-        public TaskApprovalNotification(string title, string message, long receiverId, long projectId, long approverId, string approverName, long taskId, string? image = null)
+        public TaskApprovalNotification(string title, string message, long receiverId, string? image,long projectId, long approverId, string approverName, long taskId)
             : base(title, message, receiverId, image)
         {
             ProjectId = projectId;

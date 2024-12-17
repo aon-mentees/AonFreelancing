@@ -7,7 +7,9 @@
         public string RejectorName { get; set; }
         public long TaskId { get; set; } // spare
 
-        TaskRejectionNotificationOutputDTO(TaskRejectionNotification taskRejectionNotification) : base(taskRejectionNotification.Id, taskRejectionNotification.Title, taskRejectionNotification.Message, taskRejectionNotification.IsRead, taskRejectionNotification.CreatedAt, taskRejectionNotification.Image="lilo issue")
+        TaskRejectionNotificationOutputDTO(TaskRejectionNotification taskRejectionNotification) : base(taskRejectionNotification.Id,
+            taskRejectionNotification.Title, taskRejectionNotification.Message, taskRejectionNotification.IsRead,
+            taskRejectionNotification.CreatedAt, taskRejectionNotification.Image)
         {
             ProjectId = taskRejectionNotification.ProjectId;
             RejectorId = taskRejectionNotification.RejectorId;
