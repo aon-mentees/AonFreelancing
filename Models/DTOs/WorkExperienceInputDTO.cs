@@ -22,7 +22,7 @@ namespace AonFreelancing.Models.DTOs
         public bool IsCurrent { get; set; }
 
         [Required(ErrorMessage = "StartDate is required.")]
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
 
