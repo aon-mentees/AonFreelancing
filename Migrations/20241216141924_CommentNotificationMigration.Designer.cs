@@ -4,6 +4,7 @@ using AonFreelancing.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    partial class MainAppContextModelSnapshot : ModelSnapshot
+    [Migration("20241216141924_CommentNotificationMigration")]
+    partial class CommentNotificationMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -829,56 +832,6 @@ namespace AonFreelancing.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("SubmitBidNotification");
-
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.TaskApprovalNotification", b =>
-                {
-                    b.HasBaseType("AonFreelancing.Models.Notification");
-
-                    b.Property<long>("ApproverId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ApproverName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("ProjectId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("TaskId")
-                        .HasColumnType("bigint");
-
-                    b.HasIndex("ApproverId");
-
-                    b.HasIndex("TaskId");
-
-                    b.ToTable("TaskApprovalNotifications", (string)null);
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.TaskRejectionNotification", b =>
-                {
-                    b.HasBaseType("AonFreelancing.Models.Notification");
-
-                    b.Property<long>("ProjectId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("RejectorId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RejectorName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("TaskId")
-                        .HasColumnType("bigint");
-
-                    b.HasIndex("RejectorId");
-
-                    b.HasIndex("TaskId");
-
-                    b.ToTable("TaskRejectionNotifications", (string)null);
-
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
@@ -1221,48 +1174,6 @@ namespace AonFreelancing.Migrations
                     b.HasOne("AonFreelancing.Models.Project", null)
                         .WithMany()
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.TaskApprovalNotification", b =>
-                {
-                    b.HasOne("AonFreelancing.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("ApproverId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AonFreelancing.Models.Notification", null)
-                        .WithOne()
-                        .HasForeignKey("AonFreelancing.Models.TaskApprovalNotification", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AonFreelancing.Models.TaskEntity", null)
-                        .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AonFreelancing.Models.TaskRejectionNotification", b =>
-                {
-                    b.HasOne("AonFreelancing.Models.Notification", null)
-                        .WithOne()
-                        .HasForeignKey("AonFreelancing.Models.TaskRejectionNotification", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AonFreelancing.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("RejectorId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AonFreelancing.Models.TaskEntity", null)
-                        .WithMany()
-                        .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });

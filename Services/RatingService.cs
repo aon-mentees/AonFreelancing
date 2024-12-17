@@ -69,16 +69,16 @@ namespace AonFreelancing.Services
                 double avgRating = ratings.Average(r => r.RatingValue);
                 int totalRating = ratings.Count;
 
-                int highCount = ratings.Count(r => r.RatingValue >= 8);                      // Ratings 8-10 are high
-                int midCount = ratings.Count(r => r.RatingValue >= 4 && r.RatingValue < 8); // Ratings 4-7.9 are mid
-                int lowCount = ratings.Count(r => r.RatingValue < 4);                       // Ratings 1-3.9 are low
+                double highCount = ratings.Count(r => r.RatingValue >= 8);                      // Ratings 8-10 are high
+                double midCount = ratings.Count(r => r.RatingValue >= 4 && r.RatingValue < 8); // Ratings 4-7.9 are mid
+                double lowCount = ratings.Count(r => r.RatingValue < 4);                       // Ratings 1-3.9 are low
 
                 //string highPercentage = $"{(double)highCount / totalRating * 100:0.##}%";
                 //string midPercentage = $"{(double)midCount / totalRating * 100:0.##}%";
                 //string lowPercentage = $"{(double)lowCount / totalRating * 100:0.##}%";
-                double highPercentage = Math.Round((double)(highCount / totalRating) * 100, 2);
-                double midPercentage = Math.Round((double)(midCount / totalRating) * 100, 2);
-                double lowPercentage = Math.Round((double)(lowCount / totalRating) * 100, 2);
+                double highPercentage = Math.Round((highCount / totalRating) * 100, 2);
+                double midPercentage = Math.Round((midCount / totalRating) * 100, 2);
+                double lowPercentage = Math.Round((lowCount / totalRating) * 100, 2);
 
                 return new RatingSummaryDTO(avgRating, highPercentage, midPercentage, lowPercentage, totalRating);
             }
