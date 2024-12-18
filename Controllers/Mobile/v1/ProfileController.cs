@@ -237,17 +237,30 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
-        //[HttpGet("profile-picture/{userId}")]
-        //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
-        //{
-        //    User? storedUser = await userService.FindByIdAsync(userId);
-        //    if (storedUser== null)
-        //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
 
-        //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
-        //    string imageUrl = $"{imagesBaseUrl}/{storedUser.ProfilePicture}";
-        //    return Ok(CreateSuccessResponse(imageUrl));
-        //}
-    }
+        [HttpDelete("delete-account")]
+        public async Task<IActionResult> DeleteUserAccountAsync()
+        {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
+            if (authenticatedUser == null)
+                return Unauthorized();
+            authenticatedUser.IsDeleted = true;
+            authenticatedUser.DeletedAt = DateTime.Now;
+            await profileService.SaveDeletedAccountAsync();
+            return Ok(CreateSuccessResponse( "Account deleted Successfuly"));
+        }
+            //[HttpGet("profile-picture/{userId}")]
+            //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
+            //{
+            //    User? storedUser = await userService.FindByIdAsync(userId);
+            //    if (storedUser== null)
+            //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+
+            //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+            //    string imageUrl = $"{imagesBaseUrl}/{storedUser.ProfilePicture}";
+            //    return Ok(CreateSuccessResponse(imageUrl));
+            //}
+        }
 
 }

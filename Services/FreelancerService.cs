@@ -11,7 +11,7 @@ namespace AonFreelancing.Services
 
         public async Task<Freelancer?> FindFreelancerByIdAsync(long freelancerId)
         {
-            return await _mainAppContext.Users.OfType<Freelancer>().AsNoTracking()
+            return await _mainAppContext.Users.OfType<Freelancer>()
                 .FirstOrDefaultAsync(f => f.Id == freelancerId && !f.IsDeleted);
         }
         public async Task<bool> IsFreelancerExistsAsync(long freelancerId)

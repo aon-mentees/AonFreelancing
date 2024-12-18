@@ -54,6 +54,7 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet]
         public async Task<IActionResult> GetRatingsForUser([FromQuery] long userId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.RATING_DEFAULT_PAGE_SIZE)
         {
+
             IEnumerable<RatingOutputDTO> storedRatings = (await _ratingService.GetRatingsForUserAsync(userId, page, pageSize)).Select(r => new RatingOutputDTO(r));
             return Ok(CreateSuccessResponse(storedRatings));
         }

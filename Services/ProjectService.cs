@@ -49,6 +49,13 @@ namespace AonFreelancing.Services
                 .Where(p => !p.IsDeleted)
                 .ToListAsync();
         }
+        public async Task<Project?> FindProjectTasks(long authenticatedUserId)
+        {
+            return await _mainAppContext.Projects.Include(p => p.Tasks)
+                                                        .Where( p => p.Id == authenticatedUserId)
+                                                        .Where( p => !p.IsDeleted)
+                                                        .FirstOrDefaultAsync();
+        }
         public async Task<int> CountProjectsByClientIdAsync(long clientId)
         {
             return await _mainAppContext.Projects.CountAsync(p => p.ClientId == clientId && !p.IsDeleted);
@@ -151,8 +158,7 @@ namespace AonFreelancing.Services
 
         public async Task<Project?> FindProjectAsync(long projectId)
         {
-            return await _mainAppContext.Projects
-                .Where(p => p.Id == projectId && !p.IsDeleted).FirstOrDefaultAsync();
+            return await _mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
         }
 
         public async Task<PaginatedResult<Project>> FindProjectsByClientIdWithTasksAndClient(long clientId, int pageNumber, int pageSize, string status)

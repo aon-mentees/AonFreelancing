@@ -320,10 +320,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProjectDetailsAsync(long id)
         {
-            var storedProject = await mainAppContext.Projects.Include(p => p.Tasks)
-                                                        .Where(p => p.Id == id)
-                                                        .Where(p => !p.IsDeleted)
-                                                        .FirstOrDefaultAsync();
+            var storedProject = await projectService.FindProjectTasks(id);
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse("404", "Project not found."));
@@ -351,13 +348,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
         public async Task<IActionResult> CreateTaskAsync(long projectId, [FromBody] TaskInputDTO taskInputDTO)
         {
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
-
-            //if (storedProject.IsDeleted)
-            //    return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-            //        "Cannot update a deleted project."));
 
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
@@ -377,14 +370,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            var claimsIdentity = (ClaimsIdentity)HttpContext.User.Identity;
-            long authenticatedUserId = authService.GetUserId(claimsIdentity);
-            string authenticatedLikerName = authService.GetNameOfUser(claimsIdentity);
-            User? likerUser = await userManager.FindByIdAsync(authenticatedUserId.ToString());
+
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
+            string authenticatedLikerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+
+            User? likerUser = await userManager.FindByIdAsync(authenticatedClientId.ToString());
             if (likerUser == null)
                 return Unauthorized();
 
-            Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
@@ -393,20 +388,22 @@ namespace AonFreelancing.Controllers.Mobile.v1
             //     return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
             //         "Cannot update a deleted project."));
 
-            ProjectLike? storedLike = await projectLikeService.Find(authenticatedUserId, projectId);
+            ProjectLike? storedLike = await projectLikeService.Find(authenticatedClientId, projectId);
             if (storedLike != null && action == Constants.PROJECT_LIKE_ACTION)
                 return Conflict(CreateErrorResponse("409", "you cannot like the same project twice"));
 
             if (storedLike != null && action == Constants.PROJECT_UNLIKE_ACTION)
                 return await UnLikeProjectAsync(storedLike);
             if (storedLike == null && action == Constants.PROJECT_LIKE_ACTION)
-                return await LikeProjectAsync(storedProject, authenticatedUserId, authenticatedLikerName, likerUser.ProfilePicture);
+                return await LikeProjectAsync(storedProject, authenticatedClientId, authenticatedLikerName, likerUser.ProfilePicture);
 
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "no like found to be deleted"));
         }
         [HttpGet("{projectId}/likes/count")]
         public async Task<IActionResult> GetProjectLikesCount([FromRoute] long projectId)
         {
+            //need to be checked for account softdelete
+
             if (!await projectService.IsProjectExistsAsync(projectId))
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
             return Ok(CreateSuccessResponse(new { likesCount = await projectLikeService.CountLikesForProjectAsync(projectId) }));
@@ -437,7 +434,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return base.CustomBadRequest();
 
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
+
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
@@ -457,6 +455,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
         private async Task<IActionResult> LikeProjectAsync(Project storedProject, long likerId, string likerName, string? likerProfilePicture)
         {
+         
             await projectLikeService.LikeProjectAsync(likerId, storedProject.Id, likerName);
 
             string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
@@ -501,13 +500,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (authenticatedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
 
-            Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
-
-            // if (storedProject.IsDeleted)
-            //     return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-            //         "Cannot update a deleted project."));
 
             Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
             if (commentInputDTO.ImageFile != null)
@@ -532,7 +527,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         public async Task<IActionResult> GetProjectCommentsAsync([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE)
         {
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
-            var projectExists = await mainAppContext.Projects.AnyAsync(p => p.Id == projectId && !p.IsDeleted);
+            var projectExists = await projectService.IsProjectExistsAsync(projectId);
 
             if (!projectExists)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found !"));

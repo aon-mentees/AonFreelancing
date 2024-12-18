@@ -126,7 +126,7 @@ namespace AonFreelancing.Controllers.Web.v1
                 if (storedUser.IsDeleted)
                 {
                     var canReactivate = await _authService.IsAccountPermanentlyDeletedAsync(storedUser);
-                    if (!canReactivate)
+                    if (canReactivate)
                         return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Your account has been permanently deleted."));
                     storedUser.IsDeleted = false;
                     storedUser.DeletedAt = null;

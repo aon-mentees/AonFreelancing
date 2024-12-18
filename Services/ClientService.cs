@@ -11,7 +11,7 @@ namespace AonFreelancing.Services
        
         public async Task<Client?> FindClientByIdAsync(long clientId)
         { 
-            return await _mainAppContext.Users.OfType<Client>().AsNoTracking()
+            return await _mainAppContext.Users.OfType<Client>()
                 .FirstOrDefaultAsync(c => c.Id == clientId && !c.IsDeleted);
         }
     }

@@ -237,6 +237,18 @@ namespace AonFreelancing.Controllers.Web.v1
 
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
+        [HttpDelete("delete-account")]
+        public async Task<IActionResult> DeleteUserAccountAsync()
+        {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
+            if (authenticatedUser == null)
+                return Unauthorized();
+            authenticatedUser.IsDeleted = true;
+            authenticatedUser.DeletedAt = DateTime.Now;
+            await profileService.SaveDeletedAccountAsync();
+            return Ok(CreateSuccessResponse("Account deleted Successfuly"));
+        }
         //[HttpGet("profile-picture/{userId}")]
         //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
         //{

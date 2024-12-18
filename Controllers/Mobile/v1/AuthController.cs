@@ -123,15 +123,15 @@ namespace AonFreelancing.Controllers.Mobile.v1
             {
                 User? storedUser = await _authService.FindUserByEmailAsync(req.Email);
                 if (!storedUser.PhoneNumberConfirmed)
-                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),"Verify Your Account First"));
+                    return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Verify Your Account First"));
                 if (storedUser.IsDeleted)
                 {
                     var canReactivate = await _authService.IsAccountPermanentlyDeletedAsync(storedUser);
-                    if (!canReactivate)
+                    if (canReactivate)
                         return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Your account has been permanently deleted."));
                     storedUser.IsDeleted = false;
                     storedUser.DeletedAt = null;
-                   await _userService.SaveChangesAsync();
+                    await _userService.SaveChangesAsync();
                 }
                 string role = await _authService.FindUserRoleAsync(storedUser);
                 string token = await _authService.GenerateAuthToken(storedUser, role);

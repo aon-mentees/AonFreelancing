@@ -15,7 +15,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/skills")]
     [ApiController]
-    public class SkillsController (MainAppContext mainAppContext, SkillsService skillsService): BaseController
+    public class SkillsController (MainAppContext mainAppContext, SkillsService skillsService,FreelancerService freelancerService): BaseController
     {
         [Authorize(Roles =Constants.USER_TYPE_FREELANCER)]
         [HttpPost]
@@ -42,7 +42,7 @@ namespace AonFreelancing.Controllers.Web.v1
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             long authenticatedUserId = Convert.ToInt64(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-            Skill? storedSkill= mainAppContext.Skills.Where(s=>s.Id == id).FirstOrDefault();
+            Skill? storedSkill= await skillsService.FindSkillByIdAsync(id);
             if (storedSkill == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Skill not found"));
             if (authenticatedUserId != storedSkill.FreelancerId)
@@ -56,6 +56,8 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("{freelancerId}/skills")]
         public async Task<IActionResult> GetSkillsByFreelancerIdAsync(long freelancerId, int page = 0, int pageSize = Constants.SKILLS_DEFAULT_PAGE_SIZE)
         {
+            if(await freelancerService.FindFreelancerByIdAsync(freelancerId)==null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "freelancer not found"));
             PaginatedResult<Skill> paginatedSkills = await skillsService.FindSkillsByFreelancerIdAsync(freelancerId, page, pageSize);
             List<SkillOutputDTO> skillOutputDTOs = paginatedSkills.Result.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
             PaginatedResult<SkillOutputDTO> paginatedSkillsOutputDTO = new PaginatedResult<SkillOutputDTO>(paginatedSkills.Total, skillOutputDTOs);
