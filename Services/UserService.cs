@@ -22,13 +22,16 @@ public class UserService : MainDbService
         _userManager = userManager;
     }
 
-    public async Task<User?> FindByIdAsync(long id) => await _mainAppContext.Users.FindAsync(id);
+    public async Task<User?> FindByIdAsync(long id)
+    {
+        return await _mainAppContext.Users.FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
+    }
     public async Task<IEnumerable<User>> FindAllAsync() => await _mainAppContext.Users.ToListAsync();
-    public async Task<User?> FindByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.Users.Where(tu => tu.PhoneNumber == phoneNumber).FirstOrDefaultAsync();
+    public async Task<User?> FindByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.Users.Where(tu => tu.PhoneNumber == phoneNumber  ).FirstOrDefaultAsync();
     public User Create(UserRegistrationRequest request) => new User(request);
     public async Task<User?> FindByNormalizedEmailAsync(string normalizedEmail) => await _mainAppContext.Users.Where(u => u.NormalizedEmail == normalizedEmail).FirstOrDefaultAsync();
-    public async Task<bool> IsExistsByNormalizedEmailAsync(string normalizedEmail) => await _mainAppContext.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail);
-    public async Task<bool> IsExistsByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
+    public async Task<bool> IsExistsByNormalizedEmailAsync(string normalizedEmail) => await _mainAppContext.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail && !u.IsDeleted );
+    public async Task<bool> IsExistsByPhoneNumberAsync(string phoneNumber) => await _mainAppContext.Users.AnyAsync(u => u.PhoneNumber == phoneNumber && !u.IsDeleted);
 
     public async Task<User?> FindByEmailAsync(string email) => await _mainAppContext.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == email.ToUpper());
     public async Task<bool> IsUserNameTakenAsync(string newUserName) => await _mainAppContext.Users.AnyAsync(u => u.UserName == newUserName);

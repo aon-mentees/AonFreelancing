@@ -26,13 +26,13 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-
-            var storedUser = (Freelancer?) await userManager.GetUserAsync(HttpContext.User);
-            if (storedUser == null)
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            var storedFreelancer = await freelancerService.FindFreelancerByIdAsync(freelancerId);
+            if (storedFreelancer == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
 
-            storedUser.Name = freelancerUpdateDTO.Name;
-            storedUser.QualificationName = freelancerUpdateDTO.QualificationName;
+            storedFreelancer.Name = freelancerUpdateDTO.Name;
+            storedFreelancer.QualificationName = freelancerUpdateDTO.QualificationName;
 
             await mainAppContext.SaveChangesAsync();
 
@@ -225,7 +225,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [HttpGet("{id}/work-experience")]
-        public async Task<IActionResult> GetWorkExperiencesAsync([FromRoute] long id, int page = 0, int pageSize = Constants.WORK_EXPERIENCES_DEFAULT_PAGE_SIZE) 
+        public async Task<IActionResult> GetWorkExperiencesAsync([FromRoute] long id, int page = 0, int pageSize = Constants.WORK_EXPERIENCES_DEFAULT_PAGE_SIZE)
         {
             bool isExists = await freelancerService.IsFreelancerExistsAsync(id);
 
@@ -268,7 +268,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            WorkExperience? storedWorkExperience= await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
+            WorkExperience? storedWorkExperience = await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
 
             if (storedWorkExperience == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Work experience not found."));

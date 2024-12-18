@@ -26,13 +26,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-
-            var storedUser = (Freelancer?)await userManager.GetUserAsync(HttpContext.User);
-            if (storedUser == null)
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            var storedFreelancer = await freelancerService.FindFreelancerByIdAsync(freelancerId);
+            if (storedFreelancer == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
 
-            storedUser.Name = freelancerUpdateDTO.Name;
-            storedUser.QualificationName = freelancerUpdateDTO.QualificationName;
+            storedFreelancer.Name = freelancerUpdateDTO.Name;
+            storedFreelancer.QualificationName = freelancerUpdateDTO.QualificationName;
 
             await mainAppContext.SaveChangesAsync();
 

@@ -225,7 +225,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
-            PaginatedResult<Bid> paginatedBids = await bidService.FindByProjectIdWithFreelancer(projectId, page, pageSize);
+            PaginatedResult<Bid> paginatedBids = await bidService.FindBidsByProjectIdWithFreelancerAsync(projectId, page, pageSize);
             List<BidOutputDTO> bidOutputDTOs = paginatedBids.Result.Select(b => BidOutputDTO.FromBid(b, imagesBaseUrl)).ToList();
             PaginatedResult<BidOutputDTO> paginatedBidOutputDTOs = new PaginatedResult<BidOutputDTO>(paginatedBids.Total, bidOutputDTOs);
 
@@ -245,10 +245,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
 
-            //if (storedProject.IsDeleted)
-            //    return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-            //        "cannot approve a bid for project that is deleted"));
-
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
             if (authenticatedClientId != storedProject.ClientId)
@@ -256,12 +252,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Pending."));
             
-            Bid? storedBid = storedProject.Bids.FirstOrDefault(b => b.Id == bidId);
+            Bid? storedBid = storedProject.Bids.FirstOrDefault(b => b.Id == bidId );
             if (storedBid == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found"));
             if (storedBid.Status != Constants.BIDS_STATUS_PENDING)
                 return Forbid();
-
+            
             await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 
             // Notification 
@@ -290,10 +286,6 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 return Unauthorized();
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
-
-            // if (storedProject.IsDeleted)
-            //     return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-            //         "cannot reject a bid for project that is deleted"));
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));

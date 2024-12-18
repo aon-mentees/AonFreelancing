@@ -39,6 +39,16 @@ namespace AonFreelancing.Services
                                                                         .ToListAsync();
             return new PaginatedResult<Project>(await CountProjectsByClientIdAsync(clientId), storedProjects);
         }
+        public async Task<List<Project>> FindProjectWithFreelancerAndTasks(long authenticatedUserId)
+        {
+          return  await _mainAppContext.Projects
+                .AsNoTracking()
+                .Include(p => p.Freelancer)
+                .Include(p => p.Tasks)
+                .Where(p => p.ClientId == authenticatedUserId || p.FreelancerId == authenticatedUserId)
+                .Where(p => !p.IsDeleted)
+                .ToListAsync();
+        }
         public async Task<int> CountProjectsByClientIdAsync(long clientId)
         {
             return await _mainAppContext.Projects.CountAsync(p => p.ClientId == clientId && !p.IsDeleted);

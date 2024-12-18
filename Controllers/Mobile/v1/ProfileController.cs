@@ -19,7 +19,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/profiles")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService,ProfileService profileService, PushNotificationService pushNotificationService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService,
+        NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService
+        , UserService userService,ProfileService profileService, PushNotificationService pushNotificationService,
+        FreelancerService freelancerService,ClientService clientService)
         : BaseController
     {
 
@@ -33,10 +36,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (authenticatedUser == null)
                 return Unauthorized();
        
-            Freelancer? storedFreelancer = await mainAppContext.Users.OfType<Freelancer>()
-                                                                     .AsNoTracking()
-                                                                     .Where(f => f.Id == id)
-                                                                     .FirstOrDefaultAsync();
+            Freelancer? storedFreelancer = await freelancerService.FindFreelancerByIdAsync(id);
             if (storedFreelancer != null)
             {
                 FreelancerResponseDTO storedFreelancerDTO = FreelancerResponseDTO.FromFreelancer(storedFreelancer, imagesBaseUrl);
@@ -45,12 +45,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 await HandleProfileVisitNotificationAsync(authenticatedUser, storedFreelancer);
                 return Ok(CreateSuccessResponse(storedFreelancerDTO));
             }
-            Client? storedClient = await mainAppContext.Users
-                .OfType<Client>()
-                .AsNoTracking()
-                .Where(c => c.Id == id)
-                .Include(c => c.Projects)
-                .FirstOrDefaultAsync();
+            Client? storedClient = await clientService.FindClientByIdAsync(id);
 
             if (storedClient != null)
             {
@@ -82,13 +77,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            var storedProjects = await mainAppContext.Projects
-                .AsNoTracking()
-                .Include(p => p.Freelancer)
-                .Include(p => p.Tasks)
-                .Where(p => p.ClientId == authenticatedUserId || p.FreelancerId == authenticatedUserId)
-                .Where(p => !p.IsDeleted)
-                .ToListAsync();
+            var storedProjects = await projectService.FindProjectWithFreelancerAndTasks(authenticatedUserId);
 
             var storedTasks = storedProjects.SelectMany(p => p.Tasks).ToList();
 
@@ -236,7 +225,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            Client? storedClient =await profileService.FindClientAsync(clientId);
+            Client? storedClient =await clientService.FindClientByIdAsync(clientId);
             if (storedClient == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
 

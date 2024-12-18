@@ -225,7 +225,7 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
-            PaginatedResult<Bid> paginatedBids = await bidService.FindByProjectIdWithFreelancer(projectId, page, pageSize);
+            PaginatedResult<Bid> paginatedBids = await bidService.FindBidsByProjectIdWithFreelancerAsync(projectId, page, pageSize);
             List<BidOutputDTO> bidOutputDTOs = paginatedBids.Result.Select(b => BidOutputDTO.FromBid(b, imagesBaseUrl)).ToList();
             PaginatedResult<BidOutputDTO> paginatedBidOutputDTOs = new PaginatedResult<BidOutputDTO>(paginatedBids.Total, bidOutputDTOs);
 

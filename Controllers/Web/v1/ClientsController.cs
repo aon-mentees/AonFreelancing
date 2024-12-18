@@ -17,10 +17,11 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/clients")]
     [ApiController]
+
     public class ClientsController(
         MainAppContext mainAppContext, ActivitiesService activitiesService, UserService userService,
         UserManager<User> userManager, ProjectService projectService, RatingService ratingService,
-        AuthService authService, RoleManager<ApplicationRole> roleManager) : BaseController
+        AuthService authService, RoleManager<ApplicationRole> roleManager, ClientService clientService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPatch]
@@ -28,13 +29,13 @@ namespace AonFreelancing.Controllers.Web.v1
         {
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-
-            var storedUser = (Client?)await userManager.GetUserAsync(HttpContext.User);
-            if (storedUser == null)
+            long clientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            var storedClient = await clientService.FindClientByIdAsync(clientId);
+            if (storedClient == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
 
-            storedUser.Name = clientUpdateDTO.Name;
-            storedUser.CompanyName = clientUpdateDTO.CompanyName;
+            storedClient.Name = clientUpdateDTO.Name;
+            storedClient.CompanyName = clientUpdateDTO.CompanyName;
 
             await mainAppContext.SaveChangesAsync();
 
