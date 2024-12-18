@@ -35,6 +35,7 @@ namespace AonFreelancing.Controllers.Web.v1
 
             Freelancer? storedFreelancer = await mainAppContext.Users.OfType<Freelancer>()
                                                                      .AsNoTracking()
+                                                                     .Include(f => f.Projects)
                                                                      .Where(f => f.Id == id)
                                                                      .FirstOrDefaultAsync();
             if (storedFreelancer != null)

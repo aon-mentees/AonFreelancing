@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class initmaybe : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -422,7 +422,7 @@ namespace AonFreelancing.Migrations
                     EmployerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     EmploymentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsCurrent = table.Column<bool>(type: "bit", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
