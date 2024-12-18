@@ -1,9 +1,11 @@
-﻿using AonFreelancing.Models;
+﻿using AonFreelancing.Contexts;
+using AonFreelancing.Models;
 using AonFreelancing.Models.DTOs;
 using AonFreelancing.Models.Responses;
 using AonFreelancing.Services;
 using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -12,9 +14,31 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/freelancers")]
     [ApiController]
-    public class FreelancersController(FreelancerService freelancerService, AuthService authService, UserService userService, ActivitiesService activitiesService)
+    public class FreelancersController(
+        FreelancerService freelancerService, AuthService authService,
+        UserService userService, ActivitiesService activitiesService,
+        UserManager<User> userManager, MainAppContext mainAppContext)
         : BaseController
     {
+        [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
+        [HttpPatch]
+        public async Task<IActionResult> UpdateFreelancerAsync([FromBody] FreelancerUpdateDTO freelancerUpdateDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            var storedUser = (Freelancer?)await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
+
+            storedUser.Name = freelancerUpdateDTO.Name;
+            storedUser.QualificationName = freelancerUpdateDTO.QualificationName;
+
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Freelancer updated successfully"));
+        }
+
         [HttpGet("{id}/certifications")]
         public async Task<IActionResult> GetAllCertificationsAsync([FromRoute] long id, int page = 0, int pageSize = Constants.CERTIFICATION_DEFAULT_PAGE_SIZE)
         {
@@ -118,7 +142,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("education")]
-        public async Task<IActionResult> AddEducationAsync([FromForm] EducationInputDTO educationInputDTO)
+        public async Task<IActionResult> AddEducationAsync([FromBody] EducationInputDTO educationInputDTO)
         {
 
             if (!ModelState.IsValid)
@@ -143,7 +167,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
 
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("education/{educationId}")]
-        public async Task<IActionResult> UpdateEducationAsync([FromForm] EducationInputDTO educationInputDTO, [FromRoute] long educationId)
+        public async Task<IActionResult> UpdateEducationAsync([FromBody] EducationInputDTO educationInputDTO, [FromRoute] long educationId)
         {
 
             if (!ModelState.IsValid)
@@ -216,7 +240,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost("work-experience")]
-        public async Task<IActionResult> AddWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO)
+        public async Task<IActionResult> AddWorkExperinceAsync([FromBody] WorkExperienceInputDTO workExperienceInputDTO)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
@@ -237,31 +261,31 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPut("work-experience/{workExperienceId}")]
-        public async Task<IActionResult> UpdateWorkExperinceAsync([FromForm] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
+        public async Task<IActionResult> UpdateWorkExperinceAsync([FromBody] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            WorkExperience? storedworkExperience = await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
+            WorkExperience? storedWorkExperience = await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
 
-            if (storedworkExperience == null)
+            if (storedWorkExperience == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Work experience not found."));
 
-            if (freelancerId != storedworkExperience.FreelancerId)
+            if (freelancerId != storedWorkExperience.FreelancerId)
                 return Forbid();
 
-            storedworkExperience.JobTitle = workExperienceInputDTO.JobTitle;
-            storedworkExperience.EmployerName = workExperienceInputDTO.EmployerName;
-            storedworkExperience.EmploymentType = workExperienceInputDTO.EmploymentType;
-            storedworkExperience.IsCurrent = workExperienceInputDTO.IsCurrent;
-            storedworkExperience.StartDate = workExperienceInputDTO.StartDate;
-            storedworkExperience.EndDate = workExperienceInputDTO.EndDate;
+            storedWorkExperience.JobTitle = workExperienceInputDTO.JobTitle;
+            storedWorkExperience.EmployerName = workExperienceInputDTO.EmployerName;
+            storedWorkExperience.EmploymentType = workExperienceInputDTO.EmploymentType;
+            storedWorkExperience.IsCurrent = workExperienceInputDTO.IsCurrent;
+            storedWorkExperience.StartDate = workExperienceInputDTO.StartDate;
+            storedWorkExperience.EndDate = workExperienceInputDTO.EndDate;
 
             await freelancerService.SaveChangesAsync();
 
-            WorkExperienceOutputDTO? workExperienceDTO = WorkExperienceOutputDTO.FromWorkExperience(storedworkExperience);
+            WorkExperienceOutputDTO? workExperienceDTO = WorkExperienceOutputDTO.FromWorkExperience(storedWorkExperience);
             return Ok(CreateSuccessResponse(workExperienceDTO));
         }
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]

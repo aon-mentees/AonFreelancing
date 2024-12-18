@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AonFreelancing.Migrations
 {
     [DbContext(typeof(MainAppContext))]
-    [Migration("20241216141924_CommentNotificationMigration")]
-    partial class CommentNotificationMigration
+    [Migration("20241217175214_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -280,6 +280,9 @@ namespace AonFreelancing.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -294,6 +297,9 @@ namespace AonFreelancing.Migrations
 
                     b.Property<string>("ImageFileName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("PriceType")
                         .ValueGeneratedOnAdd()
@@ -311,7 +317,7 @@ namespace AonFreelancing.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("available");
+                        .HasDefaultValue("pending");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -327,7 +333,7 @@ namespace AonFreelancing.Migrations
                         {
                             t.HasCheckConstraint("CK_PRICE_TYPE", "[PriceType] IN ('fixed', 'per-hour')");
 
-                            t.HasCheckConstraint("CK_PROJECT_STATUS", "[Status] IN ('available', 'closed')");
+                            t.HasCheckConstraint("CK_PROJECT_STATUS", "[Status] IN ('pending', 'in-progress', 'completed')");
 
                             t.HasCheckConstraint("CK_QUALIFICATION_NAME", "[QualificationName] IN ('uiux', 'frontend', 'mobile', 'backend', 'fullstack')");
                         });
@@ -744,7 +750,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("BidId");
 
-                    b.ToTable("BidApprovalNotification", (string)null);
+                    b.ToTable("BidApprovalNotifications", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.BidRejectionNotification", b =>
@@ -768,7 +774,7 @@ namespace AonFreelancing.Migrations
 
                     b.HasIndex("RejectorId");
 
-                    b.ToTable("BidRejectionNotification", (string)null);
+                    b.ToTable("BidRejectionNotifications", (string)null);
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.CommentNotification", b =>
@@ -813,6 +819,22 @@ namespace AonFreelancing.Migrations
                     b.ToTable("LikeNotifications", (string)null);
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.ProfileVisitNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("VisitorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("VisitorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasIndex("VisitorId");
+
+                    b.ToTable("ProfileVisitNotifications", (string)null);
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.SubmitBidNotification", b =>
                 {
                     b.HasBaseType("AonFreelancing.Models.Notification");
@@ -834,6 +856,54 @@ namespace AonFreelancing.Migrations
                     b.ToTable("SubmitBidNotification");
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.TaskApprovalNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("ApproverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ApproverName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TaskId")
+                        .HasColumnType("bigint");
+
+                    b.HasIndex("ApproverId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("TaskApprovalNotifications", (string)null);
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.TaskRejectionNotification", b =>
+                {
+                    b.HasBaseType("AonFreelancing.Models.Notification");
+
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RejectorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RejectorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TaskId")
+                        .HasColumnType("bigint");
+
+                    b.HasIndex("RejectorId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("TaskRejectionNotifications", (string)null);
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.Client", b =>
                 {
                     b.HasBaseType("AonFreelancing.Models.User");
@@ -849,7 +919,13 @@ namespace AonFreelancing.Migrations
                 {
                     b.HasBaseType("AonFreelancing.Models.User");
 
-                    b.ToTable("Freelancers", (string)null);
+                    b.Property<string>("QualificationName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Freelancers", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_FREELANCER_QUALIFICATION_NAME", "[QualificationName] IN ('uiux', 'frontend', 'mobile', 'backend', 'fullstack')");
+                        });
                 });
 
             modelBuilder.Entity("AonFreelancing.Models.SystemUser", b =>
@@ -1157,6 +1233,21 @@ namespace AonFreelancing.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.ProfileVisitNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.ProfileVisitNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.SubmitBidNotification", b =>
                 {
                     b.HasOne("AonFreelancing.Models.Freelancer", null)
@@ -1174,6 +1265,48 @@ namespace AonFreelancing.Migrations
                     b.HasOne("AonFreelancing.Models.Project", null)
                         .WithMany()
                         .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.TaskApprovalNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("ApproverId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.TaskApprovalNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.TaskEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.TaskRejectionNotification", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.Notification", null)
+                        .WithOne()
+                        .HasForeignKey("AonFreelancing.Models.TaskRejectionNotification", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("RejectorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AonFreelancing.Models.TaskEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });

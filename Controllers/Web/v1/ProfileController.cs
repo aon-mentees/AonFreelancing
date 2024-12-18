@@ -19,36 +19,63 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/profiles")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService,ProfileService profileService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService, ProfileService profileService, PushNotificationService pushNotificationService)
         : BaseController
     {
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
-            FreelancerResponseDTO? storedFreelancerDTO = await mainAppContext.Users
-                .OfType<Freelancer>()
-                .Include(f => f.Skills)
-                .Where(f => f.Id == id)
-                .Select(f => FreelancerResponseDTO.FromFreelancer(f,imagesBaseUrl))
-                .FirstOrDefaultAsync();
 
-            if (storedFreelancerDTO != null)
+            if (authenticatedUser == null)
+                return Unauthorized();
+
+            Freelancer? storedFreelancer = await mainAppContext.Users.OfType<Freelancer>()
+                                                                     .AsNoTracking()
+                                                                     .Where(f => f.Id == id)
+                                                                     .FirstOrDefaultAsync();
+            if (storedFreelancer != null)
+            {
+                FreelancerResponseDTO storedFreelancerDTO = FreelancerResponseDTO.FromFreelancer(storedFreelancer, imagesBaseUrl);
+                //Notifications logic
+                if (authenticatedUser.Id != storedFreelancer.Id)
+                    await HandleProfileVisitNotificationAsync(authenticatedUser, storedFreelancer);
                 return Ok(CreateSuccessResponse(storedFreelancerDTO));
-
-            ClientResponseDTO? storedClientDTO = await mainAppContext.Users
+            }
+            Client? storedClient = await mainAppContext.Users
                 .OfType<Client>()
+                .AsNoTracking()
                 .Where(c => c.Id == id)
                 .Include(c => c.Projects)
-                .Select(c => ClientResponseDTO.FromClient(c, imagesBaseUrl))
                 .FirstOrDefaultAsync();
 
-            if (storedClientDTO != null)
+            if (storedClient != null)
+            {
+                storedClient.Projects = storedClient.Projects.Where(p => !p.IsDeleted && p.StartDate != null).ToList();
+                var storedClientDTO = ClientResponseDTO.FromClient(storedClient, imagesBaseUrl);
+                //Notifications logic
+                if (authenticatedUser.Id != storedClient.Id)
+                    await HandleProfileVisitNotificationAsync(authenticatedUser, storedClient);
                 return Ok(CreateSuccessResponse(storedClientDTO));
-
+            }
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "NotFound"));
         }
+        private async Task HandleProfileVisitNotificationAsync(User visitorUser, User visitedUser)
+        {
+            string notificationMessage = string.Format(PROFILE_VISIT_NOTIFICATION_MESSAGE_FORMAT, visitorUser.Name);
+            string notificationTitle = PROFILE_VISIT_NOTIFICATION_TITLE;
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{visitorUser.ProfilePicture}";
 
+            var profileVisitNotification = new ProfileVisitNotification(notificationTitle, notificationMessage, visitedUser.Id, imageUrl, visitorUser.Id, visitorUser.Name);
+
+            await notificationService.CreateAsync(profileVisitNotification);
+            await pushNotificationService.SendProfileVisitNotification(
+                ProfileVisitNotificationOutputDTO.FromVisitNotification(profileVisitNotification),
+                profileVisitNotification.ReceiverId);
+        }
         [HttpGet("statistics")]
         public async Task<IActionResult> GetUserStatisticsAsync()
         {
@@ -59,6 +86,7 @@ namespace AonFreelancing.Controllers.Web.v1
                 .Include(p => p.Freelancer)
                 .Include(p => p.Tasks)
                 .Where(p => p.ClientId == authenticatedUserId || p.FreelancerId == authenticatedUserId)
+                .Where(p => !p.IsDeleted)
                 .ToListAsync();
 
             var storedTasks = storedProjects.SelectMany(p => p.Tasks).ToList();
@@ -67,7 +95,7 @@ namespace AonFreelancing.Controllers.Web.v1
                                                                   TasksStatisticsDTO.FromTasks(storedTasks))));
         }
         [HttpGet("projects")]
-        public async Task<IActionResult> GetProjectsForUserDashboard([AllowedValues(PROJECT_STATUS_AVAILABLE, PROJECT_STATUS_CLOSED, PROJECT_STATUS_COMPLETED)] string status = "",
+        public async Task<IActionResult> GetProjectsForUserDashboard([AllowedValues(PROJECT_STATUS_PENDING, PROJECT_STATUS_IN_PROGRESS, PROJECT_STATUS_COMPLETED)] string status = "",
                                                                         int page = 0, int pageSize = PROJECTS_DEFAULT_PAGE_SIZE)
         {
             if (!ModelState.IsValid)
@@ -152,6 +180,15 @@ namespace AonFreelancing.Controllers.Web.v1
                     case SubmitBidNotification bidSubmissionNotification:
                         notificationOutputDTOs.Add(BidSubmissionNotificationOutputDTO.FromSubmitBidNotification(bidSubmissionNotification));
                         break;
+                    case TaskApprovalNotification taskApprovalNotification:
+                        notificationOutputDTOs.Add(TaskApprovalNotificationOutputDTO.FromTaskApprovalNotification(taskApprovalNotification));
+                        break;
+                    case TaskRejectionNotification taskRejectionNotification:
+                        notificationOutputDTOs.Add(TaskRejectionNotificationOutputDTO.FromTaskRejectionNotification(taskRejectionNotification));
+                        break;
+                    case ProfileVisitNotification profileVisitNotification:
+                        notificationOutputDTOs.Add(ProfileVisitNotificationOutputDTO.FromVisitNotification(profileVisitNotification));
+                        break;
                 }
             }
             return notificationOutputDTOs;
@@ -189,10 +226,11 @@ namespace AonFreelancing.Controllers.Web.v1
             await userService.SaveChangesAsync();
             return NoContent();
         }
+
         [HttpGet("{clientId}/client-activity")]
         public async Task<IActionResult> GetClientActivityByIdAsync([FromRoute] long clientId,
-           [FromQuery] int page = 0,
-           [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
+            [FromQuery] int page = 0,
+            [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
@@ -200,12 +238,26 @@ namespace AonFreelancing.Controllers.Web.v1
             Client? storedClient = await profileService.FindClientAsync(clientId);
             if (storedClient == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
+
+            string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+
             PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
-            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p)).ToList();
+            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p, imagesBaseUrl)).ToList();
             PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
 
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
+        //[HttpGet("profile-picture/{userId}")]
+        //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
+        //{
+        //    User? storedUser = await userService.FindByIdAsync(userId);
+        //    if (storedUser== null)
+        //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
+
+        //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+        //    string imageUrl = $"{imagesBaseUrl}/{storedUser.ProfilePicture}";
+        //    return Ok(CreateSuccessResponse(imageUrl));
+        //}
     }
 
 }

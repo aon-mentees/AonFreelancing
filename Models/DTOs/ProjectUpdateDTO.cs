@@ -1,20 +1,14 @@
-﻿using AonFreelancing.Attributes;
-using AonFreelancing.Utilities;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using System.Net.NetworkInformation;
-using System.Reflection.Metadata;
-using static AonFreelancing.Utilities.Constants;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AonFreelancing.Models.DTOs
 {
-    public class ProjectInputDTO
+    public class ProjectUpdateDTO
     {
         [Required]
-        [MaxLength(512, ErrorMessage ="Title is too long.")]
+        [MaxLength(512, ErrorMessage = "Title is too long.")]
         public string Title { get; set; }
 
-        [MaxLength(1024,ErrorMessage = "Description is too long.")]
+        [MaxLength(1024, ErrorMessage = "Description is too long.")]
         public string? Description { get; set; }
 
         [Required]
@@ -31,9 +25,5 @@ namespace AonFreelancing.Models.DTOs
         [Required]
         [Range(0, int.MaxValue)]
         public decimal Budget { get; set; }
-
-        [MaxFileSize(Constants.MAX_FILE_SIZE)]
-        [AllowedFileExtensions([JPG, JPEG, PNG, GIF])]
-        public IFormFile? ImageFile { get; set; }
     }
 }

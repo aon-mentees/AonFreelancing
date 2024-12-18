@@ -10,8 +10,8 @@
         public const string PROJECT_PRICETYPE_FIXED = "fixed";
         public const string PROJECT_PRICETYPE_PERHOUR = "per-hour";
 
-        public const string PROJECT_STATUS_AVAILABLE = "available";
-        public const string PROJECT_STATUS_CLOSED = "closed";
+        public const string PROJECT_STATUS_PENDING = "pending";
+        public const string PROJECT_STATUS_IN_PROGRESS = "in-progress";
         public const string PROJECT_STATUS_COMPLETED = "completed";
 
         public const string BIDS_STATUS_PENDING = "pending";
@@ -44,6 +44,7 @@
         public const string TASK_APPROVAL_NOTIFICATION_MESSAGE_FORMAT = "{0} approved your task on project {1}";
         public const string TASK_REJECTION_NOTIFICATION_MESSAGE_FORMAT = "{0} rejected your task on project {1}";
         public const string COMMENT_NOTIFICATION_MESSAGE_FORMAT = "{0} commented on your project {1}";
+        public const string PROFILE_VISIT_NOTIFICATION_MESSAGE_FORMAT = "{0} visited your profile.";
 
         public const string LIKE_NOTIFICATION_TITLE = "You’ve Got a New Like";
         public const string BID_APPROVAL_NOTIFICATION_TITLE = "You’ve Got a bid approved";
@@ -52,6 +53,7 @@
         public const string TASK_APPROVAL_NOTIFICATION_TITLE = "You’ve Got a task approved";
         public const string TASK_REJECTION_NOTIFICATION_TITLE = "You’ve Got a task rejected";
         public const string COMMENT_NOTIFICATION_TITLE = "You’ve Got a New Comment";
+        public const string PROFILE_VISIT_NOTIFICATION_TITLE = "Profile Visit Notification";
 
         public const int LIKES_DEFAULT_PAGE_SIZE = 10;
         public const int PROJECTS_DEFAULT_PAGE_SIZE = 10;
@@ -71,7 +73,6 @@
         public const string JPEG = ".jpeg";
         public const string PNG = ".png";
         public const string GIF = ".gif";
-
 
         public const string DEFAULT_USER_PROFILE_PICTURE = "default-user-profile-picture.jpg";
 

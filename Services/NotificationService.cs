@@ -33,6 +33,7 @@ namespace AonFreelancing.Services
         public async Task<List<Notification>> FindNotificationsForUserAsync(long userId)
         {
             return await _mainAppContext.Notifications.AsNoTracking()
+                                                      .OrderByDescending(n=>n.CreatedAt)
                                                       .Where(n => n.ReceiverId == userId)
                                                       .ToListAsync();
         }

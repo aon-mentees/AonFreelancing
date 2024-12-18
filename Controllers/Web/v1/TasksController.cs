@@ -88,7 +88,9 @@ namespace AonFreelancing.Controllers.Web.v1
             // Notification 
             string notificationMessage = string.Format(Constants.TASK_APPROVAL_NOTIFICATION_MESSAGE_FORMAT, storedUser.Name, storedTask.Project.Title);
             string notificationTitle = Constants.TASK_APPROVAL_NOTIFICATION_TITLE;
-            var approvalNotification = new TaskApprovalNotification(notificationTitle, notificationMessage, storedTask.Project.FreelancerId.Value, storedTask.ProjectId, storedUser.Id, storedUser.Name, storedTask.Id);
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{storedUser.ProfilePicture}";
+
+            var approvalNotification = new TaskApprovalNotification(notificationTitle, notificationMessage, storedTask.Project.FreelancerId.Value, imageUrl, storedTask.ProjectId, storedUser.Id, storedUser.Name, storedTask.Id);
 
             await notificationService.CreateAsync(approvalNotification);
             await pushNotificationService.SendTaskApprovalNotification(
@@ -123,7 +125,9 @@ namespace AonFreelancing.Controllers.Web.v1
             // Notification
             string notificationMessage = string.Format(Constants.TASK_REJECTION_NOTIFICATION_MESSAGE_FORMAT, storedUser.Name, storedTask.Project.Title);
             string notificationTitle = Constants.TASK_REJECTION_NOTIFICATION_TITLE;
-            var rejectionNotification = new TaskRejectionNotification(notificationTitle, notificationMessage, storedTask.Project.FreelancerId.Value, storedTask.ProjectId, storedUser.Id, storedUser.Name, storedTask.Id);
+            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{storedUser.ProfilePicture}";
+
+            var rejectionNotification = new TaskRejectionNotification(notificationTitle, notificationMessage, storedTask.Project.FreelancerId.Value, imageUrl, storedTask.ProjectId, storedUser.Id, storedUser.Name, storedTask.Id);
 
             await notificationService.CreateAsync(rejectionNotification);
             await pushNotificationService.SendTaskRejectionNotification(

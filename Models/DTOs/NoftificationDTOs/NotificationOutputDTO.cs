@@ -6,6 +6,9 @@ namespace AonFreelancing.Models.DTOs.NoftificationDTOs
     [JsonDerivedType(typeof(BidRejectionNotificationOutputDTO))]
     [JsonDerivedType(typeof(BidApprovalNotificationOutputDTO))]
     [JsonDerivedType(typeof(BidSubmissionNotificationOutputDTO))]
+    [JsonDerivedType(typeof(TaskApprovalNotificationOutputDTO))]
+    [JsonDerivedType(typeof(TaskRejectionNotificationOutputDTO))]
+    [JsonDerivedType(typeof(ProfileVisitNotificationOutputDTO))]
     public class NotificationOutputDTO
     {
         public long Id { get; set; }

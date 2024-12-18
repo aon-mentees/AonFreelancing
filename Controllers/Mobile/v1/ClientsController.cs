@@ -11,20 +11,36 @@ using AonFreelancing.Services;
 using AonFreelancing.Models.Responses;
 using System.Security.Claims;
 using static AonFreelancing.Utilities.Constants;
+using Microsoft.AspNetCore.Identity;
 namespace AonFreelancing.Controllers.Mobile.v1
 {
     [Authorize]
     [Route("api/mobile/v1/clients")]
     [ApiController]
     public class ClientsController(
-        MainAppContext mainAppContext,
-        ActivitiesService activitiesService,
-        UserService userService,
-        ProjectService projectService,
-        AuthService authService,
-        RatingService ratingService) : BaseController
-    {
-     
+        MainAppContext mainAppContext, ActivitiesService activitiesService, UserService userService,
+        UserManager<User> userManager, ProjectService projectService, RatingService ratingService,
+        AuthService authService, RoleManager<ApplicationRole> roleManager) : BaseController
+    { 
+        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [HttpPatch]
+        public async Task<IActionResult> UpdateClientAsync([FromBody] ClientUpdateDTO clientUpdateDTO)
+        {
+            if (!ModelState.IsValid)
+                return CustomBadRequest();
+
+            var storedUser = (Client?)await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
+                return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
+
+            storedUser.Name = clientUpdateDTO.Name;
+            storedUser.CompanyName = clientUpdateDTO.CompanyName;
+
+            await mainAppContext.SaveChangesAsync();
+
+            return Ok(CreateSuccessResponse("Client updated successfully"));
+        }     
+   
         [HttpGet("{id}/activities")]
         public async Task<IActionResult> GetActivitiesAsync(long id)
         {
@@ -61,6 +77,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                                .OrderByDescending(p => p.EndDate)
                                                                .Where(p => p.ClientId == authenticatedClientId)
                                                                .Where(p => p.FreelancerId != null)
+                                                               .Where(p => !p.IsDeleted)
                                                                .ToListAsync();
 
             PaginatedResult<FreelancerWorkedWithOutDTO> paginatedFreelancerWorkedWithDTO = new PaginatedResult<FreelancerWorkedWithOutDTO>();

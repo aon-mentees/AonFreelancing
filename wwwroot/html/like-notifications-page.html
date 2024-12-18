@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
         // Replace this token with a valid token
-        const jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiY2xpZW50IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZ2l2ZW5uYW1lIjoiYWxpIGh1c3NlaW4iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJjbGllbnQxQGV4YW1wbGUuY29tIiwiZXhwIjoxNzM0MzY2Mzk2LCJpc3MiOiJBb24iLCJhdWQiOiJBb24gRGV2In0.CGgc2cySnD7HlkjqaWzJkVBMeIwOgFwMGOlk1U5vOk8";
+        const jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiY2xpZW50IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZ2l2ZW5uYW1lIjoibmlnZ2VyIHRoZSBjbGllbnQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJtb2hhbW1lZEBleGFtcGxlLmNvbSIsImV4cCI6NzczNDQ0OTQ0MCwiaXNzIjoiQW9uUGxhdGZvcm0iLCJhdWQiOiJUcmFpbmVycy5UcmFpbmVlcyJ9.7h3b7u3DTTuWHa0hI8TF13Q0KskK8rqIrxfIDhNNXi8";
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/Hubs/Notifications", {
@@ -47,7 +47,6 @@
             alert(`Your bid approved from ${BidApprovalNotificaationOutputDTO.approverName}`);
             console.log("Received approve notification:", BidApprovalNotificaationOutputDTO);
         });
-
         connection.on("GetBidRejectionNotification", (BidRejectionNotificationOutputDTO) => {
             alert(`Your bid rejected from ${BidRejectionNotificationOutputDTO.rejectorName}`);
             console.log("Received reject notification:", BidRejectionNotificationOutputDTO);
@@ -55,6 +54,10 @@
         connection.on("GetBidSubmissionNotification", (submitBidNotificationDTO) => {
             alert(`New Bid apply from ${submitBidNotificationDTO.freelancerId}`);
             console.log("Received Bid apply notification:", submitBidNotificationDTO);
+        });
+        connection.on('GetProfileVisitNotification', (profileVisitNotification) => {
+            alert(`Your profile visited by ${profileVisitNotification.visitorName}`);
+            console.log('New Profile Visit Notification: ', profileVisitNotification);
         });
         connection.on("GetTaskApprovalNotification", (TaskApprovalNotificaationOutputDTO) => {
             alert(`Your task approved from ${TaskApprovalNotificaationOutputDTO.approverName}`);
