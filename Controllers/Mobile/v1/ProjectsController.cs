@@ -324,7 +324,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
             return Ok(CreateSuccessResponse("Bid rejected."));
         }
 
-        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProjectDetailsAsync(long id)
         {
