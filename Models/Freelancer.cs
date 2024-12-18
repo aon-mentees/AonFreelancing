@@ -11,6 +11,7 @@ namespace AonFreelancing.Models
     [Table("Freelancers")]
     public class Freelancer : User
     {
+        public List<Project> Projects { get; set; }
         public string? QualificationName { get; set; }
         public List<Skill> Skills { get; set; }
         public List<Certification> Certifications { get; set; }
