@@ -7,6 +7,7 @@ namespace AonFreelancing.Models.DTOs
     public class FreelancerResponseDTO : UserResponseDTO
     {
         //public List<SkillOutputDTO>Skills { get; set; }
+        public IEnumerable<ProjectHistoryDTO>? Projects { get; set; }
         public string? QualificationName { get; set; }
         FreelancerResponseDTO(Freelancer freelancer, string imageBaseUrl)
         {
@@ -19,6 +20,7 @@ namespace AonFreelancing.Models.DTOs
             UserType = Constants.USER_TYPE_FREELANCER;
             IsPhoneNumberVerified = freelancer.PhoneNumberConfirmed;
             QualificationName = freelancer.QualificationName;
+            Projects = freelancer.Projects.Select(p => ProjectHistoryDTO.FromProject(p));
             //Skills = freelancer.Skills.Select(s => SkillOutputDTO.FromSkill(s)).ToList();
             //Role = new RoleResponseDTO { Name = Constants.USER_TYPE_FREELANCER };
             if(freelancer.ProfilePicture != null )
