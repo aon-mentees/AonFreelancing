@@ -15,10 +15,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
     {
         readonly AuthService _authService;
         readonly UserService _userService;
-        public AuthController(AuthService authService,UserService userService)
+        readonly BlacklistService _blacklistService;
+        public AuthController(AuthService authService,UserService userService,BlacklistService blacklistService)
         {
             _authService = authService;
             _userService = userService;
+            _blacklistService = blacklistService;
         }
         [HttpPut("resend-verification-code")]
         public async Task<IActionResult> ResendOtpAsync([FromBody] PhoneNumberReq phoneNumberReq)
@@ -131,6 +133,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
                         return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Your account has been permanently deleted."));
                     storedUser.IsDeleted = false;
                     storedUser.DeletedAt = null;
+                   
+                    await _blacklistService.DeleteTokenFromBlacklist(req.Email);
                     await _userService.SaveChangesAsync();
                 }
                 string role = await _authService.FindUserRoleAsync(storedUser);

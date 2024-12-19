@@ -168,9 +168,9 @@ namespace AonFreelancing.Services
                 int daySpan = DateTime.Now.Day - storedUser.DeletedAt.Value.Day;
 
                 if (totalMonths >= 6 && daySpan <= 0)
-                    return false;
+                    return true;
             }
-            return true;
+            return false;
         }
         public async Task<string> GenerateUserNameFromName(string Name)
         {

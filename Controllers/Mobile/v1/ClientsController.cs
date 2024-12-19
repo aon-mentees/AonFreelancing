@@ -20,14 +20,19 @@ namespace AonFreelancing.Controllers.Mobile.v1
     public class ClientsController(
         MainAppContext mainAppContext, ActivitiesService activitiesService, UserService userService,
         UserManager<User> userManager, ProjectService projectService, RatingService ratingService,
-        AuthService authService, RoleManager<ApplicationRole> roleManager,ClientService clientService) : BaseController
+        AuthService authService, RoleManager<ApplicationRole> roleManager,ClientService clientService,BlacklistService blacklistService) : BaseController
     { 
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPatch]
         public async Task<IActionResult> UpdateClientAsync([FromBody] ClientUpdateDTO clientUpdateDTO)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
+
             long clientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             var storedClient = await clientService.FindClientByIdAsync(clientId);
             if (storedClient == null)
@@ -58,6 +63,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("recent-projects")]
         public async Task<IActionResult> GetRecentProjectsAsync(int page = 0, int pageSize = Constants.RECENT_PROJECTS_DEFAULT_PAGE_SIZE)
         {
+
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
@@ -71,6 +81,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("freelancers-worked-with")]
         public async Task<IActionResult> GetFreelancersWorkedWith(int page = 0, int pageSize = FREELANCERS_WORKED_WITH_DEFAULT_PAGE_SIZE)
         {
+
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             var storedProjects = await mainAppContext.Projects.Include(p => p.Freelancer)

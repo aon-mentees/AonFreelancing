@@ -105,7 +105,7 @@ namespace AonFreelancing.Services
 
         public async Task<bool> IsProjectExistsAsync(long id)
         {
-            return await _mainAppContext.Projects.AnyAsync(p => p.Id == id && !p.IsDeleted);
+            return await _mainAppContext.Projects.AnyAsync(p => p.Id == id && !p.IsDeleted );
         }
 
         public async Task<PaginatedResult<Project>> FindClientFeedAsync(string queryString, List<string> qualificationNames, int pageNumber, int pageSize)

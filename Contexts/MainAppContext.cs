@@ -25,6 +25,7 @@ namespace AonFreelancing.Contexts
         public DbSet<Education> Educations { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<WorkExperience> WorkExperiences { get; set; }
+        public DbSet<TokenBlacklist> TokensBlacklist { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             

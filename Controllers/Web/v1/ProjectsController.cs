@@ -22,13 +22,17 @@ namespace AonFreelancing.Controllers.Web.v1
     public class ProjectsController(MainAppContext mainAppContext, FileStorageService fileStorageService,
         UserManager<User> userManager, ProjectLikeService projectLikeService, AuthService authService,
         ProjectService projectService, NotificationService notificationService, PushNotificationService pushNotificationService,
-        BidService bidService, CommentService commentService, UserService userService)
+        BidService bidService, CommentService commentService, UserService userService, BlacklistService blacklistService)
         : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPost]
         public async Task<IActionResult> PostProjectAsync([FromForm] ProjectInputDTO projectInputDto)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
@@ -49,6 +53,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProjectAsync(long id, [FromBody] ProjectUpdateDTO projectUpdateDTO)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
@@ -82,6 +90,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProjectAsync(long id)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             var storedProject = await projectService.FindProjectAsync(id);
@@ -111,6 +123,10 @@ namespace AonFreelancing.Controllers.Web.v1
             [FromQuery] int pageSize = Constants.PROJECTS_DEFAULT_PAGE_SIZE, [FromQuery] string qur = ""
         )
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
@@ -156,6 +172,10 @@ namespace AonFreelancing.Controllers.Web.v1
             [FromQuery] string qur = ""
         )
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
@@ -195,6 +215,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("{projectId}/bids")]
         public async Task<IActionResult> SubmitBidAsync(long projectId, [FromBody] BidInputDto bidInputDTO)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
@@ -223,6 +247,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("{projectId}/bids")]
         public async Task<IActionResult> GetBidsByProjectId(long projectId, int page = 0, int pageSize = Constants.BIDS_DEFAULT_PAGE_SIZE)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
             PaginatedResult<Bid> paginatedBids = await bidService.FindBidsByProjectIdWithFreelancerAsync(projectId, page, pageSize);
@@ -236,6 +263,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPut("{projectId}/bids/{bidId}/approve")]
         public async Task<IActionResult> ApproveBidAsync([FromRoute] long projectId, [FromRoute] long bidId)
         {
+
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
@@ -278,6 +309,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPut("{projectId}/bids/{bidId}/reject")]
         public async Task<IActionResult> RejectBidAsync([FromRoute] long projectId, [FromRoute] long bidId)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
@@ -320,6 +354,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProjectDetailsAsync(long id)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             var storedProject = await projectService.FindProjectTasks(id);
 
             if (storedProject == null)
@@ -347,6 +385,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("{projectId}/tasks")]
         public async Task<IActionResult> CreateTaskAsync(long projectId, [FromBody] TaskInputDTO taskInputDTO)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             Project? storedProject = await projectService.FindProjectAsync(projectId);
             if (storedProject == null)
@@ -368,6 +409,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("{projectId}/likes")]
         public async Task<IActionResult> LikeOrUnLikeProject([FromRoute] long projectId, [AllowedValues(Constants.PROJECT_LIKE_ACTION, Constants.PROJECT_UNLIKE_ACTION)] string action)
         {
+
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
@@ -402,7 +447,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("{projectId}/likes/count")]
         public async Task<IActionResult> GetProjectLikesCount([FromRoute] long projectId)
         {
-            //need to be checked for account softdelete
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
 
             if (!await projectService.IsProjectExistsAsync(projectId))
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
@@ -411,6 +458,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("{projectId}/likes")]
         public async Task<IActionResult> GetLikesForProject([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = 15)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             if (!await projectService.IsProjectExistsAsync(projectId))
@@ -430,6 +481,10 @@ namespace AonFreelancing.Controllers.Web.v1
                                                                   [AllowedValues(Constants.TASK_STATUS_TO_DO,Constants.TASK_STATUS_DONE,Constants.TASK_STATUS_IN_PROGRESS,Constants.TASK_STATUS_IN_REVIEW,ErrorMessage = $"status should be one of the values: '{Constants.TASK_STATUS_TO_DO}', '{Constants.TASK_STATUS_DONE}', '{Constants.TASK_STATUS_IN_PROGRESS}', '{Constants.TASK_STATUS_IN_REVIEW}', or empty")]
                                                                     [FromQuery] string status = "")
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
@@ -455,6 +510,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
         private async Task<IActionResult> LikeProjectAsync(Project storedProject, long likerId, string likerName, string? likerProfilePicture)
         {
+
 
             await projectLikeService.LikeProjectAsync(likerId, storedProject.Id, likerName);
 
@@ -492,6 +548,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("{projectId}/comments")]
         public async Task<IActionResult> CreateCommentAsync([FromRoute] long projectId, [FromForm] CommentInputDTO commentInputDTO)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
@@ -526,6 +585,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("{projectId}/comments")]
         public async Task<IActionResult> GetProjectCommentsAsync([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             var projectExists = await projectService.IsProjectExistsAsync(projectId);
 
@@ -553,6 +616,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPatch("{projectId}/completed")]
         public async Task<IActionResult> MarkProjectAsCompletedAsync([FromRoute] long projectId)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 

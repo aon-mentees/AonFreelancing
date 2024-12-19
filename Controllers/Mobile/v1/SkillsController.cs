@@ -15,12 +15,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/skills")]
     [ApiController]
-    public class SkillsController(MainAppContext mainAppContext, SkillsService skillsService, FreelancerService freelancerService) : BaseController
+    public class SkillsController(MainAppContext mainAppContext, SkillsService skillsService, FreelancerService freelancerService,BlacklistService blacklistService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost]
         public async Task<IActionResult> CreateSkill([FromBody] SkillInputDTO skillInputDTO)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             long authenticatedUserId = Convert.ToInt64(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
 
@@ -39,6 +43,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSkill(long id)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             long authenticatedUserId = Convert.ToInt64(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
 
@@ -56,6 +64,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{freelancerId}/skills")]
         public async Task<IActionResult> GetSkillsByFreelancerIdAsync(long freelancerId, int page = 0, int pageSize = Constants.SKILLS_DEFAULT_PAGE_SIZE)
         {
+            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            if (await blacklistService.IsTokenBlacklisted(token) == true)
+                return Forbid();
+
             if (await freelancerService.FindFreelancerByIdAsync(freelancerId) == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "freelancer not found"));
             PaginatedResult<Skill> paginatedSkills = await skillsService.FindSkillsByFreelancerIdAsync(freelancerId, page, pageSize);

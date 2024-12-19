@@ -34,5 +34,19 @@ namespace AonFreelancing.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        public DateTime GetTokenExpiry(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+
+            var expiryClaim = jwtToken.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Exp)?.Value;
+            if (expiryClaim == null)
+                throw new SecurityTokenException("Token does not have an expiry claim");
+
+            // Convert Unix timestamp to DateTime
+            return DateTimeOffset.FromUnixTimeSeconds(long.Parse(expiryClaim)).UtcDateTime;
+        }
+
     }
 }
