@@ -525,17 +525,18 @@ namespace AonFreelancing.Controllers.Mobile.v1
                 comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
 
             await commentService.SaveCommentAsync(comment);
+            if (authenticatedUser.Id != storedProject.ClientId)
+            {
+                //Notification
+                string notificationMessage = string.Format(Constants.COMMENT_NOTIFICATION_MESSAGE_FORMAT, authenticatedUser.Name, storedProject.Title);
+                string notificationTitle = Constants.COMMENT_NOTIFICATION_TITLE;
+                string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
 
-            //Notification
-            string notificationMessage = string.Format(Constants.COMMENT_NOTIFICATION_MESSAGE_FORMAT, authenticatedUser.Name, storedProject.Title);
-            string notificationTitle = Constants.COMMENT_NOTIFICATION_TITLE;
-            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
-
-            var newCommentNotification =
-                new CommentNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, authenticatedUser.Name, storedProject.Id, authenticatedUser.Id);
-            await notificationService.CreateAsync(newCommentNotification);
-            await pushNotificationService.SendCommentNotification(CommentNotificationOutputDTO.FromCommentNotification(newCommentNotification), newCommentNotification.ReceiverId);
-
+                var newCommentNotification =
+                    new CommentNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, authenticatedUser.Name, storedProject.Id, authenticatedUser.Id);
+                await notificationService.CreateAsync(newCommentNotification);
+                await pushNotificationService.SendCommentNotification(CommentNotificationOutputDTO.FromCommentNotification(newCommentNotification), newCommentNotification.ReceiverId);
+            }
             return Ok(CreateSuccessResponse("Commented"));
         }
 
