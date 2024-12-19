@@ -17,6 +17,7 @@ namespace AonFreelancing.Services
         public async Task<PaginatedResult<Project>> FindClientActivitiesAsync(long clientId, int pageNumber, int pageSize)
         {
             var query = mainAppContext.Projects.AsNoTracking().Where(p => p.ClientId == clientId)
+                                                              .Include(p=>p.Client)
                                                               .Include(p => p.ProjectLikes)
                                                               .Include(p => p.Comments)
                                                               .Where(p => !p.IsDeleted)
