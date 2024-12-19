@@ -29,10 +29,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost]
         public async Task<IActionResult> PostProjectAsync([FromForm] ProjectInputDTO projectInputDto)
         {
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedClientId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             Project? newProject = Project.FromInputDTO(projectInputDto, authenticatedClientId);
 
@@ -49,10 +52,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProjectAsync(long id, [FromBody] ProjectUpdateDTO projectUpdateDTO)
         {
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedClientId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
-
-            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             Project? storedProject = await projectService.FindProjectAsync(id);
             if (storedProject == null)
@@ -83,6 +88,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         public async Task<IActionResult> DeleteProjectAsync(long id)
         {
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedClientId))
+                return Forbid();
 
             var storedProject = await projectService.FindProjectAsync(id);
             if (storedProject == null)
@@ -111,10 +118,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
             [FromQuery] int pageSize = Constants.PROJECTS_DEFAULT_PAGE_SIZE, [FromQuery] string qur = ""
         )
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             string normalizedQuery = qur.ToLower().Replace(" ", "").Trim();
             PaginatedResult<Project> paginatedProjects = await projectService.FindClientFeedAsync(normalizedQuery, qualificationNames ?? [], page, pageSize);
@@ -156,10 +166,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
             [FromQuery] string qur = ""
         )
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             string normalizedQuery = qur.ToLower().Replace(" ", "").Trim();
 
@@ -195,10 +208,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("{projectId}/bids")]
         public async Task<IActionResult> SubmitBidAsync(long projectId, [FromBody] BidInputDto bidInputDTO)
         {
+            long authenticatedFreelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedFreelancerId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            long authenticatedFreelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string authenticatedFreelancerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
             User? authenticatedFreelancer = await userManager.FindByIdAsync(authenticatedFreelancerId.ToString());
             if (authenticatedFreelancer == null)
@@ -223,9 +239,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{projectId}/bids")]
         public async Task<IActionResult> GetBidsByProjectId(long projectId, int page = 0, int pageSize = Constants.BIDS_DEFAULT_PAGE_SIZE)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
-            PaginatedResult<Bid> paginatedBids = await bidService.FindByProjectIdWithFreelancer(projectId, page, pageSize);
+            PaginatedResult<Bid> paginatedBids = await bidService.FindBidsByProjectIdWithFreelancerAsync(projectId, page, pageSize);
             List<BidOutputDTO> bidOutputDTOs = paginatedBids.Result.Select(b => BidOutputDTO.FromBid(b, imagesBaseUrl)).ToList();
             PaginatedResult<BidOutputDTO> paginatedBidOutputDTOs = new PaginatedResult<BidOutputDTO>(paginatedBids.Total, bidOutputDTOs);
 
@@ -238,16 +258,15 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
 
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedClientId))
+                return Forbid();
+
             string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
             User? authenticatedUser = await userManager.FindByIdAsync(authenticatedClientId.ToString());
             if (authenticatedUser == null)
                 return Unauthorized();
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
-
-            //if (storedProject.IsDeleted)
-            //    return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-            //        "cannot approve a bid for project that is deleted"));
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
@@ -256,12 +275,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (storedProject.Status != Constants.PROJECT_STATUS_PENDING)
                 return Conflict(CreateErrorResponse(StatusCodes.Status409Conflict.ToString(), "Project status is not Pending."));
             
-            Bid? storedBid = storedProject.Bids.FirstOrDefault(b => b.Id == bidId);
+            Bid? storedBid = storedProject.Bids.FirstOrDefault(b => b.Id == bidId );
             if (storedBid == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Bid not found"));
             if (storedBid.Status != Constants.BIDS_STATUS_PENDING)
                 return Forbid();
-
+            
             await projectService.ApproveProjectBidAsync(storedBid, storedProject);
 
             // Notification 
@@ -282,18 +301,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPut("{projectId}/bids/{bidId}/reject")]
         public async Task<IActionResult> RejectBidAsync([FromRoute] long projectId, [FromRoute] long bidId)
         {
-
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedClientId))
+                return Forbid();
+
             string nameOfAuthenticatedClient = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
             User? authenticatedUser = await userManager.FindByIdAsync(authenticatedClientId.ToString());
             if (authenticatedUser == null)
                 return Unauthorized();
 
             Project? storedProject = await projectService.FindProjectWithBidsAsync(projectId);
-
-            // if (storedProject.IsDeleted)
-            //     return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-            //         "cannot reject a bid for project that is deleted"));
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found."));
@@ -328,10 +345,11 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProjectDetailsAsync(long id)
         {
-            var storedProject = await mainAppContext.Projects.Include(p => p.Tasks)
-                                                        .Where(p => p.Id == id)
-                                                        .Where(p => !p.IsDeleted)
-                                                        .FirstOrDefaultAsync();
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
+            var storedProject = await projectService.FindProjectTasks(id);
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse("404", "Project not found."));
@@ -359,13 +377,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         public async Task<IActionResult> CreateTaskAsync(long projectId, [FromBody] TaskInputDTO taskInputDTO)
         {
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
+            if (!await userService.IsExistingUser(authenticatedClientId))
+                return Forbid();
+
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
-
-            //if (storedProject.IsDeleted)
-            //    return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-            //        "Cannot update a deleted project."));
 
             if (authenticatedClientId != storedProject.ClientId)
                 return Forbid();
@@ -383,16 +400,21 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("{projectId}/likes")]
         public async Task<IActionResult> LikeOrUnLikeProject([FromRoute] long projectId, [AllowedValues(Constants.PROJECT_LIKE_ACTION, Constants.PROJECT_UNLIKE_ACTION)] string action)
         {
+
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedClientId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            var claimsIdentity = (ClaimsIdentity)HttpContext.User.Identity;
-            long authenticatedUserId = authService.GetUserId(claimsIdentity);
-            string authenticatedLikerName = authService.GetNameOfUser(claimsIdentity);
-            User? likerUser = await userManager.FindByIdAsync(authenticatedUserId.ToString());
+
+            string authenticatedLikerName = authService.GetNameOfUser((ClaimsIdentity)HttpContext.User.Identity);
+
+            User? likerUser = await userManager.FindByIdAsync(authenticatedClientId.ToString());
             if (likerUser == null)
                 return Unauthorized();
 
-            Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
@@ -401,20 +423,24 @@ namespace AonFreelancing.Controllers.Mobile.v1
             //     return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
             //         "Cannot update a deleted project."));
 
-            ProjectLike? storedLike = await projectLikeService.Find(authenticatedUserId, projectId);
+            ProjectLike? storedLike = await projectLikeService.Find(authenticatedClientId, projectId);
             if (storedLike != null && action == Constants.PROJECT_LIKE_ACTION)
                 return Conflict(CreateErrorResponse("409", "you cannot like the same project twice"));
 
             if (storedLike != null && action == Constants.PROJECT_UNLIKE_ACTION)
                 return await UnLikeProjectAsync(storedLike);
             if (storedLike == null && action == Constants.PROJECT_LIKE_ACTION)
-                return await LikeProjectAsync(storedProject, authenticatedUserId, authenticatedLikerName, likerUser.ProfilePicture);
+                return await LikeProjectAsync(storedProject, authenticatedClientId, authenticatedLikerName, likerUser.ProfilePicture);
 
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "no like found to be deleted"));
         }
         [HttpGet("{projectId}/likes/count")]
         public async Task<IActionResult> GetProjectLikesCount([FromRoute] long projectId)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!await projectService.IsProjectExistsAsync(projectId))
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
             return Ok(CreateSuccessResponse(new { likesCount = await projectLikeService.CountLikesForProjectAsync(projectId) }));
@@ -422,6 +448,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{projectId}/likes")]
         public async Task<IActionResult> GetLikesForProject([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = 15)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
             if (!await projectService.IsProjectExistsAsync(projectId))
@@ -441,11 +471,14 @@ namespace AonFreelancing.Controllers.Mobile.v1
                                                                   [AllowedValues(Constants.TASK_STATUS_TO_DO,Constants.TASK_STATUS_DONE,Constants.TASK_STATUS_IN_PROGRESS,Constants.TASK_STATUS_IN_REVIEW,ErrorMessage = $"status should be one of the values: '{Constants.TASK_STATUS_TO_DO}', '{Constants.TASK_STATUS_DONE}', '{Constants.TASK_STATUS_IN_PROGRESS}', '{Constants.TASK_STATUS_IN_REVIEW}', or empty")]
                                                                     [FromQuery] string status = "")
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            Project? storedProject = await mainAppContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
 
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "project not found"));
@@ -465,6 +498,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         }
         private async Task<IActionResult> LikeProjectAsync(Project storedProject, long likerId, string likerName, string? likerProfilePicture)
         {
+         
+
             await projectLikeService.LikeProjectAsync(likerId, storedProject.Id, likerName);
 
             if (likerId != storedProject.ClientId)
@@ -504,6 +539,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPost("{projectId}/comments")]
         public async Task<IActionResult> CreateCommentAsync([FromRoute] long projectId, [FromForm] CommentInputDTO commentInputDTO)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
@@ -512,13 +551,9 @@ namespace AonFreelancing.Controllers.Mobile.v1
             if (authenticatedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "User not found"));
 
-            Project? storedProject = await mainAppContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId && !p.IsDeleted);
+            Project? storedProject = await projectService.FindProjectAsync(projectId);
             if (storedProject == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found"));
-
-            // if (storedProject.IsDeleted)
-            //     return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(),
-            //         "Cannot update a deleted project."));
 
             Comment? comment = new Comment(commentInputDTO, projectId, authenticatedUser.Id);
             if (commentInputDTO.ImageFile != null)
@@ -543,8 +578,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{projectId}/comments")]
         public async Task<IActionResult> GetProjectCommentsAsync([FromRoute] long projectId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.COMMENTS_DEFAULT_PAGE_SIZE)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
-            var projectExists = await mainAppContext.Projects.AnyAsync(p => p.Id == projectId && !p.IsDeleted);
+            var projectExists = await projectService.IsProjectExistsAsync(projectId);
 
             if (!projectExists)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Project not found !"));
@@ -570,10 +609,13 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPatch("{projectId}/completed")]
         public async Task<IActionResult> MarkProjectAsCompletedAsync([FromRoute] long projectId)
         {
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedClientId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             Project? storedProject = await projectService.FindProjectAsync(projectId);
 
             if (storedProject == null)

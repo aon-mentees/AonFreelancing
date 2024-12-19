@@ -34,5 +34,7 @@ namespace AonFreelancing.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+
     }
 }

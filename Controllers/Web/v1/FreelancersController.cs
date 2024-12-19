@@ -24,15 +24,19 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPatch]
         public async Task<IActionResult> UpdateFreelancerAsync([FromBody] FreelancerUpdateDTO freelancerUpdateDTO)
         {
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            var storedUser = (Freelancer?) await userManager.GetUserAsync(HttpContext.User);
-            if (storedUser == null)
+            var storedFreelancer = await freelancerService.FindFreelancerByIdAsync(freelancerId);
+            if (storedFreelancer == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
 
-            storedUser.Name = freelancerUpdateDTO.Name;
-            storedUser.QualificationName = freelancerUpdateDTO.QualificationName;
+            storedFreelancer.Name = freelancerUpdateDTO.Name;
+            storedFreelancer.QualificationName = freelancerUpdateDTO.QualificationName;
 
             await mainAppContext.SaveChangesAsync();
 
@@ -58,10 +62,14 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("certifications")]
         public async Task<IActionResult> AddCertificationAsync([FromBody] CertificationInputDTO certificationInputDTO)
         {
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
             bool isFreelancerCertificationExists = await freelancerService
                 .FindExistingFreelancerCertificationAsync(freelancerId, certificationInputDTO.Name, certificationInputDTO.Issuer, certificationInputDTO.ExpiryDate);
 
@@ -81,10 +89,14 @@ namespace AonFreelancing.Controllers.Web.v1
         public async Task<IActionResult> UpdateCertificationAsync([FromRoute] long certificationId,
             [FromBody] CertificationInputDTO certificationInputDTO)
         {
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
 
             Certification? storedCertification = await freelancerService.FindFreelancerCertificationAsync(certificationId);
 
@@ -112,6 +124,9 @@ namespace AonFreelancing.Controllers.Web.v1
         public async Task<IActionResult> DeleteCertificationAsync([FromRoute] long certificationId)
         {
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
+
 
             Certification? storedCertification = await freelancerService.FindFreelancerCertificationAsync(certificationId);
 
@@ -144,6 +159,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("education")]
         public async Task<IActionResult> AddEducationAsync([FromBody] EducationInputDTO educationInputDTO)
         {
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
 
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
@@ -151,7 +169,7 @@ namespace AonFreelancing.Controllers.Web.v1
             if (educationInputDTO.StartDate > DateTime.Now)
                 return BadRequest(CreateErrorResponse(StatusCodes.Status400BadRequest.ToString(), "Start date should be less than today's date."));
 
-            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
 
             bool isFreelancerEducationExists = await freelancerService.FindExistingFreelancerEducationAsync(freelancerId, educationInputDTO.Institution, educationInputDTO.Degree);
 
@@ -169,11 +187,14 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPut("education/{educationId}")]
         public async Task<IActionResult> UpdateEducationAsync([FromBody] EducationInputDTO educationInputDTO, [FromRoute] long educationId)
         {
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
 
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
 
             Education? storedEducation = await freelancerService.FindFreelancerEducationAsync(educationId);
 
@@ -198,8 +219,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpDelete("education/{educationId}")]
         public async Task<IActionResult> DeleteEducationAsync([FromRoute] long educationId)
         {
-
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
             Education? storedEducation = await freelancerService.FindFreelancerEducationAsync(educationId);
 
             if (storedEducation == null)
@@ -225,7 +247,7 @@ namespace AonFreelancing.Controllers.Web.v1
         }
 
         [HttpGet("{id}/work-experience")]
-        public async Task<IActionResult> GetWorkExperiencesAsync([FromRoute] long id, int page = 0, int pageSize = Constants.WORK_EXPERIENCES_DEFAULT_PAGE_SIZE) 
+        public async Task<IActionResult> GetWorkExperiencesAsync([FromRoute] long id, int page = 0, int pageSize = Constants.WORK_EXPERIENCES_DEFAULT_PAGE_SIZE)
         {
             bool isExists = await freelancerService.IsFreelancerExistsAsync(id);
 
@@ -242,10 +264,14 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPost("work-experience")]
         public async Task<IActionResult> AddWorkExperinceAsync([FromBody] WorkExperienceInputDTO workExperienceInputDTO)
         {
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
             bool isFreelancerWorkExperinceExists = await freelancerService.
                 FindExistingFreelancerWorkExperienceAsync(freelancerId, workExperienceInputDTO.JobTitle, workExperienceInputDTO.EmploymentType,
                 workExperienceInputDTO.EmployerName);
@@ -263,12 +289,15 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPut("work-experience/{workExperienceId}")]
         public async Task<IActionResult> UpdateWorkExperinceAsync([FromBody] WorkExperienceInputDTO workExperienceInputDTO, [FromRoute] long workExperienceId)
         {
+            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
 
-            long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            WorkExperience? storedWorkExperience= await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
+            WorkExperience? storedWorkExperience = await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
 
             if (storedWorkExperience == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Work experience not found."));
@@ -293,6 +322,9 @@ namespace AonFreelancing.Controllers.Web.v1
         public async Task<IActionResult> DeleteWorkExperienceAsync([FromRoute] long workExperienceId)
         {
             long freelancerId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(freelancerId))
+                return Forbid();
+
             WorkExperience? storedworkExperience = await freelancerService.FindFreelancerWorkExperienceAsync(workExperienceId);
 
             if (storedworkExperience == null)

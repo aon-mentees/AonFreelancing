@@ -24,9 +24,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPatch("{taskId}/start-task")]
         public async Task<IActionResult> StartTaskAsync(long taskId)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
 
@@ -47,9 +50,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPatch("{taskId}/submit-task")]
         public async Task<IActionResult> SubmitTaskAsync(long taskId)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (storedUser is null)
@@ -69,9 +75,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPatch("{taskId}/approve-task")]
         public async Task<IActionResult> ApproveTaskAsync(long taskId)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (storedUser is null)
@@ -107,9 +116,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPatch("{taskId}/reject-task")]
         public async Task<IActionResult> RejectTaskAsync(long taskId)
         {
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (storedUser is null)
