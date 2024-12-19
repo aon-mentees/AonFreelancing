@@ -136,7 +136,10 @@ namespace AonFreelancing.Controllers.Web.v1
                 }
                 string role = await _authService.FindUserRoleAsync(storedUser);
                 string token = await _authService.GenerateAuthToken(storedUser, role);
-                return Ok(CreateSuccessResponse(new LoginResponse(token, new UserDetailsDTO(storedUser, role ?? string.Empty))));
+
+                string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+
+                return Ok(CreateSuccessResponse(new LoginResponse(token, new UserDetailsDTO(storedUser, role ?? string.Empty, imagesBaseUrl))));
             }
             return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(), "Unauthorized"));
         }

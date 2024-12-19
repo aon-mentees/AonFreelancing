@@ -341,7 +341,7 @@ namespace AonFreelancing.Controllers.Web.v1
             return Ok(CreateSuccessResponse("Bid rejected."));
         }
 
-        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProjectDetailsAsync(long id)
         {
@@ -502,14 +502,17 @@ namespace AonFreelancing.Controllers.Web.v1
 
             await projectLikeService.LikeProjectAsync(likerId, storedProject.Id, likerName);
 
-            string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
-            string notificationTitle = Constants.LIKE_NOTIFICATION_TITLE;
-            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{likerProfilePicture}";
+            if (likerId != storedProject.ClientId)
+            {
+                string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
+                string notificationTitle = Constants.LIKE_NOTIFICATION_TITLE;
+                string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{likerProfilePicture}";
 
-            LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, storedProject.Id, likerId, likerName);
+                LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, storedProject.Id, likerId, likerName);
 
-            await notificationService.CreateAsync(newLikeNotification);
-            await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification), newLikeNotification.ReceiverId);
+                await notificationService.CreateAsync(newLikeNotification);
+                await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification), newLikeNotification.ReceiverId);
+            }
             return Ok("Liked Successfully");
         }
         private async Task<IActionResult> UnLikeProjectAsync(ProjectLike storedProjectLike)
@@ -557,17 +560,18 @@ namespace AonFreelancing.Controllers.Web.v1
                 comment.ImageUrl = await fileStorageService.SaveAsync(commentInputDTO.ImageFile);
 
             await commentService.SaveCommentAsync(comment);
+            if (authenticatedUser.Id != storedProject.ClientId)
+            {
+                //Notification
+                string notificationMessage = string.Format(Constants.COMMENT_NOTIFICATION_MESSAGE_FORMAT, authenticatedUser.Name, storedProject.Title);
+                string notificationTitle = Constants.COMMENT_NOTIFICATION_TITLE;
+                string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
 
-            //Notification
-            string notificationMessage = string.Format(Constants.COMMENT_NOTIFICATION_MESSAGE_FORMAT, authenticatedUser.Name, storedProject.Title);
-            string notificationTitle = Constants.COMMENT_NOTIFICATION_TITLE;
-            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{authenticatedUser.ProfilePicture}";
-
-            var newCommentNotification =
-                new CommentNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, authenticatedUser.Name, storedProject.Id, authenticatedUser.Id);
-            await notificationService.CreateAsync(newCommentNotification);
-            await pushNotificationService.SendCommentNotification(CommentNotificationOutputDTO.FromCommentNotification(newCommentNotification), newCommentNotification.ReceiverId);
-
+                var newCommentNotification =
+                    new CommentNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, authenticatedUser.Name, storedProject.Id, authenticatedUser.Id);
+                await notificationService.CreateAsync(newCommentNotification);
+                await pushNotificationService.SendCommentNotification(CommentNotificationOutputDTO.FromCommentNotification(newCommentNotification), newCommentNotification.ReceiverId);
+            }
             return Ok(CreateSuccessResponse("Commented"));
         }
 

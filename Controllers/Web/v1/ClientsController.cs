@@ -59,7 +59,7 @@ namespace AonFreelancing.Controllers.Web.v1
             return Ok(CreateSuccessResponse(responseDTO));
         }
 
-        [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
+        [Authorize(Roles = USER_TYPE_CLIENT)]
         [HttpGet("recent-projects")]
         public async Task<IActionResult> GetRecentProjectsAsync(int page = 0, int pageSize = Constants.RECENT_PROJECTS_DEFAULT_PAGE_SIZE)
         {
