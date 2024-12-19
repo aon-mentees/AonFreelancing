@@ -467,14 +467,17 @@ namespace AonFreelancing.Controllers.Mobile.v1
         {
             await projectLikeService.LikeProjectAsync(likerId, storedProject.Id, likerName);
 
-            string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
-            string notificationTitle = Constants.LIKE_NOTIFICATION_TITLE;
-            string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{likerProfilePicture}";
+            if (likerId != storedProject.ClientId)
+            {
+                string notificationMessage = string.Format(Constants.LIKE_NOTIFICATION_MESSAGE_FORMAT, likerName, storedProject.Title);
+                string notificationTitle = Constants.LIKE_NOTIFICATION_TITLE;
+                string imageUrl = $"{Request.Scheme}://{Request.Host}/images/{likerProfilePicture}";
 
-            LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, storedProject.Id, likerId, likerName);
+                LikeNotification newLikeNotification = new LikeNotification(notificationTitle, notificationMessage, storedProject.ClientId, imageUrl, storedProject.Id, likerId, likerName);
 
-            await notificationService.CreateAsync(newLikeNotification);
-            await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification), newLikeNotification.ReceiverId);
+                await notificationService.CreateAsync(newLikeNotification);
+                await pushNotificationService.SendLikeNotification(LikeNotificationOutputDTO.FromLikeNotification(newLikeNotification), newLikeNotification.ReceiverId);
+            }
             return Ok("Liked Successfully");
         }
         private async Task<IActionResult> UnLikeProjectAsync(ProjectLike storedProjectLike)
