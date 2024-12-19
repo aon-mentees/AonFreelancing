@@ -21,7 +21,13 @@ public class UserService : MainDbService
         _mainAppContext = mainAppContext;
         _userManager = userManager;
     }
-
+    public async Task<bool> IsExistingUser(long id)
+    {
+        User? user= await _mainAppContext.Users.FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
+        if(user == null) 
+             return false;
+        return true;
+    }
     public async Task<User?> FindByIdAsync(long id)
     {
         return await _mainAppContext.Users.FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);

@@ -19,28 +19,26 @@ namespace AonFreelancing.Controllers.Mobile.v1
         private readonly AuthService _authService;
         private readonly ProjectService _projectService;
         private readonly UserService _userService;
-        private readonly BlacklistService _blacklistService;
-        public RatingsController(RatingService ratingService, AuthService authService, ProjectService projectService, UserService userService, BlacklistService blacklistService)
+      
+        public RatingsController(RatingService ratingService, AuthService authService, ProjectService projectService, UserService userService)
         {
             _ratingService = ratingService;
             _authService = authService;
             _projectService = projectService;
             _userService = userService;
-            _blacklistService = blacklistService;
+           
         }
 
         [Authorize(Roles = $"{Constants.USER_TYPE_CLIENT}, {Constants.USER_TYPE_FREELANCER}")]
         [HttpPost]
         public async Task<IActionResult> CreateRatingAsync([FromBody] RatingInputDTO request)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await _blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedRaterUserId = _authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await _userService.IsExistingUser(authenticatedRaterUserId))
                 return Forbid();
+
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            long authenticatedRaterUserId = _authService.GetUserId(identity);
 
 
             if (authenticatedRaterUserId == request.RatedUserId || !await _projectService.IsUser1WorkedWithUser2Async(authenticatedRaterUserId, request.RatedUserId))
@@ -58,8 +56,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet]
         public async Task<IActionResult> GetRatingsForUser([FromQuery] long userId, [FromQuery] int page = 0, [FromQuery] int pageSize = Constants.RATING_DEFAULT_PAGE_SIZE)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await _blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = _authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await _userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
             IEnumerable<RatingOutputDTO> storedRatings = (await _ratingService.GetRatingsForUserAsync(userId, page, pageSize)).Select(r => new RatingOutputDTO(r));
@@ -70,8 +68,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("average-rate")]
         public async Task<IActionResult> GetAverageRating([FromQuery] long userId)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await _blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedRaterUserId = _authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await _userService.IsExistingUser(authenticatedRaterUserId))
                 return Forbid();
 
             var storedUser = await _userService.FindByIdAsync(userId);
@@ -86,8 +84,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("rating-summary")]
         public async Task<IActionResult> GetUserRating([FromQuery] long userId)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await _blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedRaterUserId = _authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await _userService.IsExistingUser(authenticatedRaterUserId))
                 return Forbid();
 
             var storedUser = await _userService.FindByIdAsync(userId);

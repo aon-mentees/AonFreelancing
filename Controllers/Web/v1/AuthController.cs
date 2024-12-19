@@ -14,12 +14,11 @@ namespace AonFreelancing.Controllers.Web.v1
     {
         readonly AuthService _authService;
         readonly UserService _userService;
-        readonly BlacklistService _blacklistService;
-        public AuthController(AuthService authService, UserService userService, BlacklistService blacklistService)
+
+        public AuthController(AuthService authService, UserService userService)
         {
             _authService = authService;
             _userService = userService;
-            _blacklistService = blacklistService;
         }
         [HttpPut("resend-verification-code")]
         public async Task<IActionResult> ResendOtpAsync([FromBody] PhoneNumberReq phoneNumberReq)
@@ -133,7 +132,6 @@ namespace AonFreelancing.Controllers.Web.v1
                     storedUser.IsDeleted = false;
                     storedUser.DeletedAt = null;
 
-                    await _blacklistService.DeleteTokenFromBlacklist(req.Email);
                     await _userService.SaveChangesAsync();
                 }
                 string role = await _authService.FindUserRoleAsync(storedUser);

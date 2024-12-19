@@ -22,18 +22,18 @@ namespace AonFreelancing.Controllers.Web.v1
     public class ProfileController(MainAppContext mainAppContext, AuthService authService,
         NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService
         , UserService userService, ProfileService profileService, PushNotificationService pushNotificationService,
-        FreelancerService freelancerService, ClientService clientService, BlacklistService blacklistService, JwtService jwtService)
+        FreelancerService freelancerService, ClientService clientService, JwtService jwtService)
         : BaseController
     {
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
             User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
@@ -79,11 +79,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("statistics")]
         public async Task<IActionResult> GetUserStatisticsAsync()
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
-                return Forbid();
-
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
+                return Forbid();
 
             var storedProjects = await projectService.FindProjectWithFreelancerAndTasks(authenticatedUserId);
 
@@ -96,8 +94,8 @@ namespace AonFreelancing.Controllers.Web.v1
         public async Task<IActionResult> GetProjectsForUserDashboard([AllowedValues(PROJECT_STATUS_PENDING, PROJECT_STATUS_IN_PROGRESS, PROJECT_STATUS_COMPLETED)] string status = "",
                                                                         int page = 0, int pageSize = PROJECTS_DEFAULT_PAGE_SIZE)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long storedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(storedUserId))
                 return Forbid();
 
             if (!ModelState.IsValid)
@@ -137,13 +135,12 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPatch("about")]
         public async Task<IActionResult> UpdateAboutAsync([FromBody] UserAboutInputDTO userAboutInputDTO)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authonticatedUser = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authonticatedUser))
                 return Forbid();
 
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authonticatedUser = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             User? storedUser = await mainAppContext.Users.FindAsync(authonticatedUser);
 
@@ -158,11 +155,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("notifications")]
         public async Task<IActionResult> GetNotifications()
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             var storedNotifications = await notificationService.FindNotificationsForUserAsync(authenticatedUserId);
             var notificationOutputDTOs = ToNotificationOutputDTOs(storedNotifications);
 
@@ -206,14 +202,13 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPatch("profile-picture")]
         public async Task<IActionResult> CreateProfilePictureAsync([AllowedFileExtensions([JPEG, JPG, PNG]), MaxFileSize(MAX_FILE_SIZE)] IFormFile imageFile)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (authenticatedUser == null)
                 return Unauthorized();
@@ -229,11 +224,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpDelete("profile-picture")]
         public async Task<IActionResult> DeleteProfilePictureAsync()
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (authenticatedUser == null)
                 return Unauthorized();
@@ -269,23 +263,17 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpDelete("delete-account")]
         public async Task<IActionResult> DeleteUserAccountAsync()
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+
             User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (authenticatedUser == null)
                 return Unauthorized();
             authenticatedUser.IsDeleted = true;
             authenticatedUser.DeletedAt = DateTime.Now;
 
-
-            if (!string.IsNullOrEmpty(token))
-            {
-                DateTime tokenExpiry = jwtService.GetTokenExpiry(token);
-                await blacklistService.AddTokenToBlacklist(token, tokenExpiry, authenticatedUser.Email);
-            }
             await profileService.SaveDeletedAccountAsync();
             return Ok(CreateSuccessResponse("Account deleted Successfuly"));
         }

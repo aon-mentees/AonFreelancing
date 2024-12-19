@@ -17,20 +17,19 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/tasks")]
     [ApiController]
-    public class TasksController(AuthService authService, TaskService taskService, UserService userService, NotificationService notificationService, PushNotificationService pushNotificationService,BlacklistService blacklistService) : BaseController
+    public class TasksController(AuthService authService, TaskService taskService, UserService userService, NotificationService notificationService, PushNotificationService pushNotificationService) : BaseController
     {
         // Start task (Freelacner can) To Do -> in progress (Update started at)
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPatch("{taskId}/start-task")]
         public async Task<IActionResult> StartTaskAsync(long taskId)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
 
@@ -51,13 +50,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPatch("{taskId}/submit-task")]
         public async Task<IActionResult> SubmitTaskAsync(long taskId)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (storedUser is null)
@@ -77,13 +75,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPatch("{taskId}/approve-task")]
         public async Task<IActionResult> ApproveTaskAsync(long taskId)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (storedUser is null)
@@ -119,13 +116,12 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpPatch("{taskId}/reject-task")]
         public async Task<IActionResult> RejectTaskAsync(long taskId)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
             if (!ModelState.IsValid)
                 return CustomBadRequest();
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             TaskEntity? storedTask = await taskService.FindTaskByIdAsync(taskId, includeProject: true);
             User? storedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (storedUser is null)

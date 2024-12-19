@@ -15,18 +15,16 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/skills")]
     [ApiController]
-    public class SkillsController(MainAppContext mainAppContext, SkillsService skillsService, FreelancerService freelancerService,BlacklistService blacklistService) : BaseController
+    public class SkillsController(MainAppContext mainAppContext, SkillsService skillsService, FreelancerService freelancerService,AuthService authService,UserService userService) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_FREELANCER)]
         [HttpPost]
         public async Task<IActionResult> CreateSkill([FromBody] SkillInputDTO skillInputDTO)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            long authenticatedUserId = Convert.ToInt64(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
 
             bool isSkillExistsForFreelancer = await mainAppContext.Skills.AsNoTracking().AnyAsync(s => s.FreelancerId == authenticatedUserId && s.Name == skillInputDTO.Name);
 
@@ -43,12 +41,10 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSkill(long id)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            long authenticatedUserId = Convert.ToInt64(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
 
             Skill? storedSkill = await skillsService.FindSkillByIdAsync(id);
             if (storedSkill == null)
@@ -64,8 +60,8 @@ namespace AonFreelancing.Controllers.Mobile.v1
         [HttpGet("{freelancerId}/skills")]
         public async Task<IActionResult> GetSkillsByFreelancerIdAsync(long freelancerId, int page = 0, int pageSize = Constants.SKILLS_DEFAULT_PAGE_SIZE)
         {
-            string token = HttpContext.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-            if (await blacklistService.IsTokenBlacklisted(token) == true)
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
+            if (!await userService.IsExistingUser(authenticatedUserId))
                 return Forbid();
 
             if (await freelancerService.FindFreelancerByIdAsync(freelancerId) == null)
