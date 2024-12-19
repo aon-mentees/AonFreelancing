@@ -19,7 +19,7 @@ namespace AonFreelancing.Controllers.Mobile.v1
     [Authorize]
     [Route("api/mobile/v1/profiles")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService,ProfileService profileService, PushNotificationService pushNotificationService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService,ProfileService profileService, PushNotificationService pushNotificationService, ProjectLikeService projectLikeService, CommentService commentService)
         : BaseController
     {
 
@@ -228,27 +228,72 @@ namespace AonFreelancing.Controllers.Mobile.v1
             await userService.SaveChangesAsync();
             return NoContent();
         }
+        //This was commented out to speed up front end development, as per their request.
+        //[HttpGet("{clientId}/client-activity")]
+        //public async Task<IActionResult> GetClientActivityByIdAsync( [FromRoute] long clientId,
+        //    [FromQuery] int page = 0,
+        //    [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return base.CustomBadRequest();
 
+        //    Client? storedClient =await profileService.FindClientAsync(clientId);
+        //    if (storedClient == null)
+        //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
+
+        //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
+
+        //    PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
+        //    List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p, imagesBaseUrl)).ToList();
+        //    PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
+
+        //    return Ok(CreateSuccessResponse(paginatedProjectsDTO));
+        //}
         [HttpGet("{clientId}/client-activity")]
-        public async Task<IActionResult> GetClientActivityByIdAsync( [FromRoute] long clientId,
+        public async Task<IActionResult> GetClientActivityByIdAsync([FromRoute] long clientId,
             [FromQuery] int page = 0,
             [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
         {
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity) HttpContext.User.Identity);
 
-            Client? storedClient =await profileService.FindClientAsync(clientId);
+            Client? storedClient = await profileService.FindClientAsync(clientId);
             if (storedClient == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
 
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
             PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
-            List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p, imagesBaseUrl)).ToList();
-            PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
+            List<ProjectOutDTO> projectOutDTOs = paginatedProjects.Result.Select(p => ProjectOutDTO.FromProject(p, imagesBaseUrl)).ToList();
+            PaginatedResult<ProjectOutDTO> paginatedProjectsDTO = new PaginatedResult<ProjectOutDTO>(paginatedProjects.Total, projectOutDTOs);
 
+
+            foreach (var p in projectOutDTOs)
+            {
+                p.IsLiked = await projectLikeService.IsUserLikedProjectAsync(authenticatedUserId, p.Id);
+                PaginatedResult<ProjectLike> paginatedLikes = await projectLikeService.FindLikesForProjectWithLikerUserAsync(p.Id, 0, Constants.LIKES_DEFAULT_PAGE_SIZE);
+                p.PaginatedLikes = new PaginatedResult<ProjectLikeOutputDTO>(paginatedLikes.Total, paginatedLikes.Result.Select(pl => ProjectLikeOutputDTO.FromProjectLike(pl, imagesBaseUrl)).ToList());
+
+                PaginatedResult<Comment> paginatedComments = await commentService.GetProjectCommentsAsync(p.Id, 0, Constants.COMMENTS_DEFAULT_PAGE_SIZE, imagesBaseUrl);
+                p.paginatedComments = new PaginatedResult<CommentOutputDTO>();
+                foreach (var c in paginatedComments.Result)
+                {
+                    User? commenterUser = await userService.FindByIdAsync(c.UserId);
+                    if (commenterUser == null)
+                    {
+                        paginatedComments.Total--;
+                        continue;
+                    }
+                    p.paginatedComments.Result.Add(new CommentOutputDTO(c, commenterUser.Name, imagesBaseUrl, commenterUser.ProfilePicture));
+                }
+                p.paginatedComments.Total = paginatedComments.Total;
+            }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
         }
+
+
+
         //[HttpGet("profile-picture/{userId}")]
         //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)
         //{
