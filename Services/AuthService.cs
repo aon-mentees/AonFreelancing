@@ -151,7 +151,27 @@ namespace AonFreelancing.Services
         public async Task<bool> IsUserExistsByPhoneNumberAsync(string phoneNumber) => await _userService.IsExistsByPhoneNumberAsync(phoneNumber);
         
         public async Task<User?> FindUserByEmailAsync(string email)=> await _userService.FindByEmailAsync(email);
-        public async Task<bool> IsUserExistsAsync(string phoneNumber) => await _userService.FindByPhoneNumberAsync(phoneNumber) != null;
+        public async Task<bool> IsUserExistsAsync(string phoneNumber)
+        {
+            var storedUser = await _userService.FindByPhoneNumberAsync(phoneNumber);
+            if (storedUser == null)
+                return false;
+            await IsAccountPermanentlyDeletedAsync(storedUser);
+            return true;
+        }
+        public async Task<bool> IsAccountPermanentlyDeletedAsync(User storedUser)
+        {
+            if (storedUser.IsDeleted)
+            {
+                int totalMonths = (DateTime.Now.Year - storedUser.DeletedAt.Value.Year) * 12
+                                + (DateTime.Now.Month - storedUser.DeletedAt.Value.Month);
+                int daySpan = DateTime.Now.Day - storedUser.DeletedAt.Value.Day;
+
+                if (totalMonths >= 6 && daySpan <= 0)
+                    return true;
+            }
+            return false;
+        }
         public async Task<string> GenerateUserNameFromName(string Name)
         {
             string normalizedName = Name.ToLower().Replace(" ", "");
