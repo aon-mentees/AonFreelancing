@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using AonFreelancing.Enums;
+using AonFreelancing.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AonFreelancing.Models;

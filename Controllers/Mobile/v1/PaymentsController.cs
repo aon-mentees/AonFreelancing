@@ -1,11 +1,14 @@
 using System.Security.Claims;
+using AonFreelancing.Commons;
 using AonFreelancing.Enums;
 using AonFreelancing.Models;
 using AonFreelancing.Services;
+using AonFreelancing.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ZainCash.Net.DTOs;
 using ZainCash.Net.Services;
+using ZainCash.Net.Utils;
 
 namespace AonFreelancing.Controllers.Mobile.v1;
 
@@ -16,14 +19,16 @@ public class PaymentsController : BaseController
     private readonly ZainCashService _zainCashService;
     private readonly SubscriptionsService _subscriptionsService;
     private readonly IConfiguration _configuration;
+    private readonly ZainCashAPIConfig _zainCashApiConfig;
     private readonly AuthService _authService;
 
     public PaymentsController(ZainCashService zainCashService, SubscriptionsService subscriptionsService,
-        IConfiguration configuration, AuthService authService)
+        IConfiguration configuration, ZainCashAPIConfig zainCashApiConfig, AuthService authService)
     {
         _zainCashService = zainCashService;
         _subscriptionsService = subscriptionsService;
         _configuration = configuration;
+        _zainCashApiConfig = zainCashApiConfig;
         _authService = authService;
     }
 
@@ -32,7 +37,7 @@ public class PaymentsController : BaseController
     {
         long userId = _authService.GetUserId((ClaimsIdentity)User.Identity);
         string orderId = Guid.NewGuid().ToString();
-        int subscriptionCost = _configuration.GetValue<int>("Subscription:SubscriptionCost");
+        int subscriptionCost = _configuration.GetValue<int>("Subscription:Cost");
 
 
         InitTransactionRequest request = new InitTransactionRequest()
@@ -50,15 +55,20 @@ public class PaymentsController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> ActivateSubscription(string token)
     {
-        TokenResult decodedToken = _zainCashService.DecodeToken(token);
-
-        if (decodedToken.Status == PaymentStatus.Failed)
-            return Unauthorized(CreateErrorResponse(StatusCodes.Status401Unauthorized.ToString(),
-                "payment status is failed"));
+        // TokenResult decodedToken = _zainCashService.DecodeToken(token);
+        CustomTokenResult decodedToken = CustomZainCashUtil.DecodeToken(token, _zainCashApiConfig.Secret);
 
         Subscription? storedSubscription = await _subscriptionsService.FindByIdAsync(decodedToken.OrderId);
         if (storedSubscription == null)
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "subscription not found"));
+
+        if (!decodedToken.Status.Equals("completed"))
+        {
+            storedSubscription.Status = SubscriptionStatus.Failed;
+            await _subscriptionsService.UpdateAsync(storedSubscription);
+            return StatusCode(StatusCodes.Status402PaymentRequired,CreateErrorResponse(StatusCodes.Status402PaymentRequired.ToString(),
+                $"payment status: {decodedToken.Status} : {decodedToken.Msg}"));
+        }
 
         int subscriptionDurationInDays = _configuration.GetValue<int>("Subscription:DurationInDays");
         storedSubscription.Status = SubscriptionStatus.Active;
