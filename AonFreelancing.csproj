@@ -18,6 +18,7 @@
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
     <PackageReference Include="Twilio" Version="7.6.0" />
+    <PackageReference Include="ZainCash.Net" Version="5.0.3" />
   </ItemGroup>
 
 </Project>

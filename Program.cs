@@ -15,6 +15,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
+using ZainCash.Net.Extensions;
+using ZainCash.Net.Services;
 
 namespace AonFreelancing
 {
@@ -48,6 +50,11 @@ namespace AonFreelancing
             builder.Services.AddScoped<ActivitiesService>();
             builder.Services.AddScoped<CommentService>();
             builder.Services.AddScoped<ProfileService>();
+            builder.Services.AddScoped<SubscriptionsService>();
+            
+            builder.Services.AddScoped<ZainCashService>();
+            builder.Services.AddZainCashConfig("ZainCash", builder.Configuration);
+            
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()
                 .AddEntityFrameworkStores<MainAppContext>()
