@@ -62,7 +62,7 @@ public class PaymentsController : BaseController
         if (storedSubscription == null)
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "subscription not found"));
 
-        if (!decodedToken.Status.Equals("completed"))
+        if (!decodedToken.Status.Equals("success"))
         {
             storedSubscription.Status = SubscriptionStatus.Failed;
             await _subscriptionsService.UpdateAsync(storedSubscription);
