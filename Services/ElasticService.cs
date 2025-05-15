@@ -47,17 +47,27 @@ public class ElasticService<T> where T : class
         return response.IsValidResponse;
     }
 
+    public async Task<BulkResponse> AddOrUpdateBulkAsync(IEnumerable<T> documents)
+    {
+        var response = await _client.BulkAsync(i => i
+            .Index(_indexName)
+            .IndexMany(documents)
+        );
+        
+        return response;
+    }
+
     public async Task<T?> GetAsync(string id)
     {
         var result = await _client.GetAsync<T>(id, i => i.Index(_indexName));
         return result.Source;
     }
 
-    public async Task<List<T>> SearchAsync(string key,int pageNumber, int pageSize, params string[] fields)
+    public async Task<List<T>> SearchAsync(string key, int pageNumber, int pageSize, params string[] fields)
     {
         var response = await _client.SearchAsync<T>(s => s
             .Index(_indexName)
-            .From(pageNumber*pageSize)
+            .From(pageNumber * pageSize)
             .Size(pageSize)
             .Query(q => q
                 .MultiMatch(mm => mm

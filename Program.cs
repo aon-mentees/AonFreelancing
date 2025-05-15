@@ -17,6 +17,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using AonFreelancing.Configs;
 using AonFreelancing.Jobs;
+using AonFreelancing.Models.Documents;
 using ZainCash.Net.Extensions;
 using ZainCash.Net.Services;
 
@@ -54,14 +55,13 @@ namespace AonFreelancing
             builder.Services.AddScoped<CommentService>();
             builder.Services.AddScoped<ProfileService>();
             builder.Services.AddScoped<SubscriptionsService>();
-            builder.Services.AddScoped<ElasticService<User>>();
+            builder.Services.AddScoped<ElasticService<UserDocument>>();
             builder.Services.AddScoped<ElasticService<Project>>();
             
             builder.Services.AddScoped<ZainCashService>();
             builder.Services.AddZainCashConfig("ZainCash", builder.Configuration);
             
-            builder.Services.AddHostedService<ElsCreateIndexJob>();
-
+            builder.Services.AddHostedService<ElsSetupJob>();        
             builder.Services.Configure<ElasticSettings>(builder.Configuration.GetSection("ElasticSettings"));
             
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
