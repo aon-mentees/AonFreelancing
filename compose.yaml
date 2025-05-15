@@ -1,0 +1,33 @@
+﻿services:
+  ElasticSearch:
+    container_name: els
+    image: elasticsearch:8.18.0
+    ports:
+      - "9200:9200"
+    volumes:
+      - ElasticSearchData:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xmx3g
+    networks:
+      - elk
+    
+  Kibana:
+    container_name: kibana
+    image: kibana:8.18.0
+    ports:
+      - "5601:5601"
+    depends_on:
+      - ElasticSearch
+    environment:
+      - ELASTICSEARCH_URL=http://ElasticSearch:9200
+    networks:
+      - elk
+
+networks:
+    elk:
+      driver: bridge
+volumes:
+  ElasticSearchData:
+      

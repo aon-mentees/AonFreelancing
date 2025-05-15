@@ -15,6 +15,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
+using AonFreelancing.Configs;
+using AonFreelancing.Jobs;
 using ZainCash.Net.Extensions;
 using ZainCash.Net.Services;
 
@@ -29,6 +31,7 @@ namespace AonFreelancing
             var conf = builder.Configuration;
             builder.Services.AddControllers(o => o.SuppressAsyncSuffixInActionNames = false)
                             .AddJsonOptions(options => options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals);
+            
             builder.Services.AddSingleton<OtpManager>();
             builder.Services.AddSingleton<JwtService>();
             builder.Services.AddSingleton<FileStorageService>();
@@ -51,9 +54,15 @@ namespace AonFreelancing
             builder.Services.AddScoped<CommentService>();
             builder.Services.AddScoped<ProfileService>();
             builder.Services.AddScoped<SubscriptionsService>();
+            builder.Services.AddScoped<ElasticService<User>>();
+            builder.Services.AddScoped<ElasticService<Project>>();
             
             builder.Services.AddScoped<ZainCashService>();
             builder.Services.AddZainCashConfig("ZainCash", builder.Configuration);
+            
+            builder.Services.AddHostedService<ElsCreateIndexJob>();
+
+            builder.Services.Configure<ElasticSettings>(builder.Configuration.GetSection("ElasticSettings"));
             
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()

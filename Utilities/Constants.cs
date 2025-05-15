@@ -78,5 +78,7 @@
 
         public const int RATING_DEFAULT_PAGE_SIZE = 5;
         public const int FREELANCERS_WORKED_WITH_DEFAULT_PAGE_SIZE = 5;
+        
+        public const int AUTOCOMPLETE_DEFAULT_PAGE_SIZE = 10;
     }
 }
