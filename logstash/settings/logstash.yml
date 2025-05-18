@@ -1,0 +1,9 @@
+monitoring:
+  elasticsearch:
+    hosts: http://ElasticSearch:9200
+
+api:
+  http:
+    host: 0.0.0.0 
+
+config.reload.automatic: true

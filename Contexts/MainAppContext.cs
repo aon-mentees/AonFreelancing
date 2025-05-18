@@ -51,6 +51,8 @@ namespace AonFreelancing.Contexts
             builder.Entity<CommentNotification>().ToTable("CommentNotifications");
             builder.Entity<Subscription>().ToTable("Subscriptions");
             
+            builder.Entity<User>().Property(u=>u.UpdatedAt).HasDefaultValueSql("GETDATE()");
+            
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PRICE_TYPE", $"[PriceType] IN ('{Constants.PROJECT_PRICETYPE_FIXED}', '{Constants.PROJECT_PRICETYPE_PERHOUR}')"));
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_QUALIFICATION_NAME", $"[QualificationName] IN ('{Constants.PROJECT_QUALIFICATION_UIUX}', '{Constants.PROJECT_QUALIFICATION_FRONTEND}', '{Constants.PROJECT_QUALIFICATION_MOBILE}', '{Constants.PROJECT_QUALIFICATION_BACKEND}', '{Constants.PROJECT_QUALIFICATION_FULLSTACK}')"));
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PROJECT_STATUS", $"[Status] IN ('{Constants.PROJECT_STATUS_PENDING}', '{Constants.PROJECT_STATUS_IN_PROGRESS}', '{Constants.PROJECT_STATUS_COMPLETED}')"))

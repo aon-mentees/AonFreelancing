@@ -22,10 +22,10 @@ public class ElsSetupJob : IHostedService
     {
         using var scope = _scopeFactory.CreateScope();
         await CreateIndexesAsync(scope);
-        long migrationStartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        await MigrateUsersToEsAsync(scope);
-        long migrationEndTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        _logger.LogInformation($"Migration took: {migrationEndTime - migrationStartTime} milliseconds");
+    //     long migrationStartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    //     await MigrateUsersToEsAsync(scope);
+    //     long migrationEndTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    //     _logger.LogInformation($"Migration took: {migrationEndTime - migrationStartTime} milliseconds");
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -37,7 +37,7 @@ public class ElsSetupJob : IHostedService
         ElasticService<UserDocument> elsService = scope.ServiceProvider.GetRequiredService<ElasticService<UserDocument>>();
 
         long usersCount = await context.Users.CountAsync();
-        int batchSize = 100;
+        int batchSize = 5000;
         int pagesCount = (int)Math.Ceiling(usersCount / (double)batchSize);
         for (int i = 0; i < pagesCount; i++)
         {

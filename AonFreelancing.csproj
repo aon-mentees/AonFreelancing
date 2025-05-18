@@ -23,4 +23,8 @@
     <PackageReference Include="ZainCash.Net" Version="5.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="logstash\drivers\" />
+  </ItemGroup>
+
 </Project>
