@@ -21,7 +21,7 @@ private readonly MainAppContext _context;
     [HttpGet]
     public async Task<IActionResult> Search(string query, int page = 0, int size = 10)
     {
-        var result = await _elasticService.SearchAsync(query,page,size,["userName","name"]);
+        var result = await _elasticService.SearchAsync(query,page,size,["username","name"]);
         return Ok(CreateSuccessResponse(result));
     }
 
