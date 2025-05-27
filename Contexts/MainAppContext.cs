@@ -29,8 +29,9 @@ namespace AonFreelancing.Contexts
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
-            // For TPT design
-            builder.Entity<User>().ToTable("AspNetUsers")
+            // disable the sql OUTPUT clause which conflicts with the active trigger on the table AspNetUsers. 
+            // WARNING: this approach degrades performance for updates on this table but necessary since we are using a trigger.
+            builder.Entity<User>().ToTable("AspNetUsers", tb => tb.UseSqlOutputClause(false)) 
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
             builder.Entity<TempUser>().ToTable("TempUser")
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
