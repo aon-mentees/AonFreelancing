@@ -10,7 +10,6 @@ namespace AonFreelancing.Services
 {
     public class ProfileService(MainAppContext mainAppContext, PushNotificationService pushNotificationService, UserService userService)
     {
-
         public async Task<Client?> FindClientAsync(long clientId)
         {
             return await mainAppContext.Users.OfType<Client>().FirstOrDefaultAsync(c => c.Id == clientId);
@@ -47,11 +46,6 @@ namespace AonFreelancing.Services
 
             var notificationDTO = new ProfileVisitNotificationOutputDTO(profileVisitNotification);
             await pushNotificationService.SendProfileVisitNotification(notificationDTO, receiverId);
-        }
-        public async Task SaveDeletedAccountAsync()
-        {
-            
-            await mainAppContext.SaveChangesAsync();
         }
     }
 }

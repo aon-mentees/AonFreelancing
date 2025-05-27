@@ -64,7 +64,6 @@ namespace AonFreelancing
             builder.Services.AddHostedService<ElsSetupJob>();        
             builder.Services.Configure<ElasticSettings>(builder.Configuration.GetSection("ElasticSettings"));
             
-
             builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()
                 .AddEntityFrameworkStores<MainAppContext>()

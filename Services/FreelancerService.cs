@@ -9,18 +9,11 @@ namespace AonFreelancing.Services
     {
         public FreelancerService(MainAppContext mainAppContext) : base(mainAppContext) { }
 
-        public async Task<Freelancer?> FindFreelancerByIdAsync(long freelancerId)
-        {
-            return await _mainAppContext.Users.OfType<Freelancer>()
-                                                                   .AsNoTracking()
-                                                                   .Include(f => f.Projects)
-                                                                   .Where(f => f.Id == freelancerId && !f.IsDeleted)
-                                                                   .FirstOrDefaultAsync();
-        }
+
         public async Task<bool> IsFreelancerExistsAsync(long freelancerId)
         {
             return await _mainAppContext.Users.OfType<Freelancer>()
-                .AnyAsync(f => f.Id == freelancerId && !f.IsDeleted);
+                .AnyAsync(f => f.Id == freelancerId);
         }
         //Certifications
         public async Task<PaginatedResult<Certification>> FindCertificationByFreelancerIdAsync(long freelancerId, int pageNumber, int pageSize)

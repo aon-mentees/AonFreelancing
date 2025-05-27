@@ -26,7 +26,6 @@ namespace AonFreelancing.Contexts
         public DbSet<Comment> Comments { get; set; }
         public DbSet<WorkExperience> WorkExperiences { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
