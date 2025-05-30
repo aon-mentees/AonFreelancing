@@ -63,19 +63,25 @@ public class PaymentsController : BaseController
         if (storedSubscription == null)
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "subscription not found"));
 
-        if (!decodedToken.Status.Equals("success"))
+        if (decodedToken.Status.Equals("failed"))
         {
             storedSubscription.Status = SubscriptionStatus.Failed;
             await _subscriptionsService.UpdateAsync(storedSubscription);
             return StatusCode(StatusCodes.Status402PaymentRequired,CreateErrorResponse(StatusCodes.Status402PaymentRequired.ToString(),
                 $"payment status: {decodedToken.Status} : {decodedToken.Msg}"));
         }
-
+        List<Subscription> activeSubscriptions = (await _subscriptionsService.FindAllActiveByUserIdAsync(storedSubscription.UserId)).OrderByDescending(s=>s.ExpirationDateTime).ToList();
         int subscriptionDurationInDays = _configuration.GetValue<int>("Subscription:DurationInDays");
+
+        if (activeSubscriptions.Count > 0)
+            storedSubscription.ExpirationDateTime =
+                activeSubscriptions[0].ExpirationDateTime.Value.AddDays(subscriptionDurationInDays);
+        else
+            storedSubscription.ExpirationDateTime =
+                storedSubscription.StartDateTime.Value.AddDays(subscriptionDurationInDays);
+        
         storedSubscription.Status = SubscriptionStatus.Active;
         storedSubscription.StartDateTime = DateTime.Now;
-        storedSubscription.ExpirationDateTime =
-            storedSubscription.StartDateTime.Value.AddDays(subscriptionDurationInDays);
 
         await _subscriptionsService.UpdateAsync(storedSubscription);
 

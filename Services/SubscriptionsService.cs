@@ -1,4 +1,5 @@
 using AonFreelancing.Contexts;
+using AonFreelancing.Enums;
 using AonFreelancing.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,11 @@ public class SubscriptionsService
     public async Task<List<Subscription>> FindAllByUserIdAsync(long userId)
     {
         return await _mainAppContext.Subscriptions.Where(s => s.UserId == userId).ToListAsync();
+    }
+    public async Task<List<Subscription>> FindAllActiveByUserIdAsync(long userId)
+    {
+        return await _mainAppContext.Subscriptions
+            .Where(s => s.UserId == userId && s.Status == SubscriptionStatus.Active).ToListAsync();
     }
 
     public async Task<Subscription?> FindByTransactionIdAsync(string transactionId)
