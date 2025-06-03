@@ -61,7 +61,8 @@ public class PaymentsController : BaseController
         Subscription? storedSubscription = await _subscriptionsService.FindByIdAsync(decodedToken.OrderId);
         if (storedSubscription == null)
             return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "subscription not found"));
-
+        if(storedSubscription.Status == SubscriptionStatus.Active)
+            return Ok(CreateSuccessResponse("Subscription is already active")); 
         if (decodedToken.Status.Equals("failed"))
         {
             storedSubscription.Status = SubscriptionStatus.Failed;
