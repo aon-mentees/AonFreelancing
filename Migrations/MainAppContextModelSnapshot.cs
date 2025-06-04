@@ -421,6 +421,39 @@ namespace AonFreelancing.Migrations
                     b.ToTable("Skills");
                 });
 
+            modelBuilder.Entity("AonFreelancing.Models.Subscription", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Cost")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExpirationDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("StartDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Subscriptions", (string)null);
+                });
+
             modelBuilder.Entity("AonFreelancing.Models.TaskEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -494,33 +527,6 @@ namespace AonFreelancing.Migrations
                     b.ToTable("TempUser", (string)null);
                 });
 
-            modelBuilder.Entity("AonFreelancing.Models.TokenBlacklist", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("BlacklistedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ExpiredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TokensBlacklist");
-                });
-
             modelBuilder.Entity("AonFreelancing.Models.User", b =>
                 {
                     b.Property<long>("Id")
@@ -539,17 +545,11 @@ namespace AonFreelancing.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
@@ -590,6 +590,11 @@ namespace AonFreelancing.Migrations
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
@@ -1057,7 +1062,7 @@ namespace AonFreelancing.Migrations
                         .IsRequired();
 
                     b.HasOne("AonFreelancing.Models.Freelancer", "Freelancer")
-                        .WithMany()
+                        .WithMany("Projects")
                         .HasForeignKey("FreelancerId");
 
                     b.Navigation("Client");
@@ -1102,6 +1107,15 @@ namespace AonFreelancing.Migrations
                     b.HasOne("AonFreelancing.Models.Freelancer", null)
                         .WithMany("Skills")
                         .HasForeignKey("FreelancerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AonFreelancing.Models.Subscription", b =>
+                {
+                    b.HasOne("AonFreelancing.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -1389,6 +1403,8 @@ namespace AonFreelancing.Migrations
                     b.Navigation("Certifications");
 
                     b.Navigation("Education");
+
+                    b.Navigation("Projects");
 
                     b.Navigation("Skills");
 

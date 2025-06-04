@@ -19,11 +19,7 @@ namespace AonFreelancing.Controllers.Web.v1
     [Authorize]
     [Route("api/web/v1/profiles")]
     [ApiController]
-    public class ProfileController(MainAppContext mainAppContext, AuthService authService,
-        NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService
-        , UserService userService, ProfileService profileService, PushNotificationService pushNotificationService,
-        FreelancerService freelancerService, ClientService clientService, JwtService jwtService
-        , ProjectLikeService projectLikeService, CommentService commentService)
+    public class ProfileController(MainAppContext mainAppContext, AuthService authService, NotificationService notificationService, ProjectService projectService, FileStorageService fileStorageService, UserService userService, ProfileService profileService, PushNotificationService pushNotificationService, ProjectLikeService projectLikeService, CommentService commentService)
         : BaseController
     {
 
@@ -31,17 +27,17 @@ namespace AonFreelancing.Controllers.Web.v1
         public async Task<IActionResult> GetProfileByIdAsync([FromRoute] long id)
         {
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authenticatedUserId))
-                return Forbid();
-
-
             User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
             if (authenticatedUser == null)
                 return Unauthorized();
 
-            Freelancer? storedFreelancer = await freelancerService.FindFreelancerByIdAsync(id);
+            Freelancer? storedFreelancer = await mainAppContext.Users.OfType<Freelancer>()
+                                                                     .AsNoTracking()
+                                                                     .Include(f => f.Projects)
+                                                                     .Where(f => f.Id == id)
+                                                                     .FirstOrDefaultAsync();
             if (storedFreelancer != null)
             {
                 FreelancerResponseDTO storedFreelancerDTO = FreelancerResponseDTO.FromFreelancer(storedFreelancer, imagesBaseUrl);
@@ -50,7 +46,12 @@ namespace AonFreelancing.Controllers.Web.v1
                     await HandleProfileVisitNotificationAsync(authenticatedUser, storedFreelancer);
                 return Ok(CreateSuccessResponse(storedFreelancerDTO));
             }
-            Client? storedClient = await clientService.FindClientByIdAsync(id);
+            Client? storedClient = await mainAppContext.Users
+                .OfType<Client>()
+                .AsNoTracking()
+                .Where(c => c.Id == id)
+                .Include(c => c.Projects)
+                .FirstOrDefaultAsync();
 
             if (storedClient != null)
             {
@@ -76,15 +77,18 @@ namespace AonFreelancing.Controllers.Web.v1
                 ProfileVisitNotificationOutputDTO.FromVisitNotification(profileVisitNotification),
                 profileVisitNotification.ReceiverId);
         }
-
         [HttpGet("statistics")]
         public async Task<IActionResult> GetUserStatisticsAsync()
         {
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authenticatedUserId))
-                return Forbid();
 
-            var storedProjects = await projectService.FindProjectWithFreelancerAndTasks(authenticatedUserId);
+            var storedProjects = await mainAppContext.Projects
+                .AsNoTracking()
+                .Include(p => p.Freelancer)
+                .Include(p => p.Tasks)
+                .Where(p => p.ClientId == authenticatedUserId || p.FreelancerId == authenticatedUserId)
+                .Where(p => !p.IsDeleted)
+                .ToListAsync();
 
             var storedTasks = storedProjects.SelectMany(p => p.Tasks).ToList();
 
@@ -95,10 +99,6 @@ namespace AonFreelancing.Controllers.Web.v1
         public async Task<IActionResult> GetProjectsForUserDashboard([AllowedValues(PROJECT_STATUS_PENDING, PROJECT_STATUS_IN_PROGRESS, PROJECT_STATUS_COMPLETED)] string status = "",
                                                                         int page = 0, int pageSize = PROJECTS_DEFAULT_PAGE_SIZE)
         {
-            long storedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(storedUserId))
-                return Forbid();
-
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
@@ -136,12 +136,9 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPatch("about")]
         public async Task<IActionResult> UpdateAboutAsync([FromBody] UserAboutInputDTO userAboutInputDTO)
         {
-            long authonticatedUser = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authonticatedUser))
-                return Forbid();
-
             if (!ModelState.IsValid)
                 return CustomBadRequest();
+            long authonticatedUser = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
             User? storedUser = await mainAppContext.Users.FindAsync(authonticatedUser);
 
@@ -157,9 +154,6 @@ namespace AonFreelancing.Controllers.Web.v1
         public async Task<IActionResult> GetNotifications()
         {
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authenticatedUserId))
-                return Forbid();
-
             var storedNotifications = await notificationService.FindNotificationsForUserAsync(authenticatedUserId);
             var notificationOutputDTOs = ToNotificationOutputDTOs(storedNotifications);
 
@@ -203,13 +197,10 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpPatch("profile-picture")]
         public async Task<IActionResult> CreateProfilePictureAsync([AllowedFileExtensions([JPEG, JPG, PNG]), MaxFileSize(MAX_FILE_SIZE)] IFormFile imageFile)
         {
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authenticatedUserId))
-                return Forbid();
-
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (authenticatedUser == null)
                 return Unauthorized();
@@ -226,9 +217,6 @@ namespace AonFreelancing.Controllers.Web.v1
         public async Task<IActionResult> DeleteProfilePictureAsync()
         {
             long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authenticatedUserId))
-                return Forbid();
-
             User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
             if (authenticatedUser == null)
                 return Unauthorized();
@@ -239,40 +227,17 @@ namespace AonFreelancing.Controllers.Web.v1
             await userService.SaveChangesAsync();
             return NoContent();
         }
-        //This was commented out to speed up front end development, as per their request.
-        //[HttpGet("{clientId}/client-activity")]
-        //public async Task<IActionResult> GetClientActivityByIdAsync( [FromRoute] long clientId,
-        //    [FromQuery] int page = 0,
-        //    [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
-        //{
-        //    if (!ModelState.IsValid)
-        //        return base.CustomBadRequest();
 
-        //    Client? storedClient =await profileService.FindClientAsync(clientId);
-        //    if (storedClient == null)
-        //        return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
-
-        //    string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
-
-        //    PaginatedResult<Project> paginatedProjects = await profileService.FindClientActivitiesAsync(clientId, page, pageSize);
-        //    List<ClientActivityOutputDTO> clientActivityOutputDTOs = paginatedProjects.Result.Select(p => ClientActivityOutputDTO.FromProject(p, imagesBaseUrl)).ToList();
-        //    PaginatedResult<ClientActivityOutputDTO> paginatedProjectsDTO = new PaginatedResult<ClientActivityOutputDTO>(paginatedProjects.Total, clientActivityOutputDTOs);
-
-        //    return Ok(CreateSuccessResponse(paginatedProjectsDTO));
-        //}
         [HttpGet("{clientId}/client-activity")]
         public async Task<IActionResult> GetClientActivityByIdAsync([FromRoute] long clientId,
             [FromQuery] int page = 0,
             [FromQuery] int pageSize = Constants.CLIENT_ACTIVITY_DEFAULT_PAGE_SIZE)
         {
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authenticatedUserId))
-                return Forbid();
-
             if (!ModelState.IsValid)
                 return base.CustomBadRequest();
+            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
 
-            Client? storedClient = await clientService.FindClientByIdAsync(clientId);
+            Client? storedClient = await profileService.FindClientAsync(clientId);
             if (storedClient == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Client not found."));
 
@@ -304,24 +269,6 @@ namespace AonFreelancing.Controllers.Web.v1
                 p.paginatedComments.Total = paginatedComments.Total;
             }
             return Ok(CreateSuccessResponse(paginatedProjectsDTO));
-        }
-
-        [HttpDelete("delete-account")]
-        public async Task<IActionResult> DeleteUserAccountAsync()
-        {
-            long authenticatedUserId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authenticatedUserId))
-                return Forbid();
-
-
-            User? authenticatedUser = await userService.FindByIdAsync(authenticatedUserId);
-            if (authenticatedUser == null)
-                return Unauthorized();
-            authenticatedUser.IsDeleted = true;
-            authenticatedUser.DeletedAt = DateTime.Now;
-
-            await profileService.SaveDeletedAccountAsync();
-            return Ok(CreateSuccessResponse("Account deleted Successfuly"));
         }
         //[HttpGet("profile-picture/{userId}")]
         //public async Task<IActionResult> GetUserProfilePicture([FromRoute] long userId)

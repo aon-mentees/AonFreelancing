@@ -25,12 +25,13 @@ namespace AonFreelancing.Contexts
         public DbSet<Education> Educations { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<WorkExperience> WorkExperiences { get; set; }
-        public DbSet<TokenBlacklist> TokensBlacklist { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
-            // For TPT design
-            builder.Entity<User>().ToTable("AspNetUsers")
+            // disable the sql OUTPUT clause which conflicts with the active trigger on the table AspNetUsers. 
+            // WARNING: this approach degrades performance for updates on this table but necessary since we are using a trigger.
+            builder.Entity<User>().ToTable("AspNetUsers", tb => tb.UseSqlOutputClause(false)) 
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
             builder.Entity<TempUser>().ToTable("TempUser")
                 .HasIndex(u=>u.PhoneNumber).IsUnique();
@@ -49,7 +50,10 @@ namespace AonFreelancing.Contexts
             builder.Entity<BidRejectionNotification>().ToTable("BidRejectionNotifications");
             builder.Entity<ProfileVisitNotification>().ToTable("ProfileVisitNotifications");
             builder.Entity<CommentNotification>().ToTable("CommentNotifications");
-
+            builder.Entity<Subscription>().ToTable("Subscriptions");
+            
+            builder.Entity<User>().Property(u=>u.UpdatedAt).HasDefaultValueSql("GETDATE()");
+            
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PRICE_TYPE", $"[PriceType] IN ('{Constants.PROJECT_PRICETYPE_FIXED}', '{Constants.PROJECT_PRICETYPE_PERHOUR}')"));
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_QUALIFICATION_NAME", $"[QualificationName] IN ('{Constants.PROJECT_QUALIFICATION_UIUX}', '{Constants.PROJECT_QUALIFICATION_FRONTEND}', '{Constants.PROJECT_QUALIFICATION_MOBILE}', '{Constants.PROJECT_QUALIFICATION_BACKEND}', '{Constants.PROJECT_QUALIFICATION_FULLSTACK}')"));
             builder.Entity<Project>().ToTable("Projects", tb => tb.HasCheckConstraint("CK_PROJECT_STATUS", $"[Status] IN ('{Constants.PROJECT_STATUS_PENDING}', '{Constants.PROJECT_STATUS_IN_PROGRESS}', '{Constants.PROJECT_STATUS_COMPLETED}')"))
@@ -230,7 +234,12 @@ namespace AonFreelancing.Contexts
                     .HasForeignKey(r => r.RaterUserId)
                     .HasPrincipalKey(u => u.Id)
                     .OnDelete(DeleteBehavior.NoAction);
-
+            builder.Entity<Subscription>()
+                .HasOne<User>()
+                .WithMany()
+                .HasForeignKey(s=>s.UserId)
+                .HasPrincipalKey(u=>u.Id);
+            
             base.OnModelCreating(builder);
         }
     }

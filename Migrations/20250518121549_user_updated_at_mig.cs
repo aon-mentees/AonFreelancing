@@ -6,34 +6,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AonFreelancing.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUserSoftDelete : Migration
+    public partial class user_updated_at_mig : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<DateTime>(
-                name: "DeletedAt",
+                name: "UpdatedAt",
                 table: "AspNetUsers",
                 type: "datetime2",
-                nullable: true);
-
-            migrationBuilder.AddColumn<bool>(
-                name: "IsDeleted",
-                table: "AspNetUsers",
-                type: "bit",
                 nullable: false,
-                defaultValue: false);
+                defaultValueSql: "GETDATE()");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "DeletedAt",
-                table: "AspNetUsers");
-
-            migrationBuilder.DropColumn(
-                name: "IsDeleted",
+                name: "UpdatedAt",
                 table: "AspNetUsers");
         }
     }

@@ -1,0 +1,64 @@
+﻿services:
+  ElasticSearch:
+    container_name: els
+    image: elasticsearch:8.18.0
+    ports:
+      - "9200:9200"
+    volumes:
+      - ElasticSearchData:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xmx3g
+    networks:
+      - elk
+    
+  LogStash:
+    container_name: logstash
+    image: logstash:8.18.0
+    depends_on:
+      - ElasticSearch
+    
+    volumes:
+      - ./logstash/pipeline/:/usr/share/logstash/pipeline/:ro
+      - ./logstash/settings/:/usr/share/logstash/config/:ro
+      - ./logstash/drivers/mssql-jdbc-12.10.0.jre8.jar:/usr/share/logstash/logstash-core/lib/jars/mssql-jdbc-12.10.0.jre8.jar
+      - ./logstash/last-run:/usr/share/logstash/data/last-run
+    networks:
+      - elk
+      
+      
+  Kibana:
+    container_name: kibana
+    image: kibana:8.18.0
+    ports:
+      - "5601:5601"
+    depends_on:
+      - ElasticSearch
+    environment:
+      - ELASTICSEARCH_URL=http://ElasticSearch:9200
+    networks:
+      - elk
+
+#  SqlServer:
+#    container_name: sql-server-compose
+#    image: mcr.microsoft.com/mssql/server
+#    ports:
+#      - "1433:1433"
+#    env_file: .env/sql-server.env
+#    volumes:
+##      - sql-server-volume:/var/opt/mssql
+#      - SqlServerData:/var/opt/mssql
+#    networks:
+#     - elk  
+      
+networks:
+    elk:
+      driver: bridge
+volumes:
+  ElasticSearchData:
+#  SqlServerData:
+#  sql-server-volume:
+#      external: true
+
+      

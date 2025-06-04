@@ -20,26 +20,21 @@ namespace AonFreelancing.Controllers.Web.v1
     public class ClientsController(
         MainAppContext mainAppContext, ActivitiesService activitiesService, UserService userService,
         UserManager<User> userManager, ProjectService projectService, RatingService ratingService,
-        AuthService authService, RoleManager<ApplicationRole> roleManager, ClientService clientService) : BaseController
+        AuthService authService, RoleManager<ApplicationRole> roleManager) : BaseController
     {
         [Authorize(Roles = Constants.USER_TYPE_CLIENT)]
         [HttpPatch]
         public async Task<IActionResult> UpdateClientAsync([FromBody] ClientUpdateDTO clientUpdateDTO)
         {
-            long clientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(clientId))
-                return Forbid();
-
             if (!ModelState.IsValid)
                 return CustomBadRequest();
 
-
-            var storedClient = await clientService.FindClientByIdAsync(clientId);
-            if (storedClient == null)
+            var storedUser = (Client?)await userManager.GetUserAsync(HttpContext.User);
+            if (storedUser == null)
                 return NotFound(CreateErrorResponse(StatusCodes.Status404NotFound.ToString(), "Authenticated user not found"));
 
-            storedClient.Name = clientUpdateDTO.Name;
-            storedClient.CompanyName = clientUpdateDTO.CompanyName;
+            storedUser.Name = clientUpdateDTO.Name;
+            storedUser.CompanyName = clientUpdateDTO.CompanyName;
 
             await mainAppContext.SaveChangesAsync();
 
@@ -63,12 +58,7 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("recent-projects")]
         public async Task<IActionResult> GetRecentProjectsAsync(int page = 0, int pageSize = Constants.RECENT_PROJECTS_DEFAULT_PAGE_SIZE)
         {
-
             long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(authenticatedClientId))
-                return Forbid();
-
-
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
 
             PaginatedResult<Project> paginatedProjects = await projectService.FindProjectsByClientId(authenticatedClientId, page, pageSize);
@@ -81,16 +71,11 @@ namespace AonFreelancing.Controllers.Web.v1
         [HttpGet("freelancers-worked-with")]
         public async Task<IActionResult> GetFreelancersWorkedWith(int page = 0, int pageSize = FREELANCERS_WORKED_WITH_DEFAULT_PAGE_SIZE)
         {
-
-            long clientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
-            if (!await userService.IsExistingUser(clientId))
-                return Forbid();
-
-
+            long authenticatedClientId = authService.GetUserId((ClaimsIdentity)HttpContext.User.Identity);
             string imagesBaseUrl = $"{Request.Scheme}://{Request.Host}/images";
             var storedProjects = await mainAppContext.Projects.Include(p => p.Freelancer)
                                                                .OrderByDescending(p => p.EndDate)
-                                                               .Where(p => p.ClientId == clientId)
+                                                               .Where(p => p.ClientId == authenticatedClientId)
                                                                .Where(p => p.FreelancerId != null)
                                                                .Where(p => !p.IsDeleted)
                                                                .ToListAsync();

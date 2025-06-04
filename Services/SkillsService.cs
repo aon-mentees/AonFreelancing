@@ -7,15 +7,10 @@ namespace AonFreelancing.Services
 {
     public class SkillsService(MainAppContext mainAppContext)
     {
-        public async Task<Skill?> FindSkillByIdAsync(long skillId)
-        {
-           
-            return await mainAppContext.Skills.FirstOrDefaultAsync(s => s.Id == skillId);
 
-        }
         public async Task<PaginatedResult<Skill>>FindSkillsByFreelancerIdAsync(long freelancerId, int pageNumber,int pageSize)
         {
-           List<Skill> storedSkills = await mainAppContext.Skills.Where(s => s.FreelancerId == freelancerId )
+           List<Skill> storedSkills = await mainAppContext.Skills.Where(s => s.FreelancerId == freelancerId)
                                               .Skip(pageNumber * pageSize)
                                               .Take(pageSize)
                                               .ToListAsync();
