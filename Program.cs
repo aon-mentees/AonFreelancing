@@ -191,6 +191,7 @@ namespace AonFreelancing
 
             app.MapControllers();
             app.MapHub<NotificationsHub>("/Hubs/Notifications");
+            app.MapHub<SignalingHub>("/Hubs/Signaling");
             app.Run();
         }
 
