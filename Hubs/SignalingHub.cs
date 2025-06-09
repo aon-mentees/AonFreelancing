@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AonFreelancing.Interfaces;
 using AonFreelancing.Services;
 using Microsoft.IdentityModel.Tokens;
@@ -17,16 +18,19 @@ public class SignalingHub : BaseHub<ISignalingClient>
 
     public async Task SendOffer(long recipientUserId, string offerJson)
     {
-        await _signalingService.SendOfferAsync(recipientUserId, offerJson);
+        long senderUserId = _authService.GetUserId((Context.User.Identity as ClaimsIdentity));
+        await _signalingService.SendOfferAsync(senderUserId, recipientUserId, offerJson);
     }
 
     public async Task SendAnswer(long recipientUserId, string answerJson)
     {
-        await _signalingService.SendAnswerAsync(recipientUserId, answerJson);
+        long senderUserId = _authService.GetUserId((Context.User.Identity as ClaimsIdentity));
+        await _signalingService.SendAnswerAsync(senderUserId, recipientUserId, answerJson);
     }
 
     public async Task SendIceCandidate(long recipientUserId, string iceCandidateJson)
     {
-        await _signalingService.SendIceCandidateAsync(recipientUserId, iceCandidateJson);
+        long senderUserId = _authService.GetUserId((Context.User.Identity as ClaimsIdentity));
+        await _signalingService.SendIceCandidateAsync(senderUserId, recipientUserId, iceCandidateJson);
     }
 }

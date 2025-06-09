@@ -17,27 +17,27 @@ public class SignalingService
         _connectionService = connectionService;
     }
 
-    public async Task SendOfferAsync(long recipientUserId, string offerJson)
+    public async Task SendOfferAsync(long senderUserId, long recipientUserId, string offerJson)
     {
         var connections = _connectionService.GetConnections(recipientUserId);
         if (connections != null && connections.Any())
             await _signalingHubContext.Clients.Clients(connections)
-                .GetOffer(offerJson);
+                .GetOffer(senderUserId, offerJson);
     }
 
-    public async Task SendAnswerAsync(long recipientUserId, string answerJson)
+    public async Task SendAnswerAsync(long senderUserId, long recipientUserId, string answerJson)
     {
         var connections = _connectionService.GetConnections(recipientUserId);
         if (connections != null && connections.Any())
             await _signalingHubContext.Clients.Clients(connections)
-                .GetAnswer(answerJson);
+                .GetAnswer(senderUserId, answerJson);
     }
 
-    public async Task SendIceCandidateAsync(long recipientUserId, string iceCandidateJson)
+    public async Task SendIceCandidateAsync(long senderUserId, long recipientUserId, string iceCandidateJson)
     {
         var connections = _connectionService.GetConnections(recipientUserId);
         if (connections != null && connections.Any())
             await _signalingHubContext.Clients.Clients(connections)
-                .GetIceCandidate(iceCandidateJson);
+                .GetIceCandidate(senderUserId, iceCandidateJson);
     }
 }
