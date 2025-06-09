@@ -57,6 +57,7 @@ namespace AonFreelancing
             builder.Services.AddScoped<SubscriptionsService>();
             builder.Services.AddScoped<ElasticService<UserDocument>>();
             builder.Services.AddScoped<ElasticService<Project>>();
+            builder.Services.AddScoped<SignalingService>();
             
             builder.Services.AddScoped<ZainCashService>();
             builder.Services.AddZainCashConfig("ZainCash", builder.Configuration);
