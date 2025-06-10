@@ -28,7 +28,7 @@ namespace AonFreelancing
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.WebHost.UseUrls("https://0.0.0.0:7173"); // Allow all interfaces
             var conf = builder.Configuration;
             builder.Services.AddControllers(o => o.SuppressAsyncSuffixInActionNames = false)
                             .AddJsonOptions(options => options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals);
