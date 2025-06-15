@@ -38,7 +38,6 @@ namespace AonFreelancing
                 throw new InvalidOperationException(
                     "Missing required Kestrel endpoint configuration. Http and Https urls must be provided in configuration.");
             
-            builder.WebHost.UseUrls(httpUrl, httpsUrl); // Allow all interfaces
 
             bool isSslEnabled = kestrelEndpointsConfig.GetValue<bool>("Https:Ssl:Enabled");
             if (isSslEnabled)
@@ -56,6 +55,8 @@ namespace AonFreelancing
                     options.Configure(config: conf);
                 });
             }
+            else
+                builder.WebHost.UseUrls(httpUrl, httpsUrl); // Allow all interfaces
 
             builder.Services.AddControllers(o => o.SuppressAsyncSuffixInActionNames = false)
                 .AddJsonOptions(options =>
