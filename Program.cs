@@ -1,4 +1,4 @@
-
+using System.Net;
 using AonFreelancing.Contexts;
 using AonFreelancing.Enums;
 using AonFreelancing.Hubs;
@@ -28,11 +28,39 @@ namespace AonFreelancing
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.WebHost.UseUrls("https://0.0.0.0:7173"); // Allow all interfaces
             var conf = builder.Configuration;
-            builder.Services.AddControllers(o => o.SuppressAsyncSuffixInActionNames = false)
-                            .AddJsonOptions(options => options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals);
+
+            var kestrelEndpointsConfig = conf.GetSection("Kestrel:Endpoints");
+            string? httpUrl = kestrelEndpointsConfig["Http:Url"];
+            string? httpsUrl = kestrelEndpointsConfig["Https:Url"];
+
+            if (httpUrl == null || httpsUrl == null)
+                throw new InvalidOperationException(
+                    "Missing required Kestrel endpoint configuration. Http and Https urls must be provided in configuration.");
             
+            builder.WebHost.UseUrls(httpUrl, httpsUrl); // Allow all interfaces
+
+            bool isSslEnabled = kestrelEndpointsConfig.GetValue<bool>("Https:Ssl:Enabled");
+            if (isSslEnabled)
+            {
+                string? certPath = kestrelEndpointsConfig["Https:Ssl:CertPath"];
+                string? certPassword = kestrelEndpointsConfig["Https:Ssl:Password"];
+                if (certPath == null || certPassword == null)
+                    throw new InvalidOperationException(
+                        "SSL certificate configuration is missing. CertPath and Password must be provided in configuration.");
+                builder.WebHost.ConfigureKestrel(options =>
+                {
+                    options.Listen(IPAddress.Any, new Uri(httpUrl).Port); 
+                    options.Listen(IPAddress.Any, new Uri(httpsUrl).Port,
+                    listenOptions => { listenOptions.UseHttps(certPath, certPassword); });
+                    options.Configure(config: conf);
+                });
+            }
+
+            builder.Services.AddControllers(o => o.SuppressAsyncSuffixInActionNames = false)
+                .AddJsonOptions(options =>
+                    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals);
+
             builder.Services.AddSingleton<OtpManager>();
             builder.Services.AddSingleton<JwtService>();
             builder.Services.AddSingleton<FileStorageService>();
@@ -58,14 +86,15 @@ namespace AonFreelancing
             builder.Services.AddScoped<ElasticService<UserDocument>>();
             builder.Services.AddScoped<ElasticService<Project>>();
             builder.Services.AddScoped<SignalingService>();
-            
+
             builder.Services.AddScoped<ZainCashService>();
             builder.Services.AddZainCashConfig("ZainCash", builder.Configuration);
-            
-            builder.Services.AddHostedService<ElsSetupJob>();        
+
+            builder.Services.AddHostedService<ElsSetupJob>();
             builder.Services.Configure<ElasticSettings>(builder.Configuration.GetSection("ElasticSettings"));
-            
-            builder.Services.AddDbContext<MainAppContext>(options => options.UseSqlServer(conf.GetConnectionString("Default")));
+
+            builder.Services.AddDbContext<MainAppContext>(options =>
+                options.UseSqlServer(conf.GetConnectionString("Default")));
             builder.Services.AddIdentity<User, ApplicationRole>()
                 .AddEntityFrameworkStores<MainAppContext>()
                 .AddDefaultTokenProviders();
@@ -102,39 +131,40 @@ namespace AonFreelancing
             var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? string.Empty);
 
             builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings["Issuer"],
-                    ValidAudience = jwtSettings["Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(key)
-                };
-                options.Events = new JwtBearerEvents
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
                 {
-                    OnMessageReceived = context =>
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        var accessToken = context.Request.Query["access_token"];
-                        var path = context.HttpContext.Request.Path;
-                        // If the request is for a hub
-                        if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/Hubs")))
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtSettings["Issuer"],
+                        ValidAudience = jwtSettings["Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(key)
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
                         {
-                            // Read the token out of the query string
-                            context.Token = accessToken;
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            // If the request is for a hub
+                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/Hubs")))
+                            {
+                                // Read the token out of the query string
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
                         }
-                        return Task.CompletedTask;
-                    }
-                };
-            });
+                    };
+                });
 
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
@@ -142,7 +172,8 @@ namespace AonFreelancing
             });
 
             int preFlightMaxAge = int.Parse(builder.Configuration.GetSection("Cors")["PreFlightMaxAge"]);
-            builder.Services.AddCors(options => {
+            builder.Services.AddCors(options =>
+            {
                 options.AddDefaultPolicy(builder =>
                 {
                     builder.AllowAnyOrigin();
@@ -169,6 +200,7 @@ namespace AonFreelancing
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
             // just for testing
             app.UseSwagger();
             app.UseSwaggerUI();
