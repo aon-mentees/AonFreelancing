@@ -1,6 +1,9 @@
 using System.Security.Claims;
 using AonFreelancing.Interfaces;
+using AonFreelancing.Models;
 using AonFreelancing.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AonFreelancing.Hubs;
@@ -10,10 +13,25 @@ public class WebRtcSignalingHub : BaseHub<ISignalingClient>
     private readonly WebRtcSignalingService _webRtcSignalingService;
 
     public WebRtcSignalingHub(InMemorySignalRUserConnectionService userConnectionService, AuthService authService,
-        WebRtcSignalingService webRtcSignalingService) : base(
-        userConnectionService, authService)
+        WebRtcSignalingService webRtcSignalingService, UserService userService) : base(
+        userConnectionService, authService, userService)
     {
         _webRtcSignalingService = webRtcSignalingService;
+    }
+
+    public async Task SendCallInvitation(long recipientUserId)
+    {
+        long callerUserId = _authService.GetUserId((Context.User.Identity as ClaimsIdentity));
+        User? storedCallerUser = await _userService.FindByIdAsync(callerUserId);
+        if (storedCallerUser == null)
+            throw new HubException("UserNotFound: Caller does not exist (maybe deleted)");
+        await _webRtcSignalingService.SendCallInvitationAsync(callerUserId, recipientUserId, storedCallerUser.Name,
+            storedCallerUser.ProfilePicture);
+    }
+
+    public async Task SendCallAccepted(long recipientUserId)
+    {
+        await _webRtcSignalingService.SendCallAcceptedAsync(recipientUserId);
     }
 
     public async Task SendOffer(long recipientUserId, string offerJson)

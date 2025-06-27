@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebRTC Signaling Test Client</title>
+    <title>WebRTC SignalR Test Client</title>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -21,25 +21,21 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            background: white;
             border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
         .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 30px;
-            color: #333;
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .content {
+            padding: 30px;
         }
 
         .setup-section {
@@ -47,132 +43,121 @@
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-        }
-
-        .setup-section h3 {
-            color: #333;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .input-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
             margin-bottom: 15px;
         }
 
-        .input-field {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .input-field label {
+        label {
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
-            color: #555;
+            color: #333;
         }
 
-        .input-field input {
+        input, textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e1e5e9;
             border-radius: 8px;
             font-size: 14px;
-            transition: border-color 0.3s ease;
+            transition: border-color 0.3s;
         }
 
-        .input-field input:focus {
+        input:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #4facfe;
         }
 
-        .btn {
+        textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        button {
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            min-width: 120px;
         }
 
         .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
         }
 
         .btn-success {
-            background: linear-gradient(45deg, #28a745, #20c997);
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
         }
 
         .btn-danger {
-            background: linear-gradient(45deg, #dc3545, #e83e8c);
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
             color: white;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
         }
 
-        .btn:disabled {
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
 
         .status {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
             padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-weight: 500;
-            text-align: center;
-        }
-
-        .status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .status.connected {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.calling {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .video-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
             margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .status.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+
+        .status.success {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
         }
 
         .video-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .video-box {
             background: #000;
             border-radius: 10px;
             overflow: hidden;
             position: relative;
             aspect-ratio: 16/9;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
-        .video-container video {
+        video {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -182,93 +167,88 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0,0,0,0.7);
             color: white;
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 12px;
-            font-weight: 600;
         }
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-            flex-wrap: wrap;
+        .call-invitation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1000;
+            min-width: 300px;
+        }
+
+        .call-invitation h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .call-invitation .caller-info {
+            margin-bottom: 20px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
         }
 
         .logs {
-            background: #1a1a1a;
+            background: #1e1e1e;
             color: #00ff00;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 15px;
+            border-radius: 8px;
             font-family: 'Courier New', monospace;
             font-size: 12px;
             height: 200px;
             overflow-y: auto;
             margin-top: 20px;
-            border: 2px solid #333;
         }
 
-        .logs::-webkit-scrollbar {
-            width: 8px;
+        .connection-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
         }
 
-        .logs::-webkit-scrollbar-track {
-            background: #2a2a2a;
+        .connection-status.connected {
+            background: #4caf50;
+            color: white;
         }
 
-        .logs::-webkit-scrollbar-thumb {
-            background: #555;
-            border-radius: 4px;
-        }
-
-        .log-entry {
-            margin-bottom: 5px;
-            padding: 2px 0;
-        }
-
-        .log-entry.error {
-            color: #ff6b6b;
-        }
-
-        .log-entry.info {
-            color: #4ecdc4;
-        }
-
-        .log-entry.warning {
-            color: #ffe66d;
+        .connection-status.disconnected {
+            background: #f44336;
+            color: white;
         }
 
         @media (max-width: 768px) {
-            .video-section {
+            .video-container {
                 grid-template-columns: 1fr;
             }
 
-            .input-group {
+            .button-group {
                 flex-direction: column;
             }
 
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+            button {
+                width: 100%;
             }
         }
     </style>
@@ -276,185 +256,131 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>🎥 WebRTC Test Client</h1>
-        <p>Test your SignalR WebRTC signaling implementation</p>
+        <h1>WebRTC SignalR Test Client</h1>
+        <span id="connectionStatus" class="connection-status disconnected">Disconnected</span>
     </div>
 
-    <div class="setup-section">
-        <h3>🔧 Connection Setup</h3>
-        <div class="input-group">
-            <div class="input-field">
-                <label for="serverUrl">SignalR Server URL</label>
-                <input type="text" id="serverUrl" value="/Hubs/WebRtcSignaling" placeholder="Your SignalR hub URL">
+    <div class="content">
+        <div class="setup-section">
+            <h3>Setup</h3>
+            <div class="input-group">
+                <label for="jwtToken">JWT Token:</label>
+                <textarea id="jwtToken" placeholder="Paste your JWT token here..."></textarea>
             </div>
-            <div class="input-field">
-                <label for="jwtToken">JWT Token</label>
-                <input type="text" id="jwtToken" placeholder="Your JWT token">
+            <div class="input-group">
+                <label for="recipientUserId">Recipient User ID:</label>
+                <input type="number" id="recipientUserId" placeholder="Enter recipient user ID...">
+            </div>
+            <div class="button-group">
+                <button id="connectBtn" class="btn-primary">Connect to SignalR</button>
+                <button id="disconnectBtn" class="btn-danger" disabled>Disconnect</button>
             </div>
         </div>
-        <div class="input-group">
-            <div class="input-field">
-                <label for="myUserId">My User ID</label>
-                <input type="number" id="myUserId" placeholder="Your user ID">
-            </div>
-            <div class="input-field">
-                <label for="recipientUserId">Recipient User ID</label>
-                <input type="number" id="recipientUserId" placeholder="Target user ID">
+
+        <div class="setup-section">
+            <h3>Call Controls</h3>
+            <div class="button-group">
+                <button id="startCallBtn" class="btn-success" disabled>Start Call</button>
+                <button id="hangupBtn" class="btn-danger" disabled>Hang Up</button>
+                <button id="muteBtn" class="btn-warning" disabled>Mute</button>
+                <button id="videoToggleBtn" class="btn-warning" disabled>Video Off</button>
             </div>
         </div>
-        <button class="btn btn-primary" id="connectBtn">Connect to SignalR</button>
-    </div>
 
-    <div id="connectionStatus" class="status disconnected">
-        🔴 Disconnected from SignalR
-    </div>
+        <div id="statusDiv" class="status">
+            Ready to connect...
+        </div>
 
-    <div class="video-section">
         <div class="video-container">
-            <video id="localVideo" autoplay muted playsinline></video>
-            <div class="video-label">📹 Local Video</div>
+            <div class="video-box">
+                <div class="video-label">Local Video</div>
+                <video id="localVideo" autoplay muted playsinline></video>
+            </div>
+            <div class="video-box">
+                <div class="video-label">Remote Video</div>
+                <video id="remoteVideo" autoplay playsinline></video>
+            </div>
         </div>
-        <div class="video-container">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <div class="video-label">📺 Remote Video</div>
+
+        <div class="logs" id="logs">
+            <div>Logs will appear here...</div>
         </div>
-    </div>
-
-    <div class="controls">
-        <button class="btn btn-success" id="startCallBtn" disabled>📞 Start Call</button>
-        <button class="btn btn-danger" id="endCallBtn" disabled>📵 End Call</button>
-        <button class="btn btn-primary" id="toggleVideoBtn" disabled>📹 Toggle Video</button>
-        <button class="btn btn-primary" id="toggleAudioBtn" disabled>🎤 Toggle Audio</button>
-    </div>
-
-    <div class="logs" id="logs">
-        <div class="log-entry info">📋 Logs will appear here...</div>
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+<!-- Call Invitation Modal -->
+<div id="callInvitationModal" style="display: none;">
+    <div class="overlay"></div>
+    <div class="call-invitation">
+        <h3>Incoming Call</h3>
+        <div class="caller-info">
+            <p><strong>From:</strong> <span id="callerName"></span></p>
+            <p><strong>User ID:</strong> <span id="callerUserId"></span></p>
+        </div>
+        <div class="button-group">
+            <button id="acceptCallBtn" class="btn-success">Accept</button>
+            <button id="rejectCallBtn" class="btn-danger">Reject</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
 <script>
     class WebRTCClient {
         constructor() {
             this.connection = null;
             this.peerConnection = null;
             this.localStream = null;
-            this.isInitiator = false;
-            this.isConnected = false;
-            this.isInCall = false;
-            this.pendingIceCandidates = []; // Queue for ICE candidates received before remote description
-            this.remoteDescriptionSet = false;
+            this.remoteStream = null;
+            this.recipientUserId = null;
+            this.isCallInitiator = false;
+            this.isMuted = false;
+            this.isVideoEnabled = true;
 
-            this.setupUI();
-            this.initializePeerConnection();
+            this.initializeElements();
+            this.setupEventListeners();
+            this.initializeWebRTC();
         }
 
-        setupUI() {
+        initializeElements() {
             this.elements = {
-                serverUrl: document.getElementById('serverUrl'),
                 jwtToken: document.getElementById('jwtToken'),
-                myUserId: document.getElementById('myUserId'),
                 recipientUserId: document.getElementById('recipientUserId'),
                 connectBtn: document.getElementById('connectBtn'),
-                connectionStatus: document.getElementById('connectionStatus'),
+                disconnectBtn: document.getElementById('disconnectBtn'),
                 startCallBtn: document.getElementById('startCallBtn'),
-                endCallBtn: document.getElementById('endCallBtn'),
-                toggleVideoBtn: document.getElementById('toggleVideoBtn'),
-                toggleAudioBtn: document.getElementById('toggleAudioBtn'),
+                hangupBtn: document.getElementById('hangupBtn'),
+                muteBtn: document.getElementById('muteBtn'),
+                videoToggleBtn: document.getElementById('videoToggleBtn'),
+                statusDiv: document.getElementById('statusDiv'),
+                connectionStatus: document.getElementById('connectionStatus'),
                 localVideo: document.getElementById('localVideo'),
                 remoteVideo: document.getElementById('remoteVideo'),
-                logs: document.getElementById('logs')
+                logs: document.getElementById('logs'),
+                callInvitationModal: document.getElementById('callInvitationModal'),
+                callerName: document.getElementById('callerName'),
+                callerUserId: document.getElementById('callerUserId'),
+                acceptCallBtn: document.getElementById('acceptCallBtn'),
+                rejectCallBtn: document.getElementById('rejectCallBtn')
             };
+        }
 
+        setupEventListeners() {
             this.elements.connectBtn.addEventListener('click', () => this.connectToSignalR());
+            this.elements.disconnectBtn.addEventListener('click', () => this.disconnectFromSignalR());
             this.elements.startCallBtn.addEventListener('click', () => this.startCall());
-            this.elements.endCallBtn.addEventListener('click', () => this.endCall());
-            this.elements.toggleVideoBtn.addEventListener('click', () => this.toggleVideo());
-            this.elements.toggleAudioBtn.addEventListener('click', () => this.toggleAudio());
+            this.elements.hangupBtn.addEventListener('click', () => this.hangUp());
+            this.elements.muteBtn.addEventListener('click', () => this.toggleMute());
+            this.elements.videoToggleBtn.addEventListener('click', () => this.toggleVideo());
+            this.elements.acceptCallBtn.addEventListener('click', () => this.acceptCall());
+            this.elements.rejectCallBtn.addEventListener('click', () => this.rejectCall());
         }
 
-        log(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.className = `log-entry ${type}`;
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            this.elements.logs.appendChild(logEntry);
-            this.elements.logs.scrollTop = this.elements.logs.scrollHeight;
-            console.log(`[${type.toUpperCase()}] ${message}`);
-        }
-
-        async connectToSignalR() {
-            try {
-                const serverUrl = this.elements.serverUrl.value;
-                const jwtToken = this.elements.jwtToken.value;
-
-                if (!serverUrl || !jwtToken) {
-                    this.log('Please provide server URL and JWT token', 'error');
-                    return;
-                }
-
-                this.log('Connecting to SignalR...', 'info');
-
-                this.connection = new signalR.HubConnectionBuilder()
-                    .withUrl(serverUrl, {
-                        accessTokenFactory: () => jwtToken
-                    })
-                    .withAutomaticReconnect()
-                    .build();
-
-                // Set up SignalR event handlers
-                this.connection.on('GetOffer', (senderUserId, offerJson) => {
-                    this.log(`Received offer from user ${senderUserId}`, 'info');
-                    this.handleOffer(senderUserId, offerJson);
-                });
-
-                this.connection.on('GetAnswer', (senderUserId, answerJson) => {
-                    this.log(`Received answer from user ${senderUserId}`, 'info');
-                    this.handleAnswer(senderUserId, answerJson);
-                });
-
-                this.connection.on('GetIceCandidate', (senderUserId, iceCandidateJson) => {
-                    this.log(`Received ICE candidate from user ${senderUserId}`, 'info');
-                    this.handleIceCandidate(senderUserId, iceCandidateJson);
-                });
-
-                await this.connection.start();
-                this.isConnected = true;
-                this.updateConnectionStatus(true);
-                this.log('Connected to SignalR successfully!', 'info');
-
-                this.elements.startCallBtn.disabled = false;
-
-            } catch (error) {
-                this.log(`SignalR connection failed: ${error.message}`, 'error');
-                this.updateConnectionStatus(false);
-            }
-        }
-
-        updateConnectionStatus(connected) {
-            if (connected) {
-                this.elements.connectionStatus.textContent = '🟢 Connected to SignalR';
-                this.elements.connectionStatus.className = 'status connected';
-                this.elements.connectBtn.textContent = 'Connected';
-                this.elements.connectBtn.disabled = true;
-            } else {
-                this.elements.connectionStatus.textContent = '🔴 Disconnected from SignalR';
-                this.elements.connectionStatus.className = 'status disconnected';
-                this.elements.connectBtn.textContent = 'Connect to SignalR';
-                this.elements.connectBtn.disabled = false;
-            }
-        }
-
-        initializePeerConnection() {
+        initializeWebRTC() {
             const configuration = {
                 iceServers: [
-                    {urls: 'stun:stun.l.google.com:19302'},
-                    {urls: 'stun:stun1.l.google.com:19302'},
-                    {
-                        urls: 'turn:13.49.83.12:3478',
-                        username: 'username',
-                        credential: 'password'
-                    }
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
                 ]
             };
 
@@ -462,27 +388,193 @@
 
             this.peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
-                    this.log('Sending ICE candidate...', 'info');
-                    this.sendIceCandidate(event.candidate);
+                    this.log('ICE candidate generated');
+                    this.connection.invoke('SendIceCandidate', this.recipientUserId, JSON.stringify(event.candidate));
                 }
             };
 
             this.peerConnection.ontrack = (event) => {
-                this.log('Received remote stream', 'info');
+                this.log('Remote stream received');
                 this.elements.remoteVideo.srcObject = event.streams[0];
             };
 
             this.peerConnection.onconnectionstatechange = () => {
-                this.log(`Connection state: ${this.peerConnection.connectionState}`, 'info');
+                this.log(`Connection state: ${this.peerConnection.connectionState}`);
                 if (this.peerConnection.connectionState === 'connected') {
-                    this.log('WebRTC connection established!', 'info');
-                    this.elements.connectionStatus.textContent = '🎥 WebRTC Connected';
-                    this.elements.connectionStatus.className = 'status connected';
+                    this.updateStatus('Call connected!', 'success');
                 }
             };
         }
 
-        async getUserMedia() {
+        async connectToSignalR() {
+            const jwt = this.elements.jwtToken.value.trim();
+            if (!jwt) {
+                this.updateStatus('Please enter JWT token', 'error');
+                return;
+            }
+
+            try {
+                this.connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/Hubs/WebRtcSignaling', {
+                        accessTokenFactory: () => jwt
+                    })
+                    .withAutomaticReconnect()
+                    .build();
+
+                this.setupSignalRHandlers();
+
+                await this.connection.start();
+                this.log('Connected to SignalR');
+                this.updateStatus('Connected to SignalR', 'success');
+                this.elements.connectionStatus.textContent = 'Connected';
+                this.elements.connectionStatus.className = 'connection-status connected';
+
+                this.elements.connectBtn.disabled = true;
+                this.elements.disconnectBtn.disabled = false;
+                this.elements.startCallBtn.disabled = false;
+
+            } catch (error) {
+                this.log(`Connection failed: ${error}`);
+                this.updateStatus(`Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        setupSignalRHandlers() {
+            this.connection.on('ReceiveCallInvitation', (callerUserId, callerName, callerProfilePictureUrl) => {
+                this.log(`Incoming call from ${callerName} (ID: ${callerUserId})`);
+                this.showCallInvitation(callerUserId, callerName);
+            });
+
+            this.connection.on('CallAccepted', async () => {
+                this.log('Call was accepted by recipient');
+                this.updateStatus('Call accepted! Initializing media...', 'success');
+
+                try {
+                    await this.initializeLocalStream();
+                    await this.createAndSendOffer();
+                    this.elements.muteBtn.disabled = false;
+                    this.elements.videoToggleBtn.disabled = false;
+                } catch (error) {
+                    this.log(`Failed to initialize call: ${error}`);
+                    this.updateStatus(`Failed to initialize call: ${error.message}`, 'error');
+                }
+            });
+
+            this.connection.on('CallRejected', (rejecterUserId) => {
+                this.log('Call was rejected by recipient');
+                this.updateStatus('Call was rejected', 'error');
+                this.resetCallState();
+            });
+
+            this.connection.on('GetOffer', async (senderUserId, offerJson) => {
+                this.log('Received offer');
+                const offer = JSON.parse(offerJson);
+                await this.handleOffer(offer, senderUserId);
+            });
+
+            this.connection.on('GetAnswer', async (senderUserId, answerJson) => {
+                this.log('Received answer');
+                const answer = JSON.parse(answerJson);
+                await this.peerConnection.setRemoteDescription(answer);
+            });
+
+            this.connection.on('GetIceCandidate', async (senderUserId, iceCandidateJson) => {
+                this.log('Received ICE candidate');
+                const candidate = JSON.parse(iceCandidateJson);
+                await this.peerConnection.addIceCandidate(candidate);
+            });
+        }
+
+        async disconnectFromSignalR() {
+            if (this.connection) {
+                await this.connection.stop();
+                this.log('Disconnected from SignalR');
+                this.updateStatus('Disconnected from SignalR');
+                this.elements.connectionStatus.textContent = 'Disconnected';
+                this.elements.connectionStatus.className = 'connection-status disconnected';
+
+                this.elements.connectBtn.disabled = false;
+                this.elements.disconnectBtn.disabled = true;
+                this.elements.startCallBtn.disabled = true;
+            }
+        }
+
+        showCallInvitation(callerUserId, callerName) {
+            this.elements.callerName.textContent = callerName;
+            this.elements.callerUserId.textContent = callerUserId;
+            this.elements.callInvitationModal.style.display = 'block';
+            this.recipientUserId = callerUserId; // Set for response
+        }
+
+        async acceptCall() {
+            this.elements.callInvitationModal.style.display = 'none';
+            this.log('Call accepted');
+            this.updateStatus('Call accepted, initializing media...', 'success');
+
+            try {
+                await this.initializeLocalStream();
+                this.elements.hangupBtn.disabled = false;
+                this.elements.muteBtn.disabled = false;
+                this.elements.videoToggleBtn.disabled = false;
+
+                // Send acceptance signal to caller to start WebRTC negotiation
+                await this.connection.invoke('SendCallAccepted', this.recipientUserId);
+
+            } catch (error) {
+                this.log(`Failed to initialize media: ${error}`);
+                this.updateStatus(`Failed to access camera/microphone: ${error.message}`, 'error');
+            }
+        }
+
+        rejectCall() {
+            this.elements.callInvitationModal.style.display = 'none';
+            this.log('Call rejected');
+            this.updateStatus('Call rejected');
+
+            // Send rejection signal to caller
+            this.connection.invoke('SendCallRejected', this.recipientUserId);
+            this.recipientUserId = null;
+        }
+
+        resetCallState() {
+            this.recipientUserId = null;
+            this.isCallInitiator = false;
+            this.isMuted = false;
+            this.isVideoEnabled = true;
+
+            this.elements.startCallBtn.disabled = false;
+            this.elements.hangupBtn.disabled = true;
+            this.elements.muteBtn.disabled = true;
+            this.elements.muteBtn.textContent = 'Mute';
+            this.elements.videoToggleBtn.disabled = true;
+            this.elements.videoToggleBtn.textContent = 'Video Off';
+        }
+
+        async startCall() {
+            const recipientId = parseInt(this.elements.recipientUserId.value);
+            if (!recipientId) {
+                this.updateStatus('Please enter recipient user ID', 'error');
+                return;
+            }
+
+            this.recipientUserId = recipientId;
+            this.isCallInitiator = true;
+
+            try {
+                this.log(`Sending call invitation to user ${recipientId}`);
+                await this.connection.invoke('SendCallInvitation', recipientId);
+                this.updateStatus('Call invitation sent, waiting for response...', 'success');
+
+                this.elements.startCallBtn.disabled = true;
+                this.elements.hangupBtn.disabled = false;
+
+            } catch (error) {
+                this.log(`Failed to start call: ${error}`);
+                this.updateStatus(`Failed to start call: ${error.message}`, 'error');
+            }
+        }
+
+        async initializeLocalStream() {
             try {
                 this.localStream = await navigator.mediaDevices.getUserMedia({
                     video: true,
@@ -491,167 +583,48 @@
 
                 this.elements.localVideo.srcObject = this.localStream;
 
-                // Add tracks to peer connection
                 this.localStream.getTracks().forEach(track => {
                     this.peerConnection.addTrack(track, this.localStream);
                 });
 
-                this.log('Local media stream obtained', 'info');
-                this.elements.toggleVideoBtn.disabled = false;
-                this.elements.toggleAudioBtn.disabled = false;
-
-                return true;
+                this.log('Local stream initialized');
             } catch (error) {
-                this.log(`Failed to get user media: ${error.message}`, 'error');
-                return false;
+                this.log(`Failed to get local stream: ${error}`);
+                this.updateStatus(`Failed to access camera/microphone: ${error.message}`, 'error');
+                throw error;
             }
         }
 
-        async startCall() {
-            if (!this.isConnected) {
-                this.log('Please connect to SignalR first', 'error');
-                return;
-            }
-
-            const recipientId = this.elements.recipientUserId.value;
-            if (!recipientId) {
-                this.log('Please provide recipient user ID', 'error');
-                return;
-            }
-
-            this.log('Starting call...', 'info');
-            this.elements.connectionStatus.textContent = '📞 Initiating call...';
-            this.elements.connectionStatus.className = 'status calling';
-
-            const mediaObtained = await this.getUserMedia();
-            if (!mediaObtained) return;
-
-            this.isInitiator = true;
-            this.isInCall = true;
-
+        async createAndSendOffer() {
             try {
                 const offer = await this.peerConnection.createOffer();
                 await this.peerConnection.setLocalDescription(offer);
 
-                this.log('Sending offer...', 'info');
-                await this.connection.invoke('SendOffer', parseInt(recipientId), JSON.stringify(offer));
-
-                this.elements.startCallBtn.disabled = true;
-                this.elements.endCallBtn.disabled = false;
-
+                this.log('Sending offer');
+                await this.connection.invoke('SendOffer', this.recipientUserId, JSON.stringify(offer));
             } catch (error) {
-                this.log(`Failed to start call: ${error.message}`, 'error');
+                this.log(`Failed to create/send offer: ${error}`);
+                throw error;
             }
         }
 
-        async handleOffer(senderUserId, offerJson) {
-            if (this.isInCall) {
-                this.log('Already in a call, ignoring offer', 'warning');
-                return;
-            }
-
-            this.log('Handling incoming call...', 'info');
-            this.elements.connectionStatus.textContent = '📞 Incoming call...';
-            this.elements.connectionStatus.className = 'status calling';
-
-            const mediaObtained = await this.getUserMedia();
-            if (!mediaObtained) return;
-
-            this.isInCall = true;
-            this.isInitiator = false;
-
+        async handleOffer(offer, senderUserId) {
             try {
-                const offer = JSON.parse(offerJson);
                 await this.peerConnection.setRemoteDescription(offer);
-                this.remoteDescriptionSet = true;
-
-                // Process any pending ICE candidates
-                await this.processPendingIceCandidates();
 
                 const answer = await this.peerConnection.createAnswer();
                 await this.peerConnection.setLocalDescription(answer);
 
-                this.log('Sending answer...', 'info');
+                this.log('Sending answer');
                 await this.connection.invoke('SendAnswer', senderUserId, JSON.stringify(answer));
-
-                this.elements.startCallBtn.disabled = true;
-                this.elements.endCallBtn.disabled = false;
-
             } catch (error) {
-                this.log(`Failed to handle offer: ${error.message}`, 'error');
+                this.log(`Failed to handle offer: ${error}`);
+                this.updateStatus(`Failed to handle offer: ${error.message}`, 'error');
             }
         }
 
-        async handleAnswer(senderUserId, answerJson) {
-            if (!this.isInitiator) {
-                this.log('Received answer but not initiator', 'warning');
-                return;
-            }
-
-            try {
-                const answer = JSON.parse(answerJson);
-                await this.peerConnection.setRemoteDescription(answer);
-                this.remoteDescriptionSet = true;
-
-                // Process any pending ICE candidates
-                await this.processPendingIceCandidates();
-
-                this.log('Answer processed successfully', 'info');
-            } catch (error) {
-                this.log(`Failed to handle answer: ${error.message}`, 'error');
-            }
-        }
-
-        async handleIceCandidate(senderUserId, iceCandidateJson) {
-            try {
-                const candidate = JSON.parse(iceCandidateJson);
-
-                if (!this.remoteDescriptionSet) {
-                    // Queue the ICE candidate if remote description isn't set yet
-                    this.log('Queueing ICE candidate (waiting for remote description)', 'info');
-                    this.pendingIceCandidates.push(candidate);
-                    return;
-                }
-
-                await this.peerConnection.addIceCandidate(candidate);
-                this.log('ICE candidate added successfully', 'info');
-            } catch (error) {
-                this.log(`Failed to add ICE candidate: ${error.message}`, 'error');
-            }
-        }
-
-        async processPendingIceCandidates() {
-            if (this.pendingIceCandidates.length === 0) return;
-
-            this.log(`Processing ${this.pendingIceCandidates.length} pending ICE candidates`, 'info');
-
-            for (const candidate of this.pendingIceCandidates) {
-                try {
-                    await this.peerConnection.addIceCandidate(candidate);
-                    this.log('Pending ICE candidate added successfully', 'info');
-                } catch (error) {
-                    this.log(`Failed to add pending ICE candidate: ${error.message}`, 'error');
-                }
-            }
-
-            this.pendingIceCandidates = [];
-        }
-
-        async sendIceCandidate(candidate) {
-            if (!this.isConnected) return;
-
-            const recipientId = this.elements.recipientUserId.value;
-            if (!recipientId) return;
-
-            try {
-                await this.connection.invoke('SendIceCandidate', parseInt(recipientId), JSON.stringify(candidate));
-            } catch (error) {
-                this.log(`Failed to send ICE candidate: ${error.message}`, 'error');
-            }
-        }
-
-        endCall() {
-            this.log('Ending call...', 'info');
+        hangUp() {
+            this.log('Hanging up call');
 
             if (this.localStream) {
                 this.localStream.getTracks().forEach(track => track.stop());
@@ -660,47 +633,54 @@
 
             if (this.peerConnection) {
                 this.peerConnection.close();
-                this.initializePeerConnection();
+                this.initializeWebRTC(); // Reinitialize for next call
             }
 
             this.elements.localVideo.srcObject = null;
             this.elements.remoteVideo.srcObject = null;
 
-            this.isInCall = false;
-            this.isInitiator = false;
-            this.remoteDescriptionSet = false;
-            this.pendingIceCandidates = [];
+            this.resetCallState();
+            this.updateStatus('Call ended');
+        }
 
-            this.elements.startCallBtn.disabled = false;
-            this.elements.endCallBtn.disabled = true;
-            this.elements.toggleVideoBtn.disabled = true;
-            this.elements.toggleAudioBtn.disabled = true;
-
-            if (this.isConnected) {
-                this.updateConnectionStatus(true);
+        toggleMute() {
+            if (this.localStream) {
+                const audioTrack = this.localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = this.isMuted;
+                    this.isMuted = !this.isMuted;
+                    this.elements.muteBtn.textContent = this.isMuted ? 'Unmute' : 'Mute';
+                    this.log(`Audio ${this.isMuted ? 'muted' : 'unmuted'}`);
+                }
             }
         }
 
         toggleVideo() {
-            if (!this.localStream) return;
-
-            const videoTrack = this.localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                this.elements.toggleVideoBtn.textContent = videoTrack.enabled ? '📹 Video On' : '📹 Video Off';
-                this.log(`Video ${videoTrack.enabled ? 'enabled' : 'disabled'}`, 'info');
+            if (this.localStream) {
+                const videoTrack = this.localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = !this.isVideoEnabled;
+                    this.isVideoEnabled = !this.isVideoEnabled;
+                    this.elements.videoToggleBtn.textContent = this.isVideoEnabled ? 'Video Off' : 'Video On';
+                    this.log(`Video ${this.isVideoEnabled ? 'enabled' : 'disabled'}`);
+                }
             }
         }
 
-        toggleAudio() {
-            if (!this.localStream) return;
+        updateStatus(message, type = '') {
+            this.elements.statusDiv.textContent = message;
+            this.elements.statusDiv.className = `status ${type}`;
+        }
 
-            const audioTrack = this.localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                this.elements.toggleAudioBtn.textContent = audioTrack.enabled ? '🎤 Mic On' : '🎤 Mic Off';
-                this.log(`Audio ${audioTrack.enabled ? 'enabled' : 'disabled'}`, 'info');
-            }
+        log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            console.log(logEntry);
+
+            const logDiv = document.createElement('div');
+            logDiv.textContent = logEntry;
+            this.elements.logs.appendChild(logDiv);
+            this.elements.logs.scrollTop = this.elements.logs.scrollHeight;
         }
     }
 

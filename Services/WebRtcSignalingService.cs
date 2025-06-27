@@ -17,6 +17,22 @@ public class WebRtcSignalingService
         _connectionService = connectionService;
     }
 
+    public async Task SendCallInvitationAsync(long callerUserId, long recipientUserId, string callerName,
+        string callerProfilePictureUrl)
+    {
+        var connections = _connectionService.GetConnections(recipientUserId);
+        if (connections != null && connections.Any())
+            await _signalingHubContext.Clients.Clients(connections)
+                .ReceiveCallInvitation(callerUserId, callerName, callerProfilePictureUrl);
+    }
+
+    public async Task SendCallAcceptedAsync(long recipientUserId)
+    {
+        var connections = _connectionService.GetConnections(recipientUserId);
+        await _signalingHubContext.Clients.Clients(connections)
+            .CallAccepted();
+    }
+
     public async Task SendOfferAsync(long senderUserId, long recipientUserId, string offerJson)
     {
         var connections = _connectionService.GetConnections(recipientUserId);
