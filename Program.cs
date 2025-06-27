@@ -86,7 +86,7 @@ namespace AonFreelancing
             builder.Services.AddScoped<SubscriptionsService>();
             builder.Services.AddScoped<ElasticService<UserDocument>>();
             builder.Services.AddScoped<ElasticService<Project>>();
-            builder.Services.AddScoped<SignalingService>();
+            builder.Services.AddScoped<WebRtcSignalingService>();
 
             builder.Services.AddScoped<ZainCashService>();
             builder.Services.AddZainCashConfig("ZainCash", builder.Configuration);
@@ -225,7 +225,7 @@ namespace AonFreelancing
 
             app.MapControllers();
             app.MapHub<NotificationsHub>("/Hubs/Notifications");
-            app.MapHub<SignalingHub>("/Hubs/Signaling");
+            app.MapHub<WebRtcSignalingHub>("/Hubs/WebRtcSignaling");
             app.Run();
         }
 

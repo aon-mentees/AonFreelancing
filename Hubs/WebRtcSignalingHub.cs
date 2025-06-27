@@ -5,32 +5,32 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AonFreelancing.Hubs;
 
-public class SignalingHub : BaseHub<ISignalingClient>
+public class WebRtcSignalingHub : BaseHub<ISignalingClient>
 {
-    private readonly SignalingService _signalingService;
+    private readonly WebRtcSignalingService _webRtcSignalingService;
 
-    public SignalingHub(InMemorySignalRUserConnectionService userConnectionService, AuthService authService,
-        SignalingService signalingService) : base(
+    public WebRtcSignalingHub(InMemorySignalRUserConnectionService userConnectionService, AuthService authService,
+        WebRtcSignalingService webRtcSignalingService) : base(
         userConnectionService, authService)
     {
-        _signalingService = signalingService;
+        _webRtcSignalingService = webRtcSignalingService;
     }
 
     public async Task SendOffer(long recipientUserId, string offerJson)
     {
         long senderUserId = _authService.GetUserId((Context.User.Identity as ClaimsIdentity));
-        await _signalingService.SendOfferAsync(senderUserId, recipientUserId, offerJson);
+        await _webRtcSignalingService.SendOfferAsync(senderUserId, recipientUserId, offerJson);
     }
 
     public async Task SendAnswer(long recipientUserId, string answerJson)
     {
         long senderUserId = _authService.GetUserId((Context.User.Identity as ClaimsIdentity));
-        await _signalingService.SendAnswerAsync(senderUserId, recipientUserId, answerJson);
+        await _webRtcSignalingService.SendAnswerAsync(senderUserId, recipientUserId, answerJson);
     }
 
     public async Task SendIceCandidate(long recipientUserId, string iceCandidateJson)
     {
         long senderUserId = _authService.GetUserId((Context.User.Identity as ClaimsIdentity));
-        await _signalingService.SendIceCandidateAsync(senderUserId, recipientUserId, iceCandidateJson);
+        await _webRtcSignalingService.SendIceCandidateAsync(senderUserId, recipientUserId, iceCandidateJson);
     }
 }

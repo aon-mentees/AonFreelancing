@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace AonFreelancing.Services;
 
-public class SignalingService
+public class WebRtcSignalingService
 {
-    private readonly IHubContext<SignalingHub, ISignalingClient> _signalingHubContext;
+    private readonly IHubContext<WebRtcSignalingHub, ISignalingClient> _signalingHubContext;
     private readonly InMemorySignalRUserConnectionService _connectionService;
 
-    public SignalingService(
-        IHubContext<SignalingHub, ISignalingClient> signalingHubContext,
+    public WebRtcSignalingService(
+        IHubContext<WebRtcSignalingHub, ISignalingClient> signalingHubContext,
         InMemorySignalRUserConnectionService connectionService)
     {
         _signalingHubContext = signalingHubContext;
