@@ -314,6 +314,7 @@
     <div class="call-invitation">
         <h3>Incoming Call</h3>
         <div class="caller-info">
+            <img id="callerProfilePicture" src="" alt="Caller Profile" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
             <p><strong>From:</strong> <span id="callerName"></span></p>
             <p><strong>User ID:</strong> <span id="callerUserId"></span></p>
         </div>
@@ -358,6 +359,7 @@
                 remoteVideo: document.getElementById('remoteVideo'),
                 logs: document.getElementById('logs'),
                 callInvitationModal: document.getElementById('callInvitationModal'),
+                callerProfilePicture: document.getElementById('callerProfilePicture'), 
                 callerName: document.getElementById('callerName'),
                 callerUserId: document.getElementById('callerUserId'),
                 acceptCallBtn: document.getElementById('acceptCallBtn'),
@@ -442,10 +444,10 @@
         setupSignalRHandlers() {
             this.connection.on('ReceiveCallInvitation', (callerUserId, callerName, callerProfilePictureUrl) => {
                 this.log(`Incoming call from ${callerName} (ID: ${callerUserId})`);
-                this.showCallInvitation(callerUserId, callerName);
+                this.showCallInvitation(callerUserId, callerName,callerProfilePictureUrl);
             });
 
-            this.connection.on('CallAccepted', async () => {
+            this.connection.on('CallAccepted', async (callerUserId) => {
                 this.log('Call was accepted by recipient');
                 this.updateStatus('Call accepted! Initializing media...', 'success');
 
@@ -499,11 +501,12 @@
             }
         }
 
-        showCallInvitation(callerUserId, callerName) {
+        showCallInvitation(callerUserId, callerName,callerProfilePictureUrl) {
             this.elements.callerName.textContent = callerName;
             this.elements.callerUserId.textContent = callerUserId;
+            this.elements.callerProfilePicture.src = callerProfilePictureUrl;
             this.elements.callInvitationModal.style.display = 'block';
-            this.recipientUserId = callerUserId; // Set for response
+            this.recipientUserId = callerUserId;
         }
 
         async acceptCall() {

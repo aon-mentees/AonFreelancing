@@ -32,7 +32,12 @@ public class WebRtcSignalingService
         await _signalingHubContext.Clients.Clients(connections)
             .CallAccepted();
     }
-
+    public async Task SendCallRejectedAsync(long recipientUserId)
+    {
+        var connections = _connectionService.GetConnections(recipientUserId);
+        await _signalingHubContext.Clients.Clients(connections)
+            .CallRejected();
+    }
     public async Task SendOfferAsync(long senderUserId, long recipientUserId, string offerJson)
     {
         var connections = _connectionService.GetConnections(recipientUserId);

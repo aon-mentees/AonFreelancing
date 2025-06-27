@@ -25,13 +25,20 @@ public class WebRtcSignalingHub : BaseHub<ISignalingClient>
         User? storedCallerUser = await _userService.FindByIdAsync(callerUserId);
         if (storedCallerUser == null)
             throw new HubException("UserNotFound: Caller does not exist (maybe deleted)");
+        string imagesBaseUrl = $"{Context.GetHttpContext()?.Request.Scheme}://{Context.GetHttpContext()?.Request.Host}/images";
+        string profilePictureUrl = $"{imagesBaseUrl}/{storedCallerUser.ProfilePicture}";
+
         await _webRtcSignalingService.SendCallInvitationAsync(callerUserId, recipientUserId, storedCallerUser.Name,
-            storedCallerUser.ProfilePicture);
+            profilePictureUrl);
     }
 
     public async Task SendCallAccepted(long recipientUserId)
     {
         await _webRtcSignalingService.SendCallAcceptedAsync(recipientUserId);
+    }
+    public async Task SendCallRejected(long recipientUserId)
+    {
+        await _webRtcSignalingService.SendCallRejectedAsync(recipientUserId);
     }
 
     public async Task SendOffer(long recipientUserId, string offerJson)
